@@ -106,11 +106,11 @@ const TextEditor = () => {
     };
 
     return (
-        <Card className="w-full h-[600px] flex flex-col border-slate-200 shadow-sm">
+        <Card className="w-full h-150 flex flex-col border-slate-200 shadow-sm">
             <CardHeader className="bg-slate-50 border-b pb-4">
                 <CardTitle className="text-lg font-mono text-slate-700">Protocol.hs</CardTitle>
             </CardHeader>
-            <CardContent className="p-0 flex-grow">
+            <CardContent className="p-0 grow">
                 <Editor
                     height="100%"
                     language="pbkat-haskell"
