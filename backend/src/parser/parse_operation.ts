@@ -1,4 +1,4 @@
-import {BasicOperation, CompoundOperation, guard} from "../schemas/JSON_schema"
+import type { BasicOperation, CompoundOperation, guard } from "../schemas/JSON_schema.js";
 
 //Transform an operation from theoretical syntax to haskell DSL syntax
 //For example transform c(X) to create "X"
@@ -26,10 +26,13 @@ export function parseOperation(op: BasicOperation | CompoundOperation): string {
         case "loop":
             return `(whileN ${op.maxIterations} ${parseGuard(op.test)} $ ${parseOperation(op.operation)})`;
     }
+
+    //TODO Add throwing error
+    return ""
 }
 
 
 //TODO Add parseGuard function
-function parseGuard(guard: guard) {
-    return guard
+function parseGuard(g: guard):string {
+    return JSON.stringify(g)
 }
