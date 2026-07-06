@@ -4,7 +4,7 @@ import { exec } from 'node:child_process';
 import http from 'node:http';
 import { WebSocketServer } from 'ws';
 import { WebSocketMessageReader, WebSocketMessageWriter } from 'vscode-ws-jsonrpc';
-import { createConnection, createServerProcess } from 'vscode-ws-jsonrpc/server';
+import { createServerProcess } from 'vscode-ws-jsonrpc/server';
 
 const app = express();
 let corsOptions = {
@@ -28,15 +28,13 @@ const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 
 wss.on('connection', (ws) => {
-    console.log("React app connected via WebSocket. Starting HLS...");
+    console.log("Connected to frontend");
 
     const socket = {
-        send: content => ws.send(content, error => {
-            if (error) console.error("WebSocket send error:", error);
-        }),
-        onMessage: cb => ws.on('message', cb),
-        onError: cb => ws.on('error', cb),
-        onClose: cb => ws.on('close', cb),
+        send: (content) => ws.send(content),
+        onMessage: (cb) => ws.on('message', cb),
+        onError: (cb) => ws.on('error', cb),
+        onClose: (cb) => ws.on('close', cb),
         dispose: () => ws.close()
     };
 
@@ -47,25 +45,18 @@ wss.on('connection', (ws) => {
         'Haskell',
         'haskell-language-server-wrapper',
         ['--lsp'],
-        { cwd: '../' }
+        {
+            cwd: '/opt/pbkat'
+        }
     );
 
-    if (serverConnection.process) {
-        serverConnection.process.stderr.on('data', (data) => {
-            console.error(`[HLS LOG]: ${data.toString()}`);
-        });
-        serverConnection.process.on('exit', (code) => {
-            console.error(`[HLS EXIT]: Process exited with code ${code}`);
-        });
-    }
+    // 🔥 THIS is the correct wiring
+    reader.listen((msg) => {
+        serverConnection.writer.write(msg);
+    });
 
-    const connection = createConnection(reader, writer, () => serverConnection.dispose());
-
-    connection.forward(serverConnection, message => {
-        if (message.method) {
-            console.log("Monaco sent:", message.method);
-        }
-        return message;
+    serverConnection.reader.listen((msg) => {
+        writer.write(msg);
     });
 });
 
