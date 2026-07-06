@@ -1,0 +1,105 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Haskell",
+  "scopeName": "source.haskell",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#characters" },
+    { "include": "#numbers" },
+    { "include": "#keywords" },
+    { "include": "#pragmas" },
+    { "include": "#module" },
+    { "include": "#operators" },
+    { "include": "#types" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-dash.haskell",
+          "match": "--.*$"
+        },
+        {
+          "name": "comment.block.haskell",
+          "begin": "\\{-",
+          "end": "-\\}",
+          "patterns": [{ "include": "#comments" }]
+        }
+      ]
+    },
+    "pragmas": {
+      "name": "meta.preprocessor.haskell",
+      "begin": "\\{-#",
+      "end": "#-\\}"
+    },
+    "strings": {
+      "name": "string.quoted.double.haskell",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        { "name": "constant.character.escape.haskell", "match": "\\\\." }
+      ]
+    },
+    "characters": {
+      "name": "string.quoted.single.haskell",
+      "match": "'([^'\\\\]|\\\\.)'"
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.float.haskell",
+          "match": "\\b[0-9]+\\.[0-9]+([eE][+-]?[0-9]+)?\\b"
+        },
+        {
+          "name": "constant.numeric.hex.haskell",
+          "match": "\\b0[xX][0-9a-fA-F]+\\b"
+        },
+        {
+          "name": "constant.numeric.octal.haskell",
+          "match": "\\b0[oO][0-7]+\\b"
+        },
+        {
+          "name": "constant.numeric.decimal.haskell",
+          "match": "\\b[0-9]+\\b"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.haskell",
+          "match": "\\b(if|then|else|case|of|do|let|in|where)\\b"
+        },
+        {
+          "name": "keyword.other.haskell",
+          "match": "\\b(data|type|newtype|class|instance|deriving|foreign|default|infixl|infixr|infix|forall)\\b"
+        },
+        {
+          "name": "constant.language.haskell",
+          "match": "\\b(True|False|Nothing|Just|Left|Right)\\b"
+        }
+      ]
+    },
+    "module": {
+      "patterns": [
+        {
+          "name": "keyword.other.import.haskell",
+          "match": "\\b(module|import|qualified|as|hiding)\\b"
+        },
+        {
+          "name": "entity.name.namespace.haskell",
+          "match": "(?<=\\b(module|import)\\s)[A-Z][A-Za-z0-9_']*(\\.[A-Z][A-Za-z0-9_']*)*"
+        }
+      ]
+    },
+    "operators": {
+      "name": "keyword.operator.haskell",
+      "match": "(->|<-|=>|::|\\.\\.|=|\\||\\\\|@|~|!|\\$|>>=|>>|<\\$>|<\\*>|\\+\\+)"
+    },
+    "types": {
+      "name": "entity.name.type.haskell",
+      "match": "\\b[A-Z][A-Za-z0-9_']*\\b"
+    }
+  }
+}

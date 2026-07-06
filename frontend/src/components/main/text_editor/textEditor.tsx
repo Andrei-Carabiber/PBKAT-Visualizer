@@ -9,8 +9,17 @@ import {
     RegisteredMemoryFile,
     registerFileSystemOverlay
 } from "@codingame/monaco-vscode-files-service-override";
+import getTextmateServiceOverride from '@codingame/monaco-vscode-textmate-service-override';
+import getThemeServiceOverride from '@codingame/monaco-vscode-theme-service-override';
+import getLanguagesServiceOverride from '@codingame/monaco-vscode-languages-service-override';
+
+import '@codingame/monaco-vscode-theme-defaults-default-extension';
 import CustomizationBar from "@/components/main/text_editor/customizationBar.tsx";
 import type {editor} from '@codingame/monaco-vscode-editor-api'
+
+
+import haskellGrammarRaw from './haskell.tmLanguage.json?raw';
+import haskellLanguageConfigRaw from './haskell-language-configuration.json?raw';
 
 export type editorSettings = {
     fontSize: number;
@@ -69,15 +78,34 @@ const MonacoEditor = () => {
                             languages: [{
                                 id: 'haskell',
                                 extensions: ['.hs', '.lhs'],
-                                aliases: ['Haskell', 'haskell']
+                                aliases: ['Haskell', 'haskell'],
+                                // path VS Code will look up in this extension's virtual file map
+                                configuration: './haskell-language-configuration.json'
+                            }],
+                            // This is the piece that was missing: it tells the textmate
+                            // service which grammar file to load for the "haskell" language id.
+                            grammars: [{
+                                language: 'haskell',
+                                scopeName: 'source.haskell',
+                                path: './haskell.tmLanguage.json'
                             }]
                         },
-
-                    }
+                    },
+                    // Virtual filesystem for this extension: maps the relative paths used
+                    // above (configuration / grammars[].path) to actual file contents.
+                    filesOrContents: new Map([
+                        ['./haskell-language-configuration.json', haskellLanguageConfigRaw],
+                        ['./haskell.tmLanguage.json', haskellGrammarRaw],
+                    ])
                 }],
                 viewsConfig: {
                     $type: 'EditorService',
                     htmlContainer: editorRef.current as HTMLElement,
+                },
+                serviceOverrides: {
+                    ...getTextmateServiceOverride(),
+                    ...getThemeServiceOverride(),
+                    ...getLanguagesServiceOverride(),
                 },
                 userConfiguration: {
                     json: JSON.stringify({
