@@ -15,8 +15,9 @@ However, writing protocols directly in the Haskell DSL requires familiarity with
 
 ## 🏗️ Architecture
 
-* **Frontend (`/frontend`):** A **React** application where users can visualize node topologies (e.g., $A-B-C-D-E$) and construct quantum routing protocols using a clean UI.
-* **Backend (`/backend`):** A **Python FastAPI** server. It acts as a compiler and orchestrator. It receives the JSON payload, parses it, dynamically generates the equivalent `.hs` (Haskell) file using the PBKAT DSL (e.g., mapping theoretical $sw \langle A \sim B @ C \rangle$ to `swap "C" ("A", "B")`), and spawns child processes to run the `cabal` commands.
+* **Frontend (`/frontend`):** A **React** application where users can visualize node topologies (e.g., $A-B-C-D-E$) and construct quantum routing protocols using a haskell code editor.
+* **Backend (`/backend`):** A **NodeJS Express** server.
+* **PBKAT (`/prob-bellkat-master`):** **PBKAT** is a tool for calculating probabilities of forming quantum networks following some specific protocols. This version features an additional web server with a Haskell language server for the frontend editor.
 * **Core Engine:** The original Haskell-based PBKAT library, which performs the heavy mathematical computations and outputs the probabilistic state space.
 
 ## ✨ Features
