@@ -11,6 +11,7 @@ import {
     SelectValue
 } from "@/components/ui/select";
 import {Button} from "@/components/ui/button.tsx";
+import RunButton from "@/components/main/text_editor/calculate_button.tsx";
 
 type Props = {
     settings: editorSettings;
@@ -27,9 +28,8 @@ const wrapOptions = [
 
 const CustomizationBar = ({ settings, setSettings }: Props) => {
     return (
-        <div className="w-full flex flex-row items-center gap-4 px-3 py-2 text-foreground border-b">
+        <div className="w-full h-full flex flex-row items-center gap-3 px-3 py-2 text-foreground border-b">
 
-            {/* Font Size */}
             <Field>
                 <FieldLabel>Size</FieldLabel>
                 <Input
@@ -45,7 +45,6 @@ const CustomizationBar = ({ settings, setSettings }: Props) => {
                 />
             </Field>
 
-            {/* Line Height */}
             <Field>
                 <FieldLabel>Line</FieldLabel>
                 <Input
@@ -61,7 +60,6 @@ const CustomizationBar = ({ settings, setSettings }: Props) => {
                 />
             </Field>
 
-            {/* Letter spacing */}
             <Field>
                 <FieldLabel>Spacing</FieldLabel>
                 <Input
@@ -78,7 +76,6 @@ const CustomizationBar = ({ settings, setSettings }: Props) => {
                 />
             </Field>
 
-            {/* Word Wrap */}
             <Field className="min-w-1/6">
                 <FieldLabel>Wrap</FieldLabel>
                 <Select
@@ -106,35 +103,34 @@ const CustomizationBar = ({ settings, setSettings }: Props) => {
                 </Select>
             </Field>
 
-            {/* Smooth scrolling */}
-            <Button
-                className="w-fit h-full rounded-xl bg-primary hover:bg-primary/90 transition"
-                onClick={() =>
-                    setSettings(s => ({
-                        ...s,
-                        smoothScrolling: !s.smoothScrolling
-                    }))
-                }
-            >
-                Smooth Scroll: {settings.smoothScrolling ? "On" : "Off"}
-            </Button>
+            <div className="flex h-full gap-1">
+                <Button
+                    className="w-fit h-full rounded-lg bg-primary hover:bg-primary/90 transition"
+                    onClick={() =>
+                        setSettings(s => ({
+                            ...s,
+                            smoothScrolling: !s.smoothScrolling
+                        }))
+                    }
+                >
+                    Smooth Scroll: {settings.smoothScrolling ? "On" : "Off"}
+                </Button>
 
-            {/* Automatic layout */}
-            <Button
-                className="w-fit h-full rounded-xl bg-primary hover:bg-primary/90 transition"
-                onClick={() =>
-                    setSettings(s => ({
-                        ...s,
-                        automaticLayout: !s.automaticLayout
-                    }))
-                }
-            >
-                <p>Auto Layout: {settings.automaticLayout ? "On" : "Off"}</p>
-            </Button>
+                {/* Automatic layout */}
+                <Button
+                    className="w-fit h-full rounded-lg bg-primary hover:bg-primary/90 transition"
+                    onClick={() =>
+                        setSettings(s => ({
+                            ...s,
+                            automaticLayout: !s.automaticLayout
+                        }))
+                    }
+                >
+                    <p>Auto Layout: {settings.automaticLayout ? "On" : "Off"}</p>
+                </Button>
 
-            <Button className="w-fit h-full rounded-xl bg-muted">
-                Run
-            </Button>
+                <RunButton />
+            </div>
 
         </div>
     );
