@@ -202,7 +202,7 @@ function extractUserCode(model: monacoEditor.ITextModel): string {
     return model.getValueInRange(new Range(from, 1, to, model.getLineMaxColumn(to)));
 }
 
-const MonacoEditor = forwardRef<MonacoEditorHandle>((_props, ref) => {
+const MonacoEditor = forwardRef<MonacoEditorHandle, { panelSize: number }>(({ panelSize }, ref) => {
     const editorRef = useRef<HTMLDivElement>(null);
     const editorRefInstance = useRef<monacoEditor.IStandaloneCodeEditor | undefined>(undefined);
     const initialized = useRef(false);
@@ -379,13 +379,14 @@ const MonacoEditor = forwardRef<MonacoEditorHandle>((_props, ref) => {
     }, [settings]);
 
     return (
-        <div className="min-h-full w-full flex flex-col p-4 bg-card rounded-lg">
-            <div className="">
+        <div className="h-full w-full flex flex-col p-4 pt-2 bg-card rounded-lg">
+            <div className="shrink-0">
                 <CustomizationBar settings={settings}
                                   setSettings={setSettings}
+                                  panelSize={panelSize}
                 />
             </div>
-            <div id="monaco-editor-root" ref={editorRef} className="h-full w-full flex" />
+            <div id="monaco-editor-root" ref={editorRef} className="flex-1 min-h-0 w-full flex"/>
         </div>);
 });
 
