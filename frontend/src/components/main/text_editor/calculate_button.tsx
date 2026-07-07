@@ -1,6 +1,5 @@
-import {type RefObject, useState} from "react";
+import {useState} from "react";
 import { Button } from "@/components/ui/button.tsx";
-import type { MonacoEditorHandle } from "@/components/main/text_editor/textEditor";
 
 type RunResult = {
     output: string;
@@ -8,16 +7,16 @@ type RunResult = {
 };
 
 type Props = {
-    editorRef: RefObject<MonacoEditorHandle | null>;
+    getUserCode: () => string;
 };
 
 const RUN_PROTOCOL_URL = "http://localhost:8080/run-protocol";
 
-async function runProtocol(code: string): Promise<RunResult> {
+async function runProtocol(code: string, command: 'run' | 'execution-trace' = 'run'): Promise<RunResult> {
     const response = await fetch(RUN_PROTOCOL_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code }),
+        body: JSON.stringify({ code, command }),
     });
 
     if (!response.ok) {
@@ -28,10 +27,10 @@ async function runProtocol(code: string): Promise<RunResult> {
     return response.json();
 }
 
-const RunButton = ({ editorRef }: Props) => {
-    const [loading, setLoading] = useState(false)
-    const [data, setData] = useState<any>(null)
-    const [error, setError] = useState<any>(null)
+const RunButton = ({ getUserCode }: Props) => {
+    const [loading, setLoading] = useState(false);
+    const [data, setData] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
     const handleRun = async () => {
         setError(null);
@@ -39,10 +38,8 @@ const RunButton = ({ editorRef }: Props) => {
         setLoading(true);
 
         try {
-            const code = editorRef.current?.getUserCode() || "";
-
+            const code = getUserCode();
             const result = await runProtocol(code);
-
             setData(result.output);
         } catch (e: any) {
             setError(e.message || "An unexpected error occurred.");
@@ -54,8 +51,7 @@ const RunButton = ({ editorRef }: Props) => {
     return (
         <div className="flex flex-col gap-2">
             <Button
-                //TODO Manage handleRun and how you pass the editor
-                onClick={() => {}}
+                onClick={handleRun}
                 disabled={loading}
                 className="w-fit h-full rounded-lg px-3"
             >

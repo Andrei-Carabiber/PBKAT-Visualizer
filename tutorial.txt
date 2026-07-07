@@ -6,4 +6,4 @@ nix-shell -p nodejs
 
 npm install -g nodemon
 
-nodemon editor-webserver/server.js
+nodemon --watch editor-webserver --ext js,mjs,cjs editor-webserver/server.js

@@ -7,18 +7,16 @@ export const PRELUDE = `{-# LANGUAGE OverloadedStrings #-}
 
 import BellKAT.Prelude
 import BellKAT.ProbabilisticPrelude
-
-import qualified Data.ByteString.Lazy as BS
-import qualified Data.Aeson as A
 \n\n\n\n
 ${EDITABLE_START_MARKER}
 `;
 
-// Everything below the end marker: the actionConfig + main that get appended
-// after the user's protocol definition.
 export const SUFFIX = `
 ${EDITABLE_END_MARKER}
 \n\n\n\n
+networkCapacity :: NetworkCapacity BellKATTag
+networkCapacity = ["C" ~ "C", "C" ~ "C", "A" ~ "C", "B" ~ "C"]
+
 actionConfig :: ProbabilisticActionConfiguration
 actionConfig = PAC
     { pacTransmitProbability = [(("C", "B"), 1 / 2),(("C", "A"), 4 / 5)]
@@ -31,20 +29,20 @@ actionConfig = PAC
     , pacDistances = [(("A", "B"), 1), (("B", "C"), 1)]
     }
 
+goal :: ProbBellKATTest
+goal = hasSubset ["A" ~ "C", "B" ~ "C"]
+
 main :: IO ()
-main =
-    let cdbps = applyStarPolicy' actionConfig p []
-     in BS.putStr (A.encode cdbps) >> putStrLn ""
+main = pbkatMain actionConfig (Just networkCapacity) goal p
 `;
 
-// What a brand-new editor session starts with in the editable middle.
-export const DEFAULT_USER_CODE = `e :: BellKATPolicy
+export const DEFAULT_USER_CODE = `e :: ProbBellKATPolicy
 e = create "C" <> trans "C" ("A", "C")
 
-f :: BellKATPolicy
+f :: ProbBellKATPolicy
 f = create "C" <> trans "C" ("B", "C")
 
-p :: BellKATPolicy
+p :: ProbBellKATPolicy
 p = (e <.> f) <> (e <.> f)
 `;
 

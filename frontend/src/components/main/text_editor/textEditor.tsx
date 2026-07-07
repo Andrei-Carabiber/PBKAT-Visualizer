@@ -297,6 +297,7 @@ const MonacoEditor = forwardRef<MonacoEditorHandle>((_props, ref) => {
                         name: 'pbkat-workspace',
                         uri: vscode.Uri.file('/opt/pbkat')
                     },
+                    initializationOptions: {}
                 },
             };
 
@@ -369,7 +370,13 @@ const MonacoEditor = forwardRef<MonacoEditorHandle>((_props, ref) => {
 
     return (
         <div className="min-h-full w-full flex flex-col">
-            <CustomizationBar settings={settings} setSettings={setSettings} editorRef={null}/>
+            <CustomizationBar settings={settings}
+                              setSettings={setSettings}
+                              getUserCode={() => {
+                                  const model = editorRefInstance?.current?.getModel()
+                                  const userCode =  model ? extractUserCode(model) : '';
+                                  return buildFullSource(userCode)
+                              }}/>
             <div className="h-1 bg-primary-foreground"></div>
             <div id="monaco-editor-root" ref={editorRef} className="min-h-10/11 w-full flex"/>
         </div>);
