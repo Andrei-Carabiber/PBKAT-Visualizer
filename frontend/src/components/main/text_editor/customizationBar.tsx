@@ -28,7 +28,8 @@ const wrapOptions = [
 
 const CustomizationBar = ({ settings, setSettings }: Props) => {
     return (
-        <div className="w-full h-full flex flex-row items-center gap-3 px-3 py-2 text-foreground border-b">
+        <div className="w-full h-full flex flex-row
+        items-center gap-3 px-3 py-2 text-card-foreground bg-card border-b">
 
             <Field>
                 <FieldLabel>Size</FieldLabel>

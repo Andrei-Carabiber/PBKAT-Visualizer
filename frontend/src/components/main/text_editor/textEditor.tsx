@@ -18,8 +18,6 @@ import getConfigurationServiceOverride, {
 
 import '@codingame/monaco-vscode-theme-defaults-default-extension';
 import CustomizationBar from "@/components/main/text_editor/customizationBar.tsx";
-// Value import (not type-only): we need runtime members like
-// monacoEditor.TrackedRangeStickiness and the Range class below, not just types.
 import {editor as monacoEditor, KeyCode, KeyMod, Range} from '@codingame/monaco-vscode-editor-api'
 import {useTheme} from "@/components/theme-provider";
 
@@ -46,11 +44,9 @@ export type editorSettings = {
 }
 
 export type MonacoEditorHandle = {
-    /** Returns only the text the user is allowed to edit (between the sentinel markers). */
     getUserCode: () => string;
 };
 
-// Cast target for the (still real, but not always in the public .d.ts) hidden-areas API.
 type HiddenAreasCapableEditor = monacoEditor.IStandaloneCodeEditor & {
     setHiddenAreas: (ranges: InstanceType<typeof Range>[]) => void;
 };
@@ -58,15 +54,11 @@ type HiddenAreasCapableEditor = monacoEditor.IStandaloneCodeEditor & {
 function themeSettingFor(theme: string): string {
     if (theme === 'light') return 'Default Light Modern';
     if (theme === 'dark') return 'Default Dark Modern';
-    // "system" (or anything else): fall back to the OS preference.
     const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
     return prefersDark ? 'Default Dark Modern' : 'Default Light Modern';
 }
 
-// Single source of truth for the full VS Code "settings.json" document.
-// updateUserConfiguration() REPLACES the whole configuration rather than
-// merging into it, so every call — including theme-only updates — must pass
-// the complete object or earlier settings (like minimap) silently vanish.
+
 function buildUserConfigurationJson(theme: string): string {
     return JSON.stringify({
         'workbench.colorTheme': themeSettingFor(theme),
@@ -85,16 +77,7 @@ function buildUserConfigurationJson(theme: string): string {
     });
 }
 
-/**
- * Locks the prelude/suffix boilerplate against edits and folds it out of view,
- * leaving only the region between the sentinel markers visible and editable.
- * Boundaries are tracked via sticky decorations so they keep up automatically
- * as the user's code grows or shrinks.
- */
-// Navigation/no-op keys that are always safe to let through even when the
-// selection currently reaches into a locked zone (arrow keys, paging, escape,
-// bare modifier presses). Anything not in this set is treated as potentially
-// content-modifying and gets blocked if the selection escapes editable bounds.
+
 const ALWAYS_ALLOWED_KEYCODES = new Set<number>([
     KeyCode.LeftArrow, KeyCode.RightArrow,
     KeyCode.UpArrow, KeyCode.DownArrow,
@@ -116,8 +99,7 @@ function restrictToEditableRegion(editorInstance: monacoEditor.IStandaloneCodeEd
         return;
     }
 
-    // Sticky decorations: Monaco keeps these ranges correct as content above/below
-    // shifts, so we always know the *current* boundary, not the one at mount time.
+
     const lastLine = model.getLineCount();
     const [preludeDecorationId, suffixDecorationId] = model.deltaDecorations([], [
         {
@@ -151,10 +133,7 @@ function restrictToEditableRegion(editorInstance: monacoEditor.IStandaloneCodeEd
         return new Range(editableStartLine, 1, editableEndLine, model!.getLineMaxColumn(editableEndLine));
     }
 
-    // A selection only counts as "safe" if it's strictly inside the editable
-    // lines. A collapsed cursor sitting exactly on the first/last editable
-    // line is still safe on its own, but Backspace/Delete there would merge
-    // into the locked line next door, so those two are special-cased below.
+
     function selectionsAreSafe(): boolean {
         const {editableStartLine, editableEndLine} = currentBounds();
         return editorInstance.getSelections()?.every(sel =>
@@ -163,18 +142,13 @@ function restrictToEditableRegion(editorInstance: monacoEditor.IStandaloneCodeEd
     }
 
     applyHiddenAreas();
-    // Whenever the document legitimately changes (typing inside the editable
-    // region shifts the suffix up/down), re-fold using the fresh boundary.
+
     model.onDidChangeContent(() => applyHiddenAreas());
 
-    // Clamp Cmd/Ctrl+A to the editable range instead of selecting the whole file.
     editorInstance.addCommand(KeyMod.CtrlCmd | KeyCode.KeyA, () => {
         editorInstance.setSelection(editableRangeNow());
     });
 
-    // Block any content-modifying keystroke whose selection reaches outside
-    // the editable lines, *before* Monaco applies it — nothing gets edited,
-    // nothing gets undone, hidden areas and tokenization are never disturbed.
     editorInstance.onKeyDown((event) => {
         if (ALWAYS_ALLOWED_KEYCODES.has(event.keyCode)) return;
 
@@ -199,8 +173,7 @@ function restrictToEditableRegion(editorInstance: monacoEditor.IStandaloneCodeEd
         }
     });
 
-    // Cut/Paste go through the clipboard API rather than keydown, so they need
-    // their own guarded commands (same keybindings, checked against bounds first).
+
     editorInstance.addCommand(KeyMod.CtrlCmd | KeyCode.KeyV, async () => {
         if (!selectionsAreSafe()) return;
         const text = await navigator.clipboard.readText();
@@ -301,8 +274,6 @@ const MonacoEditor = forwardRef<MonacoEditorHandle>((_props, ref) => {
                     ...getTextmateServiceOverride(),
                     ...getThemeServiceOverride(),
                     ...getLanguagesServiceOverride(),
-                    // Needed so we can call updateUserConfiguration() later at runtime
-                    // (e.g. when the app's own theme toggle changes), not just at startup.
                     ...getConfigurationServiceOverride(),
                 },
                 userConfiguration: {
