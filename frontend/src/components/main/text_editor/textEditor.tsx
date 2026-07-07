@@ -369,7 +369,7 @@ const MonacoEditor = forwardRef<MonacoEditorHandle>((_props, ref) => {
 
     return (
         <div className="min-h-full w-full flex flex-col">
-            <CustomizationBar settings={settings} setSettings={setSettings}/>
+            <CustomizationBar settings={settings} setSettings={setSettings} editorRef={null}/>
             <div className="h-1 bg-primary-foreground"></div>
             <div id="monaco-editor-root" ref={editorRef} className="min-h-10/11 w-full flex"/>
         </div>);

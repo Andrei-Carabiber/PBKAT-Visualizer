@@ -130,7 +130,7 @@ const CustomizationBar = ({ settings, setSettings }: Props) => {
                     <p>Auto Layout: {settings.automaticLayout ? "On" : "Off"}</p>
                 </Button>
 
-                <RunButton />
+                <RunButton editorRef={null} />
             </div>
 
         </div>
