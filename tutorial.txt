@@ -1,0 +1,9 @@
+To open pbkat server
+
+docker run --rm -it -p 8080:8080 --mount type=bind,source=$(pwd),target=/opt/pbkat pbkat:latest
+
+nix-shell -p nodejs
+
+npm install -g nodemon
+
+nodemon editor-webserver/server.js

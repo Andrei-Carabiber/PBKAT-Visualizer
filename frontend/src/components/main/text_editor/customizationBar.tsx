@@ -27,7 +27,7 @@ const wrapOptions = [
 
 const CustomizationBar = ({ settings, setSettings }: Props) => {
     return (
-        <div className="w-full flex flex-row items-center gap-4 px-3 py-2 bg-primary text-primary-foreground border-b">
+        <div className="w-full flex flex-row items-center gap-4 px-3 py-2 text-foreground border-b">
 
             {/* Font Size */}
             <Field>
@@ -79,7 +79,7 @@ const CustomizationBar = ({ settings, setSettings }: Props) => {
             </Field>
 
             {/* Word Wrap */}
-            <Field>
+            <Field className="min-w-1/6">
                 <FieldLabel>Wrap</FieldLabel>
                 <Select
                     value={settings.wordWrap}
@@ -106,22 +106,9 @@ const CustomizationBar = ({ settings, setSettings }: Props) => {
                 </Select>
             </Field>
 
-            {/* Minimap toggle */}
-            <Button
-                className="w-fit h-full rounded bg-secondary/10 hover:bg-secondary/30 transition"
-                onClick={() =>
-                    setSettings(s => ({
-                        ...s,
-                        minimap: { enabled: !s.minimap.enabled }
-                    }))
-                }
-            >
-                Minimap: {settings.minimap.enabled ? "On" : "Off"}
-            </Button>
-
             {/* Smooth scrolling */}
             <Button
-                className="w-fit h-full rounded bg-secondary/10 hover:bg-secondary/30 transition"
+                className="w-fit h-full rounded-xl bg-primary hover:bg-primary/90 transition"
                 onClick={() =>
                     setSettings(s => ({
                         ...s,
@@ -134,7 +121,7 @@ const CustomizationBar = ({ settings, setSettings }: Props) => {
 
             {/* Automatic layout */}
             <Button
-                className="w-fit h-full rounded bg-secondary/10 hover:bg-secondary/30 transition"
+                className="w-fit h-full rounded-xl bg-primary hover:bg-primary/90 transition"
                 onClick={() =>
                     setSettings(s => ({
                         ...s,
@@ -143,6 +130,10 @@ const CustomizationBar = ({ settings, setSettings }: Props) => {
                 }
             >
                 <p>Auto Layout: {settings.automaticLayout ? "On" : "Off"}</p>
+            </Button>
+
+            <Button className="w-fit h-full rounded-xl bg-muted">
+                Run
             </Button>
 
         </div>
