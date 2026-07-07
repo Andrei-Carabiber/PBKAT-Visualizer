@@ -1,9 +1,7 @@
 const NodeEditor = () => {
     return (
-        <div
-            className="w-full min-h-full border-4 border-black flex items-center justify-center text-center bg-card"
-        >
-            Node Editor
+        <div className="min-h-full w-full flex flex-col p-4 bg-card rounded-lg justify-around items-center">
+        <p className="text-center">Node Editor</p>
         </div>
     );
 };

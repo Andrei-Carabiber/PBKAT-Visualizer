@@ -29,6 +29,7 @@ import {
     EDITABLE_END_MARKER,
     EDITABLE_START_MARKER,
 } from './haskellBoilerplate';
+import {useRunEngine} from "@/store/runEngine.ts";
 
 export type editorSettings = {
     fontSize: number;
@@ -219,6 +220,9 @@ const MonacoEditor = forwardRef<MonacoEditorHandle>((_props, ref) => {
         automaticLayout: true,
     });
 
+    const [isEditorReady, setIsEditorReady] = useState(false);
+    const registerEditor = useRunEngine(state => state.registerEditor);
+
     useImperativeHandle(ref, () => ({
         getUserCode: () => {
             const model = editorRefInstance.current?.getModel();
@@ -321,19 +325,25 @@ const MonacoEditor = forwardRef<MonacoEditorHandle>((_props, ref) => {
                 await lcWrapper.start()
 
                 console.log("Started everything")
+
+                setIsEditorReady(true);
             }
         };
 
         startEditor().catch(console.error);
     }, []);
 
+    useEffect(() => {
+        if (!isEditorReady || !editorRefInstance.current) return;
 
-    // Keep the editor's color theme in sync with the app's ThemeProvider.
-    // Guarded with a mounted flag (separate from `initialized`, which flips
-    // true before startup even finishes) so this only runs on *later* theme
-    // changes — the initial theme is already applied via userConfiguration
-    // above, and calling updateUserConfiguration again here always sends the
-    // FULL settings object so nothing else gets dropped.
+        registerEditor(() => {
+            const model = editorRefInstance.current?.getModel();
+            const userCode = model ? extractUserCode(model) : '';
+            return buildFullSource(userCode);
+        });
+    }, [isEditorReady, registerEditor]);
+
+
     const mounted = useRef(false);
     useEffect(() => {
         if (!mounted.current) {
@@ -364,21 +374,18 @@ const MonacoEditor = forwardRef<MonacoEditorHandle>((_props, ref) => {
             automaticLayout: settings.automaticLayout,
 
             renderLineHighlight: 'all',
-            bracketPairColorization: { enabled: true },
+            bracketPairColorization: {enabled: true},
         });
     }, [settings]);
 
     return (
-        <div className="min-h-full w-full flex flex-col">
-            <CustomizationBar settings={settings}
-                              setSettings={setSettings}
-                              getUserCode={() => {
-                                  const model = editorRefInstance?.current?.getModel()
-                                  const userCode =  model ? extractUserCode(model) : '';
-                                  return buildFullSource(userCode)
-                              }}/>
-            <div className="h-1 bg-primary-foreground"></div>
-            <div id="monaco-editor-root" ref={editorRef} className="min-h-10/11 w-full flex"/>
+        <div className="min-h-full w-full flex flex-col p-4 bg-card rounded-lg">
+            <div className="">
+                <CustomizationBar settings={settings}
+                                  setSettings={setSettings}
+                />
+            </div>
+            <div id="monaco-editor-root" ref={editorRef} className="h-full w-full flex" />
         </div>);
 });
 

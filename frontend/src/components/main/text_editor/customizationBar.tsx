@@ -16,8 +16,6 @@ import RunButton from "@/components/main/text_editor/calculate_button.tsx";
 type Props = {
     settings: editorSettings;
     setSettings: React.Dispatch<React.SetStateAction<editorSettings>>;
-    getUserCode: () => string;
-
 };
 
 
@@ -28,7 +26,7 @@ const wrapOptions = [
     { label: "Column", value: "wordWrapColumn" },
 ] as const;
 
-const CustomizationBar = ({ settings, setSettings, getUserCode }: Props) => {
+const CustomizationBar = ({ settings, setSettings }: Props) => {
     return (
         <div className="w-full h-full flex flex-row
         items-center gap-3 px-3 py-2 text-card-foreground bg-card border-b">
@@ -132,7 +130,9 @@ const CustomizationBar = ({ settings, setSettings, getUserCode }: Props) => {
                     <p>Auto Layout: {settings.automaticLayout ? "On" : "Off"}</p>
                 </Button>
 
-                <RunButton getUserCode={getUserCode} />
+                <div className="flex h-full gap-1">
+                    <RunButton />
+                </div>
             </div>
 
         </div>
