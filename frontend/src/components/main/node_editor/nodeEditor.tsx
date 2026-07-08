@@ -6,7 +6,8 @@ import {
     ReactFlow,
     addEdge,
     useNodesState,
-    useEdgesState, useReactFlow, ReactFlowProvider, type Edge, type Node, type Connection,
+    useEdgesState, useReactFlow, ReactFlowProvider, type Edge, type Node, type Connection, type ConnectionMode,
+    type IsValidConnection, type DefaultEdgeOptions, type EdgeTypes,
 } from '@xyflow/react';
 
 
@@ -64,11 +65,8 @@ const edgeTypes = {
     floating: FloatingEdge,
 };
 
-const defaultEdgeOptions = {
+const defaultEdgeOptions: DefaultEdgeOptions = {
     type: 'floating',
-    markerEnd: {
-        color: '#b1b1b7',
-    },
 };
 
 const NodeEditor = () => {
@@ -77,6 +75,7 @@ const NodeEditor = () => {
 
     useEffect(() => {
         console.log(edges)
+        setNodes(nodes)
     }, [edges]);
 
     const {getEdges} = useReactFlow();
@@ -113,12 +112,13 @@ const NodeEditor = () => {
             onConnect={onConnect}
             fitView
             nodeTypes={nodeTypes}
-            edgeTypes={edgeTypes}
+            edgeTypes={edgeTypes as EdgeTypes}
             defaultEdgeOptions={defaultEdgeOptions}
             connectionLineComponent={CustomConnectionLine}
             connectionLineStyle={connectionLineStyle}
             colorMode="system"
-            isValidConnection={isValidConnection}
+            isValidConnection={isValidConnection as  IsValidConnection<Edge>}
+            connectionMode={'loose' as ConnectionMode}
         >
             <Background/>
         </ReactFlow>
