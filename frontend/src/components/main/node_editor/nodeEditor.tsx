@@ -1,4 +1,4 @@
-import {useCallback, useEffect} from 'react';
+import {useCallback, useEffect, useState} from 'react';
 import './index.css';
 
 import {
@@ -7,7 +7,7 @@ import {
     addEdge,
     useNodesState,
     useEdgesState, useReactFlow, ReactFlowProvider, type Edge, type Node, type Connection, type ConnectionMode,
-    type IsValidConnection, type DefaultEdgeOptions, type EdgeTypes,
+    type IsValidConnection, type DefaultEdgeOptions, type EdgeTypes
 } from '@xyflow/react';
 
 
@@ -15,8 +15,10 @@ import CustomNode from './CustomNode';
 import FloatingEdge from './FloatingEdge';
 import CustomConnectionLine from './customConnectionLine.tsx';
 import {useTheme} from "@/components/theme-provider.tsx";
+import NodePropertiesSheet from "@/components/main/node_editor/NodePropertiesSheet.tsx";
 
-const initialNodes: Node[] = [
+
+const initialNodes: Node<NodeData>[] = [
     {
         id: '1',
         type: 'custom',
@@ -70,8 +72,14 @@ const defaultEdgeOptions: DefaultEdgeOptions = {
     type: 'floating',
 };
 
+export type NodeData = {
+    label: string;
+    color?: string;
+    notes?: string;
+};
+
 const NodeEditor = () => {
-    const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+    const [nodes, setNodes, onNodesChange] = useNodesState<Node>(initialNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
     const {theme} = useTheme()
@@ -80,6 +88,16 @@ const NodeEditor = () => {
         console.log(edges)
         setNodes(nodes)
     }, [edges]);
+
+    const [selectedNode, setSelectedNode] = useState<Node<NodeData> | null>(null);
+    const [sheetOpen, setSheetOpen] = useState(false);
+
+
+    //Remove attribution
+    useEffect(() => {
+        const toDelete = document.querySelector('[data-message="Please only hide this attribution when you are subscribed to React Flow Pro: https://reactflow.dev/attribution"]');
+        toDelete?.remove()
+    }, []);
 
     const {getEdges} = useReactFlow();
 
@@ -106,31 +124,48 @@ const NodeEditor = () => {
         [setEdges],
     );
 
+    const onNodeDoubleClick = useCallback((_event: React.MouseEvent, node: Node) => {
+        setSelectedNode(node as Node<NodeData>);
+        setSheetOpen(true);
+    }, []);
+
+    const updateNodeData = useCallback((id: string, patch: Record<string, any>) => {
+        setNodes((nds) =>
+            nds.map((n) => (n.id === id ? {...n, data: {...n.data, ...patch}} : n))
+        );
+        setSelectedNode((prev) => (prev && prev.id === id ? {...prev, data: {...prev.data, ...patch}} : prev));
+    }, [setNodes]);
+
     return (
-        <ReactFlow
-            className="rounded-2xl text-secondary-foreground"
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            fitView
-            nodeTypes={nodeTypes}
-            edgeTypes={edgeTypes as EdgeTypes}
-            defaultEdgeOptions={defaultEdgeOptions}
-            connectionLineComponent={CustomConnectionLine}
-            connectionLineStyle={connectionLineStyle}
-            colorMode={theme}
-            isValidConnection={isValidConnection as IsValidConnection}
-            connectionMode={'loose' as ConnectionMode}
-        >
-            {theme === 'dark' ? (
-                <Background bgColor="#161C1D" />
-            ) : (
-                <Background bgColor="#E3E3E3" />
-            )}
-        </ReactFlow>
-    );
+        <>
+            <ReactFlow
+                className="rounded-2xl text-secondary-foreground"
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                onConnect={onConnect}
+                fitView
+                nodeTypes={nodeTypes}
+                edgeTypes={edgeTypes as EdgeTypes}
+                defaultEdgeOptions={defaultEdgeOptions}
+                connectionLineComponent={CustomConnectionLine}
+                connectionLineStyle={connectionLineStyle}
+                colorMode={theme}
+                isValidConnection={isValidConnection as IsValidConnection}
+                connectionMode={'loose' as ConnectionMode}
+                onNodeDoubleClick={onNodeDoubleClick}
+            >
+                {theme === 'dark' ? (
+                    <Background bgColor="#161C1D"/>
+                ) : (
+                    <Background bgColor="#E3E3E3"/>
+                )}
+            </ReactFlow>
+            <NodePropertiesSheet sheetOpen={sheetOpen} setSheetOpen={setSheetOpen} selectedNode={selectedNode} updateNodeData={updateNodeData}/>
+        </>
+    )
+        ;
 };
 
 export default () => (
