@@ -7,7 +7,7 @@ type props = {
     }
 }
 
-export default function CustomNode({ id, data } : props) {
+const CustomNode = ({ id, data } : props) => {
     const connection = useConnection();
 
     const isTarget = connection.inProgress && connection.fromNode.id !== id;
@@ -34,3 +34,5 @@ export default function CustomNode({ id, data } : props) {
         </div>
     );
 }
+
+export default CustomNode

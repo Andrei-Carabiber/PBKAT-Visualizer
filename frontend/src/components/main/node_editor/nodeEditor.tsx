@@ -117,7 +117,7 @@ const NodeEditor = () => {
             connectionLineComponent={CustomConnectionLine}
             connectionLineStyle={connectionLineStyle}
             colorMode="system"
-            isValidConnection={isValidConnection as  IsValidConnection<Edge>}
+            isValidConnection={isValidConnection as IsValidConnection}
             connectionMode={'loose' as ConnectionMode}
         >
             <Background/>
