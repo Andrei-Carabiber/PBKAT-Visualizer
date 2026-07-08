@@ -14,6 +14,7 @@ body {
 }
 
 .customNodeBody {
+    box-sizing: border-box;
     width: 150px;
     height: 80px;
     position: relative;
@@ -22,17 +23,66 @@ body {
     justify-content: center;
     align-items: center;
     font-weight: bold;
+
+    background-color: var(--xy-node-background-color-default);
+    border: var(--xy-node-border-default);
+    box-shadow: var(--xy-node-boxshadow-default);
+    color: var(--xy-node-color, var(--xy-node-color-default));
 }
 
-div.customHandle {
-    width: 100%;
-    height: 100%;
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+.react-flow__node-custom {
+    padding: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+}
+
+
+.customHandle {
     background: blue;
+    opacity: 0;
+    border-radius: 0;
+    border: none;
     position: absolute;
+    transform: none;
+}
+
+.handleFull {
     top: 0;
     left: 0;
-    border-radius: 0;
-    transform: none;
-    border: none;
-    opacity: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* Outer band = 20% from each edge. Tweak this single value to adjust the "grab zone" size. */
+.handleBand-top {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 20%;
+}
+
+.handleBand-bottom {
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 20%;
+}
+
+.handleBand-left {
+    top: 20%;
+    left: 0;
+    width: 20%;
+    height: 60%; /* 100% - 2*20%, so it doesn't overlap the top/bottom bands */
+}
+
+.handleBand-right {
+    top: 20%;
+    right: 0;
+    width: 20%;
+    height: 60%;
 }

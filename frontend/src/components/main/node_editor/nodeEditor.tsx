@@ -14,6 +14,7 @@ import {
 import CustomNode from './CustomNode';
 import FloatingEdge from './FloatingEdge';
 import CustomConnectionLine from './customConnectionLine.tsx';
+import {useTheme} from "@/components/theme-provider.tsx";
 
 const initialNodes: Node[] = [
     {
@@ -73,6 +74,8 @@ const NodeEditor = () => {
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
+    const {theme} = useTheme()
+
     useEffect(() => {
         console.log(edges)
         setNodes(nodes)
@@ -105,6 +108,7 @@ const NodeEditor = () => {
 
     return (
         <ReactFlow
+            className="rounded-2xl text-secondary-foreground"
             nodes={nodes}
             edges={edges}
             onNodesChange={onNodesChange}
@@ -116,11 +120,15 @@ const NodeEditor = () => {
             defaultEdgeOptions={defaultEdgeOptions}
             connectionLineComponent={CustomConnectionLine}
             connectionLineStyle={connectionLineStyle}
-            colorMode="system"
+            colorMode={theme}
             isValidConnection={isValidConnection as IsValidConnection}
             connectionMode={'loose' as ConnectionMode}
         >
-            <Background/>
+            {theme === 'dark' ? (
+                <Background bgColor="#161C1D" />
+            ) : (
+                <Background bgColor="#E3E3E3" />
+            )}
         </ReactFlow>
     );
 };
