@@ -21,14 +21,26 @@ const NodePropertiesSheet = ({sheetOpen, setSheetOpen, selectedNode, updateNodeD
                 </SheetHeader>
 
                 {selectedNode && (
-                    <div className="grid gap-4 py-4">
-                        <div className="grid gap-2">
+                    <div className="flex flex-col gap-4 p-4">
+
+                        <div className="flex flex-col gap-2">
                             <Label htmlFor="node-label">Label</Label>
                             <Input
                                 id="node-label"
                                 value={selectedNode.data.label ?? ''}
                                 onChange={(e) =>
                                     updateNodeData(selectedNode.id, {label: e.target.value})
+                                }
+                            />
+                        </div>
+
+                        <div className="flex flex-col gap-2">
+                            <Label htmlFor="node-transmission">Transmission</Label>
+                            <Input
+                                id="node-transmission"
+                                value={selectedNode.data.color ?? ''}
+                                onChange={(e) =>
+                                    updateNodeData(selectedNode.id, {color: e.target.value})
                                 }
                             />
                         </div>

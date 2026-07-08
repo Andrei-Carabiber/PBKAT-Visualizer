@@ -1,0 +1,60 @@
+import {useCallback} from 'react';
+import {useReactFlow, type Node} from '@xyflow/react';
+import {type NodeData, type MenuType} from './nodeEditor.tsx';
+import {Card, CardContent} from "@/components/ui/card.tsx";
+import {Button} from "@/components/ui/button.tsx"; // Assuming file paths match
+
+interface ContextMenuProps extends MenuType {
+    onClick: (event: React.MouseEvent) => void;
+}
+
+export default function ContextMenu({id, top, left, right, bottom, openProperties, ...props}: ContextMenuProps) {
+    const {getNode, setNodes, addNodes, setEdges} = useReactFlow<Node<NodeData>>();
+
+    const duplicateNode = useCallback(() => {
+        const node = getNode(id);
+        if (!node) return;
+
+        const position = {
+            x: node.position.x + 50,
+            y: node.position.y + 50,
+        };
+
+        addNodes({
+            ...node,
+            selected: false,
+            dragging: false,
+            id: `${node.id}-copy`,
+            position,
+        });
+    }, [id, getNode, addNodes]);
+
+    const deleteNode = useCallback(() => {
+        setNodes((nodes) => nodes.filter((node) => node.id !== id));
+        setEdges((edges) => edges.filter((edge) => edge.source !== id));
+    }, [id, setNodes, setEdges]);
+
+    return (
+        <Card style={{top, left, right, bottom, position: 'absolute', zIndex: 1000}}
+              className="context-menu bg-muted w-fit h-fit shadow-2xl ring-1 px-3"
+              {...props}>
+            <CardContent className="flex flex-col gap-1 p-1">
+                <Button className="w-full"
+                        onClick={duplicateNode}
+                >
+                    Duplicate Node
+                </Button>
+                <Button className="w-full"
+                        onClick={deleteNode}
+                >
+                    Delete Node
+                </Button>
+                <Button className="w-full"
+                        onClick={openProperties}
+                >
+                    Properties
+                </Button>
+            </CardContent>
+        </Card>
+    );
+}
