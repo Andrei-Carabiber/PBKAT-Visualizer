@@ -30,6 +30,7 @@ import {
     EDITABLE_START_MARKER,
 } from './haskellBoilerplate';
 import {useRunEngine} from "@/store/runEngine.ts";
+import {LoaderCircle} from "lucide-react";
 
 export type editorSettings = {
     fontSize: number;
@@ -395,14 +396,21 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, { panelSize: number }>(({pan
     }, [settings]);
 
     return (
-        <div className="h-full w-full flex flex-col p-4 pt-2 bg-card rounded-lg">
+        <div className="h-full w-full flex flex-col gap-3 p-4 pt-2 bg-card rounded-lg">
             <div className="shrink-0">
                 <CustomizationBar settings={settings}
                                   setSettings={setSettings}
                                   panelSize={panelSize}
                 />
             </div>
-            <div id="monaco-editor-root" ref={editorRef} className="flex-1 min-h-0 w-full flex nokey"/>
+            <div className="flex-1 min-h-0 w-full flex rounded-lg border overflow-hidden nokey">
+                <div id="monaco-editor-root" ref={editorRef} className="flex-1 min-h-0 w-full flex nokey"/>
+                {!isEditorReady && (
+                    <div className="w-full h-full flex items-center justify-center">
+                        <LoaderCircle className="animate-spin w-1/2 h-1/2"/>
+                    </div>
+                )}
+            </div>
         </div>);
 });
 

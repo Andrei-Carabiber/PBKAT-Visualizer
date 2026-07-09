@@ -9,7 +9,8 @@ import {useState} from "react";
 const MainView = () => {
     const {data, error, loading, clearOutput} = useRunEngine();
 
-    const [leftPanelSize, setLeftPanelSize] = useState<number>(50); // percentage track
+    const [leftPanelSize, setLeftPanelSize] = useState<number>(50);
+    const [rightPanelSize, setRightPanelSize] = useState<number>(50)
 
     return (
         <div className="flex flex-1 flex-col h-full min-h-0 gap-4">
@@ -47,8 +48,11 @@ const MainView = () => {
                     <div
                         className="h-8 w-1/2 bg-muted-foreground/30 group-hover:bg-muted-foreground group-data-[dragging=true]:bg-primary rounded"/>
                 </Separator>
-                <Panel minSize='30%' collapsible={true} className="h-full">
-                    <NodeEditor/>
+                <Panel minSize='30%'
+                       collapsible={true}
+                       className="h-full"
+                       onResize={(percentageSize) => setRightPanelSize(percentageSize.inPixels)}>
+                    <NodeEditor panelSize={rightPanelSize}/>
                 </Panel>
             </Group>
         </div>

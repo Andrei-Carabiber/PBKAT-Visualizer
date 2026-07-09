@@ -22,7 +22,6 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
     registerEditor: (callback) => set({ getCodeCallback: callback }),
 
     handleRun: async () => {
-        console.log("Clicked run")
         const { getCodeCallback } = get();
         if (!getCodeCallback) {
             set({
@@ -35,7 +34,6 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
 
         const code = getCodeCallback();
         set({ loading: true, error: null, data: null });
-        console.log("Running the 'run' command in the 'run-protocol' directory, ")
         try {
             const response = await fetch(RUN_PROTOCOL_URL, {
                 method: "POST",

@@ -54,7 +54,7 @@ const CustomizationBar = ({settings, setSettings, panelSize}: Props) => {
     if (isCollapsed) {
         return (
             <div
-                className="w-full h-full flex flex-row items-center justify-between gap-2 px-3 py-2 text-card-foreground bg-card border-b">
+                className="w-full h-full flex flex-row items-center justify-between gap-2 px-2 py-2 text-card-foreground bg-background rounded-lg border shadow-sm">
                 <Popover>
                     <PopoverTrigger asChild>
                         <Button variant="outline" size="icon" aria-label="Editor settings">
@@ -98,13 +98,6 @@ const CustomizationBar = ({settings, setSettings, panelSize}: Props) => {
                                 </SelectContent>
                             </Select>
                         </Field>
-
-                        <div className="flex flex-col gap-2 pt-2 border-t">
-                            <Button size="sm" variant="secondary" className="w-full justify-start"
-                                    onClick={() => setSettings(s => ({...s, automaticLayout: !s.automaticLayout}))}>
-                                Auto Layout: {settings.automaticLayout ? "On" : "Off"}
-                            </Button>
-                        </div>
                     </PopoverContent>
                 </Popover>
 
@@ -118,7 +111,7 @@ const CustomizationBar = ({settings, setSettings, panelSize}: Props) => {
     // Standard Expanded View
     return (
         <div
-            className="w-full h-full flex flex-row items-center gap-3 px-3 py-2 text-card-foreground bg-card border-b overflow-x-auto">
+            className="w-full h-full flex flex-row items-center gap-3 px-2 py-2 text-card-foreground bg-background rounded-lg border shadow-sm overflow-x-auto">
             <Field>
                 <FieldLabel>Size</FieldLabel>
                 <Input type="number" className="w-20 bg-secondary" value={settings.fontSize}
@@ -153,13 +146,7 @@ const CustomizationBar = ({settings, setSettings, panelSize}: Props) => {
                 </Select>
             </Field>
 
-            <div className="flex h-full gap-1 ml-auto items-center">
-                <Button className="w-fit h-full rounded-lg bg-secondary
-                text-secondary-foreground hover:bg-secondary/80 hover:text-secondary-foreground/80"
-                        onClick={() => setSettings(s => ({...s, automaticLayout: !s.automaticLayout}))}
-                >
-                    Auto Layout: {settings.automaticLayout ? "On" : "Off"}
-                </Button>
+            <div className="flex h-full gap-2 ml-auto items-center">
                 <div className="h-full flex items-center">
                     <RunButton/>
                 </div>

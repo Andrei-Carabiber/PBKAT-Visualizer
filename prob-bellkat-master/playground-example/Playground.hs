@@ -15,10 +15,12 @@ e :: ProbBellKATPolicy
 e = create "C" <> trans "C" ("A", "C")
 
 f :: ProbBellKATPolicy
-f = create "C" <> trans "C" ("B", "C")
+f = create "C" <> trans "C" ("B", "C") <> trans "C" ("B", "C") <> trans "C" ("B", "C") <> trans "C" ("B", "C") <> trans "C" ("B", "C")
 
 p :: ProbBellKATPolicy
 p = (e <.> f) <> (e <.> f)
+
+
 
 -- <<< EDITABLE REGION END <<<
 

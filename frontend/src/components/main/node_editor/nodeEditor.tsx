@@ -17,13 +17,14 @@ import CustomConnectionLine from './customConnectionLine.tsx';
 import {useTheme} from "@/components/theme-provider.tsx";
 import NodePropertiesSheet from "@/components/main/node_editor/NodePropertiesSheet.tsx";
 import ContextMenu from "@/components/main/node_editor/NodeRightClickMenu.tsx";
+import UtilityBar from "@/components/main/node_editor/utilityBar.tsx";
 
 
 const initialNodes: Node<NodeData>[] = [
     {
         id: '1',
         type: 'custom',
-        position: {x: 0, y: 0},
+        position: {x: 100, y: 0},
         data: {
             label: "A"
         }
@@ -32,7 +33,7 @@ const initialNodes: Node<NodeData>[] = [
     {
         id: '2',
         type: 'custom',
-        position: {x: 250, y: 320},
+        position: {x: 100, y: 500},
         data: {
             label: "B"
         }
@@ -40,22 +41,18 @@ const initialNodes: Node<NodeData>[] = [
     {
         id: '3',
         type: 'custom',
-        position: {x: 40, y: 300},
+        position: {x: 100, y: 250},
         data: {
             label: "C"
         }
     },
-    {
-        id: '4',
-        type: 'custom',
-        position: {x: 300, y: 0},
-        data: {
-            label: "D"
-        }
-    },
 ];
 
-const initialEdges: Edge[] = [];
+const initialEdges: Edge[] = [
+    {id: 'A-C', source: '1', target: '3'},
+    {id: 'B-C', source: '2', target: '3'},
+
+];
 
 const connectionLineStyle = {
     stroke: '#b1b1b7',
@@ -88,7 +85,7 @@ export type MenuType = {
     openProperties: () => void;
 }
 
-const NodeEditor = () => {
+const NodeEditor = ({panelSize} : {panelSize:number}) => {
     const [nodes, setNodes, onNodesChange] = useNodesState<Node>(initialNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
     const ref = useRef<HTMLDivElement>(null);
@@ -114,7 +111,7 @@ const NodeEditor = () => {
 
     const {getEdges, screenToFlowPosition} = useReactFlow();
 
-    //Checl if 2 nodes already have the connection
+    //Check if 2 nodes already have the connection
     const isValidConnection = useCallback(
         (connection: Connection) => {
             if (connection.source === connection.target) return false;
@@ -206,44 +203,52 @@ const NodeEditor = () => {
     );
 
     return (
-        <>
-            <ReactFlow
-                ref={ref}
-                className="rounded-2xl text-secondary-foreground"
-                nodes={nodes}
-                edges={edges}
-                onNodesChange={onNodesChange}
-                onEdgesChange={onEdgesChange}
-                onConnect={onConnect}
-                fitView
-                nodeTypes={nodeTypes}
-                edgeTypes={edgeTypes as EdgeTypes}
-                defaultEdgeOptions={defaultEdgeOptions}
-                connectionLineComponent={CustomConnectionLine}
-                connectionLineStyle={connectionLineStyle}
-                colorMode={theme}
-                isValidConnection={isValidConnection as IsValidConnection}
-                connectionMode={'loose' as ConnectionMode}
-                onNodeDoubleClick={onNodeDoubleClick}
-                onPaneClick={onPaneClick}
-                onNodeContextMenu={onNodeContextMenu}
-            >
-                {theme === 'dark' ? (
-                    <Background bgColor="#161C1D"/>
-                ) : (
-                    <Background bgColor="#E3E3E3"/>
-                )}
-            </ReactFlow>
-            {menu && <ContextMenu onClick={onPaneClick} {...menu} />}
-            <NodePropertiesSheet sheetOpen={sheetOpen} setSheetOpen={setSheetOpen} selectedNode={selectedNode}
-                                 updateNodeData={updateNodeData}/>
-        </>
+        <div className="h-full w-full flex flex-col gap-3 p-4 pt-2 bg-card rounded-lg">
+            <div className="shrink-0">
+                <UtilityBar panelSize={panelSize}/>
+            </div>
+            <div className="flex-1 min-h-0 w-full flex relative">
+                <div className="flex-1 min-h-0 w-full flex rounded-lg border overflow-hidden">
+                    <ReactFlow
+                        ref={ref}
+                        className="text-secondary-foreground"
+                        nodes={nodes}
+                        edges={edges}
+                        onNodesChange={onNodesChange}
+                        onEdgesChange={onEdgesChange}
+                        onConnect={onConnect}
+                        fitView
+                        nodeTypes={nodeTypes}
+                        edgeTypes={edgeTypes as EdgeTypes}
+                        defaultEdgeOptions={defaultEdgeOptions}
+                        connectionLineComponent={CustomConnectionLine}
+                        connectionLineStyle={connectionLineStyle}
+                        colorMode={theme}
+                        isValidConnection={isValidConnection as IsValidConnection}
+                        connectionMode={'loose' as ConnectionMode}
+                        onNodeDoubleClick={onNodeDoubleClick}
+                        onPaneClick={onPaneClick}
+                        onNodeContextMenu={onNodeContextMenu}
+                        zoomOnDoubleClick={false}
+                    >
+                        {theme === 'dark' ? (
+                            <Background bgColor="#161C1D"/>
+                        ) : (
+                            <Background bgColor="#E3E3E3"/>
+                        )}
+                    </ReactFlow>
+                </div>
+                {menu && <ContextMenu onClick={onPaneClick} {...menu} />}
+                <NodePropertiesSheet sheetOpen={sheetOpen} setSheetOpen={setSheetOpen} selectedNode={selectedNode}
+                                     updateNodeData={updateNodeData}/>
+            </div>
+        </div>
     )
         ;
 };
 
-export default () => (
+export default ({panelSize}: {panelSize:number}) => (
     <ReactFlowProvider>
-        <NodeEditor/>
+        <NodeEditor panelSize={panelSize}/>
     </ReactFlowProvider>
 );
