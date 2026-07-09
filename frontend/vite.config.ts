@@ -24,7 +24,7 @@ export default defineConfig({
         format: "es"
     },
     optimizeDeps: {
-        esbuildOptions: {
+        rolldownOptions: {
             plugins: [importMetaUrlPlugin]
         }
     }

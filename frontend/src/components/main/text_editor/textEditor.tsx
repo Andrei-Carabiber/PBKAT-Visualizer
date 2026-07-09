@@ -202,7 +202,7 @@ function extractUserCode(model: monacoEditor.ITextModel): string {
     return model.getValueInRange(new Range(from, 1, to, model.getLineMaxColumn(to)));
 }
 
-const MonacoEditor = forwardRef<MonacoEditorHandle, { panelSize: number }>(({ panelSize }, ref) => {
+const MonacoEditor = forwardRef<MonacoEditorHandle, { panelSize: number }>(({panelSize}, ref) => {
     const editorRef = useRef<HTMLDivElement>(null);
     const editorRefInstance = useRef<monacoEditor.IStandaloneCodeEditor | undefined>(undefined);
     const initialized = useRef(false);
@@ -301,7 +301,23 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, { panelSize: number }>(({ pa
                         name: 'pbkat-workspace',
                         uri: vscode.Uri.file('/opt/pbkat')
                     },
-                    initializationOptions: {}
+                    initializationOptions: {},
+                    middleware: {
+                        resolveCompletionItem: async (item, token, next) => {
+                            try {
+                                return await next(item, token);
+                            } catch {
+                                return item; // fall back to the unresolved item, no error surfaced
+                            }
+                        },
+                        provideFoldingRanges: async (document, context, token, next) => {
+                            try {
+                                return await next(document, context, token);
+                            } catch {
+                                return [];
+                            }
+                        },
+                    },
                 },
             };
 
