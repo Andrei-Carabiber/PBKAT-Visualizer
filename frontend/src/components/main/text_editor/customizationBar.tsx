@@ -54,7 +54,8 @@ const CustomizationBar = ({settings, setSettings, panelSize}: Props) => {
     if (isCollapsed) {
         return (
             <div
-                className="w-full h-full flex flex-row items-center justify-between gap-2 px-2 py-2 text-card-foreground bg-background rounded-lg border shadow-sm">
+                className="w-full h-full flex flex-row items-center
+                justify-between gap-2 px-2 py-4 text-card-foreground bg-background rounded-lg border shadow-sm">
                 <Popover>
                     <PopoverTrigger asChild>
                         <Button variant="outline" size="icon" aria-label="Editor settings">
@@ -111,7 +112,9 @@ const CustomizationBar = ({settings, setSettings, panelSize}: Props) => {
     // Standard Expanded View
     return (
         <div
-            className="w-full h-full flex flex-row items-center gap-3 px-2 py-2 text-card-foreground bg-background rounded-lg border shadow-sm overflow-x-auto">
+            className="w-full h-full flex flex-row items-center
+            gap-1 px-6 py-4 text-card-foreground bg-background rounded-lg border shadow-sm overflow-x-auto">
+
             <Field>
                 <FieldLabel>Size</FieldLabel>
                 <Input type="number" className="w-20 bg-secondary" value={settings.fontSize}

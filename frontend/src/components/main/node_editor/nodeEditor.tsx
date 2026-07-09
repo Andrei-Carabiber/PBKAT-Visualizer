@@ -185,8 +185,7 @@ const NodeEditor = ({panelSize} : {panelSize:number}) => {
             event.preventDefault();
 
             if (!ref || !ref.current) return;
-            console.log("There is ref")
-
+            console.log(event.clientY, event.clientX)
             setMenu({
                 id: node.id,
                 top: event.clientY,
@@ -201,6 +200,8 @@ const NodeEditor = ({panelSize} : {panelSize:number}) => {
         },
         [setMenu],
     );
+
+
 
     return (
         <div className="h-full w-full flex flex-col gap-3 p-4 pt-2 bg-card rounded-lg">
@@ -230,6 +231,7 @@ const NodeEditor = ({panelSize} : {panelSize:number}) => {
                         onPaneClick={onPaneClick}
                         onNodeContextMenu={onNodeContextMenu}
                         zoomOnDoubleClick={false}
+
                     >
                         {theme === 'dark' ? (
                             <Background bgColor="#161C1D"/>
