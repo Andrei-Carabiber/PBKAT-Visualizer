@@ -54,8 +54,8 @@ const CustomizationBar = ({settings, setSettings, panelSize}: Props) => {
     if (isCollapsed) {
         return (
             <div
-                className="w-full h-full flex flex-row items-center
-                justify-between gap-2 px-2 py-4 text-card-foreground bg-background rounded-lg border shadow-sm">
+                className="w-full h-20 flex flex-row items-center
+                justify-between gap-2 px-2 py-0 text-card-foreground bg-background rounded-lg border shadow-sm">
                 <Popover>
                     <PopoverTrigger asChild>
                         <Button variant="outline" size="icon" aria-label="Editor settings">
@@ -102,7 +102,7 @@ const CustomizationBar = ({settings, setSettings, panelSize}: Props) => {
                     </PopoverContent>
                 </Popover>
 
-                <div className="h-full">
+                <div className="h-3/4">
                     <RunButton/>
                 </div>
             </div>
@@ -112,8 +112,8 @@ const CustomizationBar = ({settings, setSettings, panelSize}: Props) => {
     // Standard Expanded View
     return (
         <div
-            className="w-full h-full flex flex-row items-center
-            gap-1 px-6 py-4 text-card-foreground bg-background rounded-lg border shadow-sm overflow-x-auto">
+            className="w-full h-20 flex flex-row items-center
+            gap-1 px-6 py-0 text-card-foreground bg-background rounded-lg border shadow-sm overflow-x-auto">
 
             <Field>
                 <FieldLabel>Size</FieldLabel>
@@ -149,11 +149,10 @@ const CustomizationBar = ({settings, setSettings, panelSize}: Props) => {
                 </Select>
             </Field>
 
-            <div className="flex h-full gap-2 ml-auto items-center">
-                <div className="h-full flex items-center">
-                    <RunButton/>
-                </div>
+            <div className="h-3/4">
+                <RunButton/>
             </div>
+
         </div>
     );
 };

@@ -397,7 +397,7 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, { panelSize: number }>(({pan
 
     return (
         <div className="h-full w-full flex flex-col gap-3 p-4 pt-2 bg-card rounded-lg">
-            <div className="shrink-0">
+            <div className="shrink-0 h-20">
                 <CustomizationBar settings={settings}
                                   setSettings={setSettings}
                                   panelSize={panelSize}

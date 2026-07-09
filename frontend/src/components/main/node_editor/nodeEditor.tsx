@@ -205,7 +205,7 @@ const NodeEditor = ({panelSize} : {panelSize:number}) => {
 
     return (
         <div className="h-full w-full flex flex-col gap-3 p-4 pt-2 bg-card rounded-lg">
-            <div className="shrink-0">
+            <div className="shrink-0 h-20">
                 <UtilityBar panelSize={panelSize}/>
             </div>
             <div className="flex-1 min-h-0 w-full flex relative">

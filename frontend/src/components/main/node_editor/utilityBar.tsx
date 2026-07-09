@@ -49,7 +49,7 @@ const UtilityBar = ({
         const rect = flowContainer.getBoundingClientRect();
 
         const centerX = rect.left + rect.width / 2 - 100;
-        const centerY = rect.top + rect.height / 2 - 100 ;
+        const centerY = rect.top + rect.height / 2 - 100;
 
         const projectCenter = screenToFlowPosition({
             x: centerX,
@@ -94,8 +94,8 @@ const UtilityBar = ({
             onClick={action.onClick}
             className={
                 action.variant === "destructive"
-                    ? "text-destructive/80 hover:text-destructive hover:bg-destructive/10 transition-colors w-fit p-2"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted transition-colors w-fit p-2"
+                    ? "text-destructive/80 hover:text-destructive hover:bg-destructive/10 transition-colors w-fit p-2 h-full"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted transition-colors w-fit p-2 h-full"
             }
         >
             <action.icon className="size-4"/>
@@ -106,12 +106,12 @@ const UtilityBar = ({
     if (isCollapsed) {
         return (
             <div
-                className="w-full h-full flex flex-row items-center
-                justify-between gap-2 px-2 py-4 text-card-foreground bg-background rounded-lg border shadow-sm">
+                className="w-full h-20 flex flex-row items-center
+                justify-between gap-2 px-2 py-0 text-card-foreground bg-background rounded-lg border shadow-sm">
                 <Button
                     size="icon"
                     onClick={addBasicNode}
-                    className="shrink-0 shadow-sm h-full w-fit px-4 py-1"
+                    className="shrink-0 shadow-sm h-3/4 w-fit px-4 py-1"
                 >
                     <Plus className="size-4"/>
                     <p>Add new node</p>
@@ -132,7 +132,7 @@ const UtilityBar = ({
                                         variant="ghost"
                                         onClick={action.onClick}
                                         className={
-                                            "justify-start gap-2 " +
+                                            "justify-start gap-2 w-full " +
                                             (action.variant === "destructive"
                                                 ? "text-destructive hover:text-destructive hover:bg-destructive/10"
                                                 : "")
@@ -155,12 +155,12 @@ const UtilityBar = ({
     // Standard expanded view
     return (
         <div
-            className="w-full h-full flex flex-row items-center
-            gap-1 px-6 py-4 text-card-foreground bg-background rounded-lg border shadow-sm overflow-x-auto">
+            className="w-full h-20 flex flex-row items-center
+            gap-1 px-6 py-0 text-card-foreground bg-background rounded-lg border shadow-sm overflow-x-auto">
             <Button
                 size="icon"
                 onClick={addBasicNode}
-                className="shrink-0 shadow-sm h-full w-fit px-4 py-1"
+                className="shrink-0 shadow-sm h-3/4 w-fit px-4 py-1"
             >
                 <Plus className="size-4"/>
                 <p>Add new node</p>
@@ -168,7 +168,7 @@ const UtilityBar = ({
 
             <Separator orientation="vertical" className="h-6 mx-4"/>
 
-            <div className="flex items-center justify-between w-full">
+            <div className="flex items-center justify-between w-full h-3/4">
                 {availableActions.map((action) => (
                     <IconAndTextButton key={action.key} action={action}/>
                 ))}
