@@ -11,7 +11,6 @@ export default defineConfig({
         react(),
         babel({presets: [reactCompilerPreset()]}),
         tailwindcss(),
-        importMetaUrlPlugin
     ],
     server: {
         port: 3000,

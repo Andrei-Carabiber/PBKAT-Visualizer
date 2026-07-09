@@ -386,7 +386,7 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, { panelSize: number }>(({ pa
                                   panelSize={panelSize}
                 />
             </div>
-            <div id="monaco-editor-root" ref={editorRef} className="flex-1 min-h-0 w-full flex"/>
+            <div id="monaco-editor-root" ref={editorRef} className="flex-1 min-h-0 w-full flex nokey"/>
         </div>);
 });
 

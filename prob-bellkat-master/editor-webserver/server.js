@@ -46,6 +46,33 @@ const server = http.createServer(app);
 
 const wss = new WebSocketServer({ server });
 
+
+let hlsProcess = null;
+let cachedInitializeResult = null;
+let activeDocUri = null;
+let currentClientWriter = null; // where to send server->client responses
+
+function startHls() {
+    hlsProcess = createServerProcess(
+        'Haskell', 'haskell-language-server-wrapper', ['--lsp'],
+        { cwd: '/opt/pbkat' }
+    );
+    hlsProcess.onExit?.(() => {
+        hlsProcess = null;
+        cachedInitializeResult = null;
+        activeDocUri = null;
+    });
+
+    hlsProcess.reader.listen((msg) => {
+        // Cache the initialize result the first (real) time it comes back
+        if (msg.id !== undefined && msg.result && cachedInitializeResult === null && msg.result.capabilities) {
+            cachedInitializeResult = msg;
+        }
+        currentClientWriter?.write(msg);
+    });
+}
+startHls(); // start once at server boot, not on first connection
+
 wss.on('connection', (ws) => {
     console.log("Connected to frontend");
 
@@ -59,22 +86,42 @@ wss.on('connection', (ws) => {
 
     const reader = new WebSocketMessageReader(socket);
     const writer = new WebSocketMessageWriter(socket);
+    currentClientWriter = writer;
 
-    const serverConnection = createServerProcess(
-        'Haskell',
-        'haskell-language-server-wrapper',
-        ['--lsp'],
-        {
-            cwd: '/opt/pbkat'
-        }
-    );
+    let seenInitialize = false;
 
     reader.listen((msg) => {
-        serverConnection.writer.write(msg);
+        if (msg.method === 'initialize' && cachedInitializeResult) {
+            if (activeDocUri) {
+                hlsProcess.writer.write({
+                    jsonrpc: '2.0',
+                    method: 'textDocument/didClose',
+                    params: { textDocument: { uri: activeDocUri } }
+                });
+                activeDocUri = null;
+            }
+            writer.write({ ...cachedInitializeResult, id: msg.id });
+            seenInitialize = true;
+            return;
+        }
+        if (msg.method === 'initialized' && seenInitialize) {
+            return; // already told HLS this on first real client, don't resend
+        }
+        if (msg.method === 'shutdown' ) {
+            writer.write({ jsonrpc: '2.0', id: msg.id, result: null }); // ack locally
+            return;
+        }
+        if (msg.method === 'exit') {
+            return; // don't kill the shared process when a tab closes
+        }
+        if (msg.method === 'textDocument/didOpen') {
+            activeDocUri = msg.params?.textDocument?.uri ?? activeDocUri;
+        }
+        hlsProcess.writer.write(msg);
     });
 
-    serverConnection.reader.listen((msg) => {
-        writer.write(msg);
+    ws.on('close', () => {
+        if (currentClientWriter === writer) currentClientWriter = null;
     });
 });
 

@@ -20,8 +20,6 @@ f = create "C" <> trans "C" ("B", "C")
 p :: ProbBellKATPolicy
 p = (e <.> f) <> (e <.> f)
 
-
-
 -- <<< EDITABLE REGION END <<<
 
 
