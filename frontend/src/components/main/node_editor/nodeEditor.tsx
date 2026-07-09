@@ -18,6 +18,7 @@ import {useTheme} from "@/components/theme-provider.tsx";
 import NodePropertiesSheet from "@/components/main/node_editor/NodePropertiesSheet.tsx";
 import ContextMenu from "@/components/main/node_editor/NodeRightClickMenu.tsx";
 import UtilityBar from "@/components/main/node_editor/utilityBar.tsx";
+import {useUndoRedo} from "@/components/main/node_editor/useUndoRedo.ts";
 
 
 const initialNodes: Node<NodeData>[] = [
@@ -85,11 +86,14 @@ export type MenuType = {
     openProperties: () => void;
 }
 
-const NodeEditor = ({panelSize} : {panelSize:number}) => {
+const NodeEditor = ({panelSize}: { panelSize: number }) => {
     const [nodes, setNodes, onNodesChange] = useNodesState<Node>(initialNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
     const ref = useRef<HTMLDivElement>(null);
     const [menu, setMenu] = useState<MenuType | null>(null);
+
+    const {takeSnapshot, undo, redo, canUndo, canRedo} =
+        useUndoRedo(nodes, edges, setNodes, setEdges);
 
     const {theme} = useTheme()
 
@@ -131,9 +135,16 @@ const NodeEditor = ({panelSize} : {panelSize:number}) => {
 
 
     const onConnect = useCallback(
-        (params: any) => setEdges((eds) => addEdge(params, eds)),
-        [setEdges],
+        (params: any) => {
+            takeSnapshot();
+            setEdges((eds) => addEdge(params, eds));
+        },
+        [setEdges, takeSnapshot],
     );
+
+    const onNodeDragStart = useCallback(() => {
+        takeSnapshot();
+    }, [takeSnapshot]);
 
     //Double click handler on node
     const onNodeDoubleClick = useCallback((_event: React.MouseEvent, node: Node) => {
@@ -146,38 +157,31 @@ const NodeEditor = ({panelSize} : {panelSize:number}) => {
     const onPaneClick = useCallback(
         (event: React.MouseEvent | React.TouchEvent) => {
             setMenu(null);
-
             if ('detail' in event && event.detail === 2) {
-
                 const mouseEvent = event as React.MouseEvent;
-
                 const position = screenToFlowPosition({
                     x: mouseEvent.clientX,
                     y: mouseEvent.clientY,
                 });
 
+                takeSnapshot();
                 const newNode: Node<NodeData> = {
                     id: `node_${Date.now()}`,
                     type: 'custom',
                     position,
-                    data: {
-                        label: `Node ${nodes.length + 1}`,
-                    },
+                    data: {label: `Node ${nodes.length + 1}`},
                 };
-
                 setNodes((nds) => nds.concat(newNode));
             }
         },
-        [screenToFlowPosition, nodes.length, setNodes]
+        [screenToFlowPosition, nodes.length, setNodes, takeSnapshot]
     );
-
     const updateNodeData = useCallback((id: string, patch: Record<string, any>) => {
         setNodes((nds) =>
             nds.map((n) => (n.id === id ? {...n, data: {...n.data, ...patch}} : n))
         );
         setSelectedNode((prev) => (prev && prev.id === id ? {...prev, data: {...prev.data, ...patch}} : prev));
     }, [setNodes]);
-
 
     //Right click handler
     const onNodeContextMenu = useCallback(
@@ -202,11 +206,53 @@ const NodeEditor = ({panelSize} : {panelSize:number}) => {
     );
 
 
+    useEffect(() => {
+        const handler = (e: KeyboardEvent) => {
+            const tag = (e.target as HTMLElement)?.tagName;
+            if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+
+            const isMod = e.ctrlKey || e.metaKey;
+            if (isMod && e.key.toLowerCase() === 'z') {
+                e.preventDefault();
+                e.shiftKey ? redo() : undo();
+            } else if (isMod && e.key.toLowerCase() === 'y') {
+                e.preventDefault();
+                redo();
+            }
+        };
+        window.addEventListener('keydown', handler);
+        return () => window.removeEventListener('keydown', handler);
+    }, [undo, redo]);
+
+
+    const onBeforeDelete = useCallback(
+        async () => {
+            takeSnapshot();
+            return true; // allow the deletion to proceed
+        },
+        [takeSnapshot],
+    );
+
+    const onNodesDelete = useCallback(
+        (_deleted: Node[]) => {
+            takeSnapshot();
+        },
+        [takeSnapshot],
+    );
+
+    const onEdgesDelete = useCallback(
+        (_deleted: Edge[]) => {
+            takeSnapshot();
+        },
+        [takeSnapshot],
+    );
+
 
     return (
         <div className="h-full w-full flex flex-col gap-3 p-4 pt-2 bg-card rounded-lg">
             <div className="shrink-0 h-20">
-                <UtilityBar panelSize={panelSize}/>
+                <UtilityBar panelSize={panelSize} onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo}
+                            takeSnapshot={takeSnapshot}/>
             </div>
             <div className="flex-1 min-h-0 w-full flex relative">
                 <div className="flex-1 min-h-0 w-full flex rounded-lg border overflow-hidden">
@@ -218,7 +264,9 @@ const NodeEditor = ({panelSize} : {panelSize:number}) => {
                         onNodesChange={onNodesChange}
                         onEdgesChange={onEdgesChange}
                         onConnect={onConnect}
-                        fitView
+                        onBeforeDelete={onBeforeDelete}
+                        onNodesDelete={onNodesDelete}
+                        onEdgesDelete={onEdgesDelete}
                         nodeTypes={nodeTypes}
                         edgeTypes={edgeTypes as EdgeTypes}
                         defaultEdgeOptions={defaultEdgeOptions}
@@ -231,7 +279,8 @@ const NodeEditor = ({panelSize} : {panelSize:number}) => {
                         onPaneClick={onPaneClick}
                         onNodeContextMenu={onNodeContextMenu}
                         zoomOnDoubleClick={false}
-
+                        onNodeDragStart={onNodeDragStart}
+                        fitView
                     >
                         {theme === 'dark' ? (
                             <Background bgColor="#161C1D"/>
@@ -240,16 +289,16 @@ const NodeEditor = ({panelSize} : {panelSize:number}) => {
                         )}
                     </ReactFlow>
                 </div>
-                {menu && <ContextMenu onClick={onPaneClick} {...menu} />}
+                {menu && <ContextMenu onClick={onPaneClick} takeSnapshot={takeSnapshot} {...menu} />}
                 <NodePropertiesSheet sheetOpen={sheetOpen} setSheetOpen={setSheetOpen} selectedNode={selectedNode}
-                                     updateNodeData={updateNodeData}/>
+                                     updateNodeData={updateNodeData} takeSnapshot={takeSnapshot}/>
             </div>
         </div>
     )
         ;
 };
 
-export default ({panelSize}: {panelSize:number}) => (
+export default ({panelSize}: { panelSize: number }) => (
     <ReactFlowProvider>
         <NodeEditor panelSize={panelSize}/>
     </ReactFlowProvider>

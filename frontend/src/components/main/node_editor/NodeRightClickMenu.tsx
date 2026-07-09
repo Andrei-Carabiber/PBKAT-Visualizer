@@ -6,33 +6,25 @@ import {Button} from "@/components/ui/button.tsx";
 
 interface ContextMenuProps extends MenuType {
     onClick: (event: React.MouseEvent) => void;
+    takeSnapshot: () => void;
 }
 
-export default function ContextMenu({id, top, left, right, bottom, openProperties, ...props}: ContextMenuProps) {
+export default function ContextMenu({id, top, left, right, bottom, openProperties, takeSnapshot, ...props}: ContextMenuProps) {
     const {getNode, setNodes, addNodes, setEdges} = useReactFlow<Node<NodeData>>();
 
     const duplicateNode = useCallback(() => {
         const node = getNode(id);
         if (!node) return;
-
-        const position = {
-            x: node.position.x + 50,
-            y: node.position.y + 50,
-        };
-
-        addNodes({
-            ...node,
-            selected: false,
-            dragging: false,
-            id: `${node.id}-copy`,
-            position,
-        });
-    }, [id, getNode, addNodes]);
+        takeSnapshot();
+        addNodes({ ...node, selected: false, dragging: false, id: `${node.id}-copy`,
+            position: { x: node.position.x + 50, y: node.position.y + 50 } });
+    }, [id, getNode, addNodes, takeSnapshot]);
 
     const deleteNode = useCallback(() => {
+        takeSnapshot();
         setNodes((nodes) => nodes.filter((node) => node.id !== id));
-        setEdges((edges) => edges.filter((edge) => edge.source !== id));
-    }, [id, setNodes, setEdges]);
+        setEdges((edges) => edges.filter((edge) => edge.source !== id && edge.target !== id));
+    }, [id, setNodes, setEdges, takeSnapshot]);
 
     return (
         <Card style={{top, left, position: 'fixed', zIndex: 1000}}

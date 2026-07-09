@@ -12,33 +12,32 @@ import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover.t
 import {type Node, useReactFlow} from "@xyflow/react";
 import type {NodeData} from "@/components/main/node_editor/nodeEditor.tsx";
 
-type Props = {
-    panelSize: number;
-    onUndo?: () => void;
-    onRedo?: () => void;
-};
-
 type Action = {
     key: string;
     label: string;
     icon: typeof Plus;
     onClick?: () => void;
     variant?: "default" | "ghost" | "destructive";
+    disabled?: boolean;
 };
 
-const UtilityBar = ({
-                        panelSize,
-                        onUndo,
-                        onRedo,
-                    }: Props) => {
+type Props = {
+    panelSize: number;
+    onUndo?: () => void;
+    onRedo?: () => void;
+    canUndo?: boolean;
+    canRedo?: boolean;
+    takeSnapshot: () => void;
+};
 
-
+const UtilityBar = ({panelSize, onUndo, onRedo, canUndo, canRedo, takeSnapshot}: Props) => {
     const {fitView, getNodes, setNodes, setEdges, screenToFlowPosition} = useReactFlow<Node<NodeData>>();
 
     const deleteAll = () => {
-        setNodes([])
-        setEdges([])
-    }
+        takeSnapshot();
+        setNodes([]);
+        setEdges([]);
+    };
 
     const addBasicNode = () => {
 
@@ -67,6 +66,8 @@ const UtilityBar = ({
             },
         };
 
+        takeSnapshot()
+
         setNodes((nds) => nds.concat(newNode));
 
     }
@@ -75,8 +76,8 @@ const UtilityBar = ({
     const isCollapsed = panelSize < 900;
 
     const availableActions: Action[] = [
-        {key: "undo", label: "Undo", icon: Undo2, onClick: onUndo},
-        {key: "redo", label: "Redo", icon: Redo2, onClick: onRedo},
+        {key: "undo", label: "Undo", icon: Undo2, onClick: onUndo, disabled: !canUndo},
+        {key: "redo", label: "Redo", icon: Redo2, onClick: onRedo, disabled: !canRedo},
         {key: "fit-view", label: "Fit view", icon: Maximize2, onClick: fitView},
         {
             key: "calculate", label: "Auto-create", icon: BrainIcon, onClick: () => {
@@ -92,10 +93,11 @@ const UtilityBar = ({
             variant='outline'
             size="icon"
             onClick={action.onClick}
+            disabled={action.disabled}
             className={
                 action.variant === "destructive"
-                    ? "text-destructive/80 hover:text-destructive hover:bg-destructive/10 transition-colors w-fit p-2 h-full"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted transition-colors w-fit p-2 h-full"
+                    ? "text-destructive/80 hover:text-destructive hover:bg-destructive/10 transition-colors w-fit p-2 h-full disabled:opacity-40 disabled:pointer-events-none"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted transition-colors w-fit p-2 h-full disabled:opacity-40 disabled:pointer-events-none"
             }
         >
             <action.icon className="size-4"/>
@@ -126,13 +128,13 @@ const UtilityBar = ({
                     <PopoverContent align="end" className="w-56 flex flex-col gap-3 p-3 shadow-lg">
                         <div>
                             {availableActions.map((action, index) => (
-                                <div>
+                                <div key={action.key}>
                                     <Button
-                                        key={action.key}
                                         variant="ghost"
                                         onClick={action.onClick}
+                                        disabled={action.disabled}
                                         className={
-                                            "justify-start gap-2 w-full " +
+                                            "justify-start gap-2 w-full disabled:opacity-40 disabled:pointer-events-none " +
                                             (action.variant === "destructive"
                                                 ? "text-destructive hover:text-destructive hover:bg-destructive/10"
                                                 : "")

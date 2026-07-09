@@ -10,9 +10,10 @@ type props = {
     setSheetOpen: Dispatch<SetStateAction<boolean>>;
     selectedNode: Node<NodeData> | null;
     updateNodeData: (id: string, patch: Record<string, any>) => void;
+    takeSnapshot: () => void;
 }
 
-const NodePropertiesSheet = ({sheetOpen, setSheetOpen, selectedNode, updateNodeData}: props) => {
+const NodePropertiesSheet = ({sheetOpen, setSheetOpen, selectedNode, updateNodeData, takeSnapshot}: props) => {
     return (
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetContent>
@@ -28,9 +29,8 @@ const NodePropertiesSheet = ({sheetOpen, setSheetOpen, selectedNode, updateNodeD
                             <Input
                                 id="node-label"
                                 value={selectedNode.data.label ?? ''}
-                                onChange={(e) =>
-                                    updateNodeData(selectedNode.id, {label: e.target.value})
-                                }
+                                onFocus={() => takeSnapshot()}
+                                onChange={(e) => updateNodeData(selectedNode.id, {label: e.target.value})}
                             />
                         </div>
 
@@ -39,6 +39,7 @@ const NodePropertiesSheet = ({sheetOpen, setSheetOpen, selectedNode, updateNodeD
                             <Input
                                 id="node-transmission"
                                 value={selectedNode.data.color ?? ''}
+                                onFocus={() => takeSnapshot()}
                                 onChange={(e) =>
                                     updateNodeData(selectedNode.id, {color: e.target.value})
                                 }
