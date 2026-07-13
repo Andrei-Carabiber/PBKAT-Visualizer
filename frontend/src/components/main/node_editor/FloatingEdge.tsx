@@ -1,13 +1,8 @@
 import {BaseEdge, EdgeLabelRenderer, type EdgeProps, getBezierPath, useInternalNode} from '@xyflow/react';
 
 import {getEdgeParams} from './utils.js';
-import type {EdgeData} from "@/components/main/node_editor/nodeEditor.tsx";
 
-type FloatingEdgeProps = EdgeProps & {
-    data: EdgeData;
-};
-
-function FloatingEdge({id, source, target, markerEnd, style, data}: FloatingEdgeProps) {
+function FloatingEdge({id, source, target, markerEnd, style}: EdgeProps) {
     const sourceNode = useInternalNode(source);
     const targetNode = useInternalNode(target);
 
@@ -43,8 +38,7 @@ function FloatingEdge({id, source, target, markerEnd, style, data}: FloatingEdge
                     className="nodrag nopan bg-background border px-2 py-1 rounded shadow-sm text-xs flex gap-2 items-center"
                 >
                     <div className="flex flex-col">
-                        <span>Dist: {data?.distance ?? 0}m</span>
-                        <span>{`${sourceNode.data.nodeLabel} ~ ${targetNode.data.nodeLabel} Prob: ${data?.transmit_prob ?? 0}`}</span>
+                        <span>{`${sourceNode.data.nodeLabel} ~ ${targetNode.data.nodeLabel}`}</span>
                     </div>
                 </div>
             </EdgeLabelRenderer>

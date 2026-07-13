@@ -1,40 +1,119 @@
+import type {Edge, Node} from '@xyflow/react';
+import type {NodeData, EdgeData} from '@/components/main/node_editor/nodeEditor.tsx';
+
 export const EDITABLE_START_MARKER = '-- >>> EDITABLE REGION START >>>';
 export const EDITABLE_END_MARKER = '-- <<< EDITABLE REGION END <<<';
 
-// Everything above the start marker: pragmas + imports the user never edits.
 export const PRELUDE = `{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE OverloadedLists #-}
 
 import BellKAT.Prelude
 import BellKAT.ProbabilisticPrelude
-\n\n\n\n
+
 ${EDITABLE_START_MARKER}
 `;
 
-export const SUFFIX = `
+export function buildFullSource(
+    userCode: string,
+    nodes: Node<NodeData>[] = [],
+    edges: Edge<EdgeData>[] = []
+): string {
+
+    const capacities = edges.map(e => {
+        const sourceNode = nodes.find(n => n.id === e.source);
+        const targetNode = nodes.find(n => n.id === e.target);
+        const srcLabel = sourceNode?.data?.nodeLabel ?? 'Unknown';
+        const tgtLabel = targetNode?.data?.nodeLabel ?? 'Unknown';
+        return `"${srcLabel}" ~ "${tgtLabel}"`;
+    }).join(", ");
+
+    const transmitProbs = edges
+        .flatMap(e => {
+            const src = nodes.find(n => n.id === e.source)?.data?.nodeLabel;
+            const tgt = nodes.find(n => n.id === e.target)?.data?.nodeLabel;
+            const prob = e.data?.transmit_prob ?? 1.0;
+            return [
+                `(("${src}", "${tgt}"), ${prob})`,
+                `(("${tgt}", "${src}"), ${prob})`,
+            ];
+        }).join(", ");
+
+    // 3. Parse Node parameters with runtime configuration fallbacks
+    const createProbs = nodes
+        .map(n => `("${n.data.nodeLabel}", ${n.data.create_prob ?? 1.0})`).join(", ");
+
+    const createQualities = nodes
+        .map(n => `("${n.data.nodeLabel}", ${n.data.create_quality ?? 1.0})`).join(", ");
+
+    const uCreateProbs = edges
+        .flatMap(e => {
+            const src = nodes.find(n => n.id === e.source)?.data?.nodeLabel;
+            const tgt = nodes.find(n => n.id === e.target)?.data?.nodeLabel;
+            const prob = e.data?.uCreate_prob ?? 1.0;
+            return [
+                `(("${src}", "${tgt}"), ${prob})`,
+                `(("${tgt}", "${src}"), ${prob})`,
+            ];
+        }).join(", ");
+
+    const uCreateQualities = edges
+        .flatMap(e => {
+            const src = nodes.find(n => n.id === e.source)?.data?.nodeLabel;
+            const tgt = nodes.find(n => n.id === e.target)?.data?.nodeLabel;
+            const quality = e.data?.uCreate_quality ?? 1.0;
+            return [
+                `(("${src}", "${tgt}"), ${quality})`,
+                `(("${tgt}", "${src}"), ${quality})`,
+            ];
+        }).join(", ");
+
+    const swapProbs = nodes
+        .map(n => `("${n.data.nodeLabel}", ${n.data.swap_prob ?? 1.0})`).join(", ");
+    const coherenceTimes = nodes
+        .map(n => `("${n.data.nodeLabel}", ${n.data.coherence_time ?? 1})`).join(", ");
+
+    const distances = edges
+        .flatMap(e => {
+            const src = nodes.find(n => n.id === e.source)?.data?.nodeLabel;
+            const tgt = nodes.find(n => n.id === e.target)?.data?.nodeLabel;
+            const dist = e.data?.distance ?? 0;
+            return [
+                `(("${src}", "${tgt}"), ${dist})`,
+                `(("${tgt}", "${src}"), ${dist})`,
+            ];
+        }).join(", ");
+
+
+    //TODO: Look at goal and networkCapacity. Clarify with TA
+
+    // 4. Generate the dynamic suffix string
+    const dynamicSuffix = `
 ${EDITABLE_END_MARKER}
-\n\n\n\n
-networkCapacity :: NetworkCapacity BellKATTag
-networkCapacity = ["C" ~ "C", "C" ~ "C", "A" ~ "C", "B" ~ "C"]
+
+-- networkCapacity :: NetworkCapacity BellKATTag
+-- networkCapacity = [${capacities}]
 
 actionConfig :: ProbabilisticActionConfiguration
 actionConfig = PAC
-    { pacTransmitProbability = [(("C", "B"), 1 / 2),(("C", "A"), 4 / 5)]
-    , pacCreateProbability = [("C", 9/10)]
-    , pacCreateWerner = [("C", 1.0)]
-    , pacUCreateProbability = []
-    , pacUCreateWerner = []
-    , pacSwapProbability = []
-    , pacCoherenceTime = [("A", 1), ("B", 1), ("C", 1)]
-    , pacDistances = [(("A", "B"), 1), (("B", "C"), 1)]
+    { pacTransmitProbability = [${transmitProbs}]
+    , pacCreateProbability = [${createProbs}]
+    , pacCreateWerner = [${createQualities}]
+    , pacUCreateProbability = [${uCreateProbs}]
+    , pacUCreateWerner = [${uCreateQualities}]
+    , pacSwapProbability = [${swapProbs}]
+    , pacCoherenceTime = [${coherenceTimes}]
+    , pacDistances = [${distances}]
     }
 
 goal :: ProbBellKATTest
-goal = hasSubset ["A" ~ "C", "B" ~ "C"]
+goal = hasSubset [${capacities}]
 
 main :: IO ()
-main = pbkatMain actionConfig (Just networkCapacity) goal p
+main = pbkatMain actionConfig Nothing goal p
 `;
+
+    return `${PRELUDE}\n${userCode}\n${dynamicSuffix}`;
+}
 
 export const DEFAULT_USER_CODE = `e :: ProbBellKATPolicy
 e = create "C" <> trans "C" ("A", "C")
@@ -45,8 +124,3 @@ f = create "C" <> trans "C" ("B", "C")
 p :: ProbBellKATPolicy
 p = (e <.> f) <> (e <.> f)
 `;
-
-/** Stitches prelude + user code + suffix into the full source sent to the LSP. */
-export function buildFullSource(userCode: string): string {
-    return `${PRELUDE}\n${userCode}\n${SUFFIX}`;
-}

@@ -1,12 +1,15 @@
 import { create } from 'zustand';
+import type {Node, Edge} from "@xyflow/react";
+import type {NodeData, EdgeData} from "@/components/main/node_editor/nodeEditor.tsx";
 
 interface RunEngineState {
     loading: boolean;
     data: string | null;
     error: string | null;
-    // Holds the callback to get the latest editor code
     getCodeCallback: (() => string) | null;
+    getGraphCallback: (() => { nodes: Node<NodeData>[]; edges: Edge<EdgeData>[] }) | null;
     registerEditor: (callback: () => string) => void;
+    registerGraph: (callback: () => { nodes: Node<NodeData>[]; edges: Edge<EdgeData>[] }) => void;
     handleRun: () => Promise<void>;
     clearOutput: () => void;
 }
@@ -18,8 +21,10 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
     data: null,
     error: null,
     getCodeCallback: null,
+    getGraphCallback: null,
 
     registerEditor: (callback) => set({ getCodeCallback: callback }),
+    registerGraph: (callback) => set({ getGraphCallback: callback }),
 
     handleRun: async () => {
         const { getCodeCallback } = get();
@@ -31,8 +36,8 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
             return;
         }
 
-
         const code = getCodeCallback();
+
         set({ loading: true, error: null, data: null });
         try {
             const response = await fetch(RUN_PROTOCOL_URL, {

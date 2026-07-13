@@ -72,30 +72,6 @@ const NodePropertiesSheet = ({sheetOpen, setSheetOpen, selectedNode, updateNodeD
                         </div>
 
                         <div className="flex flex-col gap-2">
-                            <Label htmlFor="node-UCreate-prob">UCreate Probability</Label>
-                            <Input
-                                id="node-UCreate-prob"
-                                type="number"
-                                step={0.01}
-                                value={selectedNode.data.uCreate_prob ?? 1}
-                                onFocus={() => takeSnapshot()}
-                                onChange={(e) => updateNodeData(selectedNode.id, {uCreate_prob: convertToProbability(Number(e.target.value))})}
-                            />
-                        </div>
-
-                        <div className="flex flex-col gap-2">
-                            <Label htmlFor="node-UCreate-quality">UCreate Quality</Label>
-                            <Input
-                                id="node-UCreate-quality"
-                                type="number"
-                                step={0.01}
-                                value={selectedNode.data.uCreate_quality ?? 1}
-                                onFocus={() => takeSnapshot()}
-                                onChange={(e) => updateNodeData(selectedNode.id, {uCreate_quality: convertToProbability(Number(e.target.value))})}
-                            />
-                        </div>
-
-                        <div className="flex flex-col gap-2">
                             <Label htmlFor="node-swap-prob">Swap Probability</Label>
                             <Input
                                 id="node-swap-prob"

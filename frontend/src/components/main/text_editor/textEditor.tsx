@@ -356,7 +356,12 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, { panelSize: number }>(({pan
         registerEditor(() => {
             const model = editorRefInstance.current?.getModel();
             const userCode = model ? extractUserCode(model) : '';
-            return buildFullSource(userCode);
+
+            // Fetch the graph data right out of our new Zustand hook callback setup
+            const graphData = useRunEngine.getState().getGraphCallback?.() ?? { nodes: [], edges: [] };
+
+            // Pass the nodes and edges context to build the correct boilerplate configuration blocks
+            return buildFullSource(userCode, graphData.nodes, graphData.edges);
         });
     }, [isEditorReady, registerEditor]);
 

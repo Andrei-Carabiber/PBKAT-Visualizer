@@ -4,10 +4,6 @@
 import BellKAT.Prelude
 import BellKAT.ProbabilisticPrelude
 
-
-
-
-
 -- >>> EDITABLE REGION START >>>
 
 
@@ -24,27 +20,23 @@ p = (e <.> f) <> (e <.> f)
 
 -- <<< EDITABLE REGION END <<<
 
-
-
-
-
-networkCapacity :: NetworkCapacity BellKATTag
-networkCapacity = ["C" ~ "C", "C" ~ "C", "A" ~ "C", "B" ~ "C"]
+-- networkCapacity :: NetworkCapacity BellKATTag
+-- networkCapacity = ["A" ~ "C", "B" ~ "C"]
 
 actionConfig :: ProbabilisticActionConfiguration
 actionConfig = PAC
-    { pacTransmitProbability = [(("C", "B"), 1 / 2),(("C", "A"), 4 / 5)]
-    , pacCreateProbability = [("C", 9/10)]
-    , pacCreateWerner = [("C", 1.0)]
-    , pacUCreateProbability = []
-    , pacUCreateWerner = []
-    , pacSwapProbability = []
+    { pacTransmitProbability = [(("A", "C"), 0.99), (("C", "A"), 0.99), (("B", "C"), 1), (("C", "B"), 1)]
+    , pacCreateProbability = [("A", 1), ("B", 1), ("C", 1)]
+    , pacCreateWerner = [("A", 1), ("B", 1), ("C", 1)]
+    , pacUCreateProbability = [(("A", "A"), 1), (("B", "B"), 1), (("C", "C"), 1)]
+    , pacUCreateWerner = [(("A", "A"), 1), (("B", "B"), 1), (("C", "C"), 1)]
+    , pacSwapProbability = [("A", 1), ("B", 1), ("C", 1)]
     , pacCoherenceTime = [("A", 1), ("B", 1), ("C", 1)]
-    , pacDistances = [(("A", "B"), 1), (("B", "C"), 1)]
+    , pacDistances = [(("A", "C"), 50), (("C", "A"), 50), (("B", "C"), 30), (("C", "B"), 30)]
     }
 
 goal :: ProbBellKATTest
 goal = hasSubset ["A" ~ "C", "B" ~ "C"]
 
 main :: IO ()
-main = pbkatMain actionConfig (Just networkCapacity) goal p
+main = pbkatMain actionConfig Nothing goal p

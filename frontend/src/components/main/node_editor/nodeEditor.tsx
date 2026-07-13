@@ -95,14 +95,14 @@ export type NodeData = {
     coherence_time: number;
     create_prob?: number;
     create_quality?: number
-    uCreate_prob?: number;
-    uCreate_quality?: number;
     swap_prob?: number;
 };
 
 export type EdgeData = {
     distance: number;
     transmit_prob: number;
+    uCreate_prob?: number;
+    uCreate_quality?: number;
 }
 
 export type MenuType = {
