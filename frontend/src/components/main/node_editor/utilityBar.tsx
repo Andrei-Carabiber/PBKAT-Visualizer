@@ -62,7 +62,8 @@ const UtilityBar = ({panelSize, onUndo, onRedo, canUndo, canRedo, takeSnapshot}:
             type: 'custom',
             position: projectCenter,
             data: {
-                label: `Node ${nodes.length + 1}`,
+                nodeLabel: `Node ${nodes.length + 1}`,
+                coherence_time: 1,
             },
         };
 

@@ -1,27 +1,31 @@
-import { useState, useCallback, useRef } from 'react';
-import type { Node, Edge } from '@xyflow/react';
+import {useState, useCallback, useRef} from 'react';
+import type {Node, Edge} from '@xyflow/react';
 
-type HistoryItem = { nodes: Node[]; edges: Edge[] };
+// Use generics here so the history tracks the exact shape of your data
+type HistoryItem<TNode extends Node = Node, TEdge extends Edge = Edge> = {
+    nodes: TNode[];
+    edges: TEdge[];
+};
 
 const MAX_HISTORY = 100;
 
-export function useUndoRedo(
-    nodes: Node[],
-    edges: Edge[],
-    setNodes: (nodes: Node[]) => void,
-    setEdges: (edges: Edge[]) => void,
+export function useUndoRedo<TNode extends Node = Node, TEdge extends Edge = Edge>(
+    nodes: TNode[],
+    edges: TEdge[],
+    setNodes: (nodes: TNode[]) => void,
+    setEdges: (edges: TEdge[]) => void,
 ) {
-    const past = useRef<HistoryItem[]>([]);
-    const future = useRef<HistoryItem[]>([]);
+    // Pass the generics down to the history refs
+    const past = useRef<HistoryItem<TNode, TEdge>[]>([]);
+    const future = useRef<HistoryItem<TNode, TEdge>[]>([]);
     const [canUndo, setCanUndo] = useState(false);
     const [canRedo, setCanRedo] = useState(false);
 
-    const snapshot = useCallback((): HistoryItem => ({
+    const snapshot = useCallback((): HistoryItem<TNode, TEdge> => ({
         nodes: JSON.parse(JSON.stringify(nodes)),
         edges: JSON.parse(JSON.stringify(edges)),
     }), [nodes, edges]);
 
-    // Call this BEFORE you mutate nodes/edges
     const takeSnapshot = useCallback(() => {
         past.current.push(snapshot());
         if (past.current.length > MAX_HISTORY) past.current.shift();
@@ -50,5 +54,5 @@ export function useUndoRedo(
         setCanUndo(true);
     }, [snapshot, setNodes, setEdges]);
 
-    return { takeSnapshot, undo, redo, canUndo, canRedo };
+    return {takeSnapshot, undo, redo, canUndo, canRedo};
 }

@@ -19,6 +19,8 @@ import NodePropertiesSheet from "@/components/main/node_editor/NodePropertiesShe
 import ContextMenu from "@/components/main/node_editor/NodeRightClickMenu.tsx";
 import UtilityBar from "@/components/main/node_editor/utilityBar.tsx";
 import {useUndoRedo} from "@/components/main/node_editor/useUndoRedo.ts";
+import EdgePropertiesSheet from "@/components/main/node_editor/EdgePropertiesSheet.tsx";
+import {useRunEngine} from "@/store/runEngine.ts";
 
 
 const initialNodes: Node<NodeData>[] = [
@@ -27,7 +29,9 @@ const initialNodes: Node<NodeData>[] = [
         type: 'custom',
         position: {x: 100, y: 0},
         data: {
-            label: "A"
+            nodeLabel: "A",
+            coherence_time: 1,
+
         }
 
     },
@@ -36,7 +40,9 @@ const initialNodes: Node<NodeData>[] = [
         type: 'custom',
         position: {x: 100, y: 500},
         data: {
-            label: "B"
+            nodeLabel: "B",
+            coherence_time: 1,
+
         }
     },
     {
@@ -44,15 +50,28 @@ const initialNodes: Node<NodeData>[] = [
         type: 'custom',
         position: {x: 100, y: 250},
         data: {
-            label: "C"
+            nodeLabel: "C",
+            coherence_time: 1,
+
         }
     },
 ];
 
-const initialEdges: Edge[] = [
-    {id: 'A-C', source: '1', target: '3'},
-    {id: 'B-C', source: '2', target: '3'},
-
+const initialEdges: Edge<EdgeData>[] = [
+    {
+        id: 'A-C',
+        source: '1',
+        target: '3',
+        type: 'floating',
+        data: {distance: 50, transmit_prob: 0.85}
+    },
+    {
+        id: 'B-C',
+        source: '2',
+        target: '3',
+        type: 'floating',
+        data: {distance: 30, transmit_prob: 0.95}
+    },
 ];
 
 const connectionLineStyle = {
@@ -72,10 +91,19 @@ const defaultEdgeOptions: DefaultEdgeOptions = {
 };
 
 export type NodeData = {
-    label: string;
-    color?: string;
-    notes?: string;
+    nodeLabel: string;
+    coherence_time: number;
+    create_prob?: number;
+    create_quality?: number
+    uCreate_prob?: number;
+    uCreate_quality?: number;
+    swap_prob?: number;
 };
+
+export type EdgeData = {
+    distance: number;
+    transmit_prob: number;
+}
 
 export type MenuType = {
     id: string;
@@ -87,8 +115,8 @@ export type MenuType = {
 }
 
 const NodeEditor = ({panelSize}: { panelSize: number }) => {
-    const [nodes, setNodes, onNodesChange] = useNodesState<Node>(initialNodes);
-    const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+    const [nodes, setNodes, onNodesChange] = useNodesState<Node<NodeData>>(initialNodes);
+    const [edges, setEdges, onEdgesChange] = useEdgesState<Edge<EdgeData>>(initialEdges);
     const ref = useRef<HTMLDivElement>(null);
     const [menu, setMenu] = useState<MenuType | null>(null);
 
@@ -97,14 +125,11 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
 
     const {theme} = useTheme()
 
-    useEffect(() => {
-        console.log("EDGES: " + edges)
-        console.log("NODES: " + nodes)
-        setNodes(nodes)
-    }, [edges]);
-
     const [selectedNode, setSelectedNode] = useState<Node<NodeData> | null>(null);
-    const [sheetOpen, setSheetOpen] = useState(false);
+    const [selectedEdge, setSelectedEdge] = useState<Edge<EdgeData> | null>(null);
+    const [nodeSheetOpen, setNodeSheetOpen] = useState(false);
+    const [edgeSheetOpen, setEdgeSheetOpen] = useState(false);
+
 
 
     //Remove watermark
@@ -135,9 +160,20 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
 
 
     const onConnect = useCallback(
-        (params: any) => {
+        (params: Connection) => {
             takeSnapshot();
-            setEdges((eds) => addEdge(params, eds));
+
+            const newEdge: Edge<EdgeData> = {
+                ...params,
+                id: `edge_${Date.now()}`,
+                type: 'floating',
+                data: {
+                    distance: 10,
+                    transmit_prob: 1.0,
+                }
+            };
+
+            setEdges((eds) => addEdge(newEdge, eds));
         },
         [setEdges, takeSnapshot],
     );
@@ -149,8 +185,13 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
     //Double click handler on node
     const onNodeDoubleClick = useCallback((_event: React.MouseEvent, node: Node) => {
         setSelectedNode(node as Node<NodeData>);
-        setSheetOpen(true);
+        setNodeSheetOpen(true);
     }, []);
+
+    const onEdgeDoubleClick = useCallback((_event: React.MouseEvent, edge: Edge) => {
+        setSelectedEdge(edge as Edge<EdgeData>);
+        setEdgeSheetOpen(true);
+    }, [])
 
 
     //Double click handler on background
@@ -169,7 +210,10 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
                     id: `node_${Date.now()}`,
                     type: 'custom',
                     position,
-                    data: {label: `Node ${nodes.length + 1}`},
+                    data: {
+                        nodeLabel: `Node ${nodes.length + 1}`,
+                        coherence_time: 1,
+                    },
                 };
                 setNodes((nds) => nds.concat(newNode));
             }
@@ -178,10 +222,16 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
     );
     const updateNodeData = useCallback((id: string, patch: Record<string, any>) => {
         setNodes((nds) =>
-            nds.map((n) => (n.id === id ? {...n, data: {...n.data, ...patch}} : n))
-        );
+            nds.map((n) => (n.id === id ? {...n, data: {...n.data, ...patch}} : n)));
         setSelectedNode((prev) => (prev && prev.id === id ? {...prev, data: {...prev.data, ...patch}} : prev));
     }, [setNodes]);
+
+    const updateEdgeData = useCallback((id: string, patch: Partial<EdgeData>) => {
+        setEdges((edgs) =>
+            edgs.map((e) => (e.id === id ? { ...e, data: { ...e.data, ...patch } as EdgeData } : e))
+        );
+        setSelectedEdge((prev) => (prev && prev.id === id ? { ...prev, data: { ...prev.data, ...patch } as EdgeData } : prev));
+    }, [setEdges]);
 
     //Right click handler
     const onNodeContextMenu = useCallback(
@@ -198,7 +248,7 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
                 bottom: undefined,
                 openProperties: () => {
                     setSelectedNode(node as Node<NodeData>);
-                    setSheetOpen(true);
+                    setNodeSheetOpen(true);
                 }
             });
         },
@@ -206,6 +256,7 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
     );
 
 
+    //Handle undo redo
     useEffect(() => {
         const handler = (e: KeyboardEvent) => {
             const tag = (e.target as HTMLElement)?.tagName;
@@ -247,6 +298,14 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
         [takeSnapshot],
     );
 
+    //Connect to zustand
+    const registerGraph = useRunEngine((state) => state.registerGraph)
+    useEffect(() => {
+        if (registerGraph) {
+            registerGraph(() => ({nodes,edges}));
+        }
+    }, [nodes, edges, registerGraph]);
+
 
     return (
         <div className="h-full w-full flex flex-col gap-3 p-4 pt-2 bg-card rounded-lg">
@@ -256,7 +315,7 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
             </div>
             <div className="flex-1 min-h-0 w-full flex relative">
                 <div className="flex-1 min-h-0 w-full flex rounded-lg border overflow-hidden">
-                    <ReactFlow
+                    <ReactFlow<Node<NodeData>, Edge<EdgeData>>
                         ref={ref}
                         className="text-secondary-foreground"
                         nodes={nodes}
@@ -276,6 +335,7 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
                         isValidConnection={isValidConnection as IsValidConnection}
                         connectionMode={'loose' as ConnectionMode}
                         onNodeDoubleClick={onNodeDoubleClick}
+                        onEdgeDoubleClick={onEdgeDoubleClick}
                         onPaneClick={onPaneClick}
                         onNodeContextMenu={onNodeContextMenu}
                         zoomOnDoubleClick={false}
@@ -290,8 +350,11 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
                     </ReactFlow>
                 </div>
                 {menu && <ContextMenu onClick={onPaneClick} takeSnapshot={takeSnapshot} {...menu} />}
-                <NodePropertiesSheet sheetOpen={sheetOpen} setSheetOpen={setSheetOpen} selectedNode={selectedNode}
+                <NodePropertiesSheet sheetOpen={nodeSheetOpen} setSheetOpen={setNodeSheetOpen}
+                                     selectedNode={selectedNode}
                                      updateNodeData={updateNodeData} takeSnapshot={takeSnapshot}/>
+                <EdgePropertiesSheet sheetOpen={edgeSheetOpen} setSheetOpen={setEdgeSheetOpen}
+                                     selectedEdge={selectedEdge} updateEdgeData={updateEdgeData} takeSnapshot={takeSnapshot}/>
             </div>
         </div>
     )

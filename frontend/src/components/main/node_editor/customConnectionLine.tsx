@@ -1,15 +1,18 @@
-import {type ConnectionLineComponent, getBezierPath} from '@xyflow/react';
-import type {CSSProperties} from "react";
+import { type ConnectionLineComponentProps, getBezierPath } from '@xyflow/react';
+import type { CSSProperties } from "react";
 
-type props = {
-    fromX: number,
-    fromY: number,
-    toX: number,
-    toY: number,
-    connectionLineStyle: CSSProperties
-}
+// Use ConnectionLineComponentProps directly to get correct XYFlow typing
+type CustomConnectionLineProps = ConnectionLineComponentProps & {
+    connectionLineStyle?: CSSProperties;
+};
 
-function CustomConnectionLine({fromX, fromY, toX, toY, connectionLineStyle}: props) {
+function CustomConnectionLine({
+                                  fromX,
+                                  fromY,
+                                  toX,
+                                  toY,
+                                  connectionLineStyle
+                              }: CustomConnectionLineProps) {
     const [edgePath] = getBezierPath({
         sourceX: fromX,
         sourceY: fromY,
@@ -24,4 +27,4 @@ function CustomConnectionLine({fromX, fromY, toX, toY, connectionLineStyle}: pro
     );
 }
 
-export default CustomConnectionLine as ConnectionLineComponent;
+export default CustomConnectionLine;

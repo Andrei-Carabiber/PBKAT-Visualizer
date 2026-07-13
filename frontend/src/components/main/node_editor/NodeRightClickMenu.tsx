@@ -9,15 +9,26 @@ interface ContextMenuProps extends MenuType {
     takeSnapshot: () => void;
 }
 
-export default function ContextMenu({id, top, left, right, bottom, openProperties, takeSnapshot, ...props}: ContextMenuProps) {
+export default function ContextMenu({
+                                        id,
+                                        top,
+                                        left,
+                                        right,
+                                        bottom,
+                                        openProperties,
+                                        takeSnapshot,
+                                        ...props
+                                    }: ContextMenuProps) {
     const {getNode, setNodes, addNodes, setEdges} = useReactFlow<Node<NodeData>>();
 
     const duplicateNode = useCallback(() => {
         const node = getNode(id);
         if (!node) return;
         takeSnapshot();
-        addNodes({ ...node, selected: false, dragging: false, id: `${node.id}-copy`,
-            position: { x: node.position.x + 50, y: node.position.y + 50 } });
+        addNodes({
+            ...node, selected: false, dragging: false, id: `${node.id}-copy`,
+            position: {x: node.position.x + 50, y: node.position.y + 50}
+        });
     }, [id, getNode, addNodes, takeSnapshot]);
 
     const deleteNode = useCallback(() => {

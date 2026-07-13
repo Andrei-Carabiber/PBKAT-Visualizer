@@ -3,7 +3,7 @@ import { Handle, Position, useConnection } from '@xyflow/react';
 type props = {
     id: string;
     data: {
-        label: string;
+        nodeLabel: string;
     }
 }
 
@@ -12,7 +12,7 @@ export default function CustomNode({ id, data }: props) {
 
     const isTarget = connection.inProgress && connection.fromNode.id !== id;
 
-    const label = data.label;
+    const label = data.nodeLabel;
 
     return (
         <div className="customNode">
