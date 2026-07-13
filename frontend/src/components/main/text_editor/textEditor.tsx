@@ -223,6 +223,7 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, { panelSize: number }>(({pan
 
     const [isEditorReady, setIsEditorReady] = useState(false);
     const registerEditor = useRunEngine(state => state.registerEditor);
+    const registerUserCodeGetter = useRunEngine(state => state.registerUserCodeGetter);
 
     useImperativeHandle(ref, () => ({
         getUserCode: () => {
@@ -357,11 +358,18 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, { panelSize: number }>(({pan
             const model = editorRefInstance.current?.getModel();
             const userCode = model ? extractUserCode(model) : '';
 
+            // Fetch the graph data right out of our new Zustand hook callback setup
             const graphData = useRunEngine.getState().getGraphCallback?.() ?? { nodes: [], edges: [] };
 
+            // Pass the nodes and edges context to build the correct boilerplate configuration blocks
             return buildFullSource(userCode, graphData.nodes, graphData.edges);
         });
-    }, [isEditorReady, registerEditor]);
+
+        registerUserCodeGetter(() => {
+            const model = editorRefInstance.current?.getModel();
+            return model ? extractUserCode(model) : '';
+        });
+    }, [isEditorReady, registerEditor, registerUserCodeGetter]);
 
 
     const mounted = useRef(false);

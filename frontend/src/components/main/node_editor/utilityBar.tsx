@@ -28,9 +28,10 @@ type Props = {
     canUndo?: boolean;
     canRedo?: boolean;
     takeSnapshot: () => void;
+    onAutoCreate?: () => void;
 };
 
-const UtilityBar = ({panelSize, onUndo, onRedo, canUndo, canRedo, takeSnapshot}: Props) => {
+const UtilityBar = ({panelSize, onUndo, onRedo, canUndo, canRedo, takeSnapshot, onAutoCreate}: Props) => {
     const {fitView, getNodes, setNodes, setEdges, screenToFlowPosition} = useReactFlow<Node<NodeData>>();
 
     const deleteAll = () => {
@@ -80,10 +81,7 @@ const UtilityBar = ({panelSize, onUndo, onRedo, canUndo, canRedo, takeSnapshot}:
         {key: "undo", label: "Undo", icon: Undo2, onClick: onUndo, disabled: !canUndo},
         {key: "redo", label: "Redo", icon: Redo2, onClick: onRedo, disabled: !canRedo},
         {key: "fit-view", label: "Fit view", icon: Maximize2, onClick: fitView},
-        {
-            key: "calculate", label: "Auto-create", icon: BrainIcon, onClick: () => {
-            }
-        },
+        {key: "calculate", label: "Auto-create", icon: BrainIcon, onClick: onAutoCreate},
         {key: "delete", label: "Delete everything", icon: Trash2, onClick: deleteAll, variant: "destructive"},
 
     ];

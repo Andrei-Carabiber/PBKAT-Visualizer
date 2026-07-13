@@ -21,6 +21,8 @@ import UtilityBar from "@/components/main/node_editor/utilityBar.tsx";
 import {useUndoRedo} from "@/components/main/node_editor/useUndoRedo.ts";
 import EdgePropertiesSheet from "@/components/main/node_editor/EdgePropertiesSheet.tsx";
 import {useRunEngine} from "@/store/runEngine.ts";
+import {parseProtocolGraph} from "@/components/main/text_editor/protocolParser.ts";
+import * as React from "react";
 
 
 const initialNodes: Node<NodeData>[] = [
@@ -233,7 +235,7 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
         setSelectedEdge((prev) => (prev && prev.id === id ? { ...prev, data: { ...prev.data, ...patch } as EdgeData } : prev));
     }, [setEdges]);
 
-    //Right click handler
+    //Right-click handler
     const onNodeContextMenu = useCallback(
         (event: React.MouseEvent, node: Node) => {
             event.preventDefault();
@@ -307,11 +309,72 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
     }, [nodes, edges, registerGraph]);
 
 
+    //Auto-create button
+    const onAutoCreate = useCallback(() => {
+        const getUserCode = useRunEngine.getState().getUserCodeCallback;
+        const code = getUserCode?.();
+        if (!code) return;
+
+        const {nodeLabels, edgePairs} = parseProtocolGraph(code);
+        if (nodeLabels.length === 0) return;
+
+        takeSnapshot();
+
+        const existingLabels = new Set(nodes.map((n) => n.data.nodeLabel));
+        const labelsToAdd = nodeLabels.filter((label) => !existingLabels.has(label));
+
+        const newNodes: Node<NodeData>[] = labelsToAdd.map((label, i) => ({
+            id: `node_${Date.now()}_${i}`,
+            type: 'custom',
+            position: {
+                x: 100 + ((nodes.length + i) % 4) * 200,
+                y: 100 + Math.floor((nodes.length + i) / 4) * 200,
+            },
+            data: {
+                nodeLabel: label,
+                coherence_time: 1,
+            },
+        }));
+
+        const allNodes = nodes.concat(newNodes);
+        const labelToId = new Map(allNodes.map((n) => [n.data.nodeLabel, n.id]));
+
+        const edgeAlreadyPresent = (aId: string, bId: string, list: Edge<EdgeData>[]) =>
+            list.some(
+                (e) =>
+                    (e.source === aId && e.target === bId) ||
+                    (e.source === bId && e.target === aId),
+            );
+
+        const newEdges: Edge<EdgeData>[] = [];
+        edgePairs.forEach(([a, b]) => {
+            const aId = labelToId.get(a);
+            const bId = labelToId.get(b);
+            if (!aId || !bId || aId === bId) return;
+            if (edgeAlreadyPresent(aId, bId, edges) || edgeAlreadyPresent(aId, bId, newEdges)) return;
+
+            newEdges.push({
+                id: `edge_${Date.now()}_${a}_${b}`,
+                source: aId,
+                target: bId,
+                type: 'floating',
+                data: {
+                    distance: 10,
+                    transmit_prob: 1.0,
+                },
+            });
+        });
+
+        if (newNodes.length) setNodes(allNodes);
+        if (newEdges.length) setEdges(edges.concat(newEdges));
+    }, [nodes, edges, setNodes, setEdges, takeSnapshot]);
+
+
     return (
         <div className="h-full w-full flex flex-col gap-3 p-4 pt-2 bg-card rounded-lg">
             <div className="shrink-0 h-20">
                 <UtilityBar panelSize={panelSize} onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo}
-                            takeSnapshot={takeSnapshot}/>
+                            takeSnapshot={takeSnapshot} onAutoCreate={onAutoCreate} />
             </div>
             <div className="flex-1 min-h-0 w-full flex relative">
                 <div className="flex-1 min-h-0 w-full flex rounded-lg border overflow-hidden">

@@ -7,8 +7,10 @@ interface RunEngineState {
     data: string | null;
     error: string | null;
     getCodeCallback: (() => string) | null;
+    getUserCodeCallback: (() => string) | null;
     getGraphCallback: (() => { nodes: Node<NodeData>[]; edges: Edge<EdgeData>[] }) | null;
     registerEditor: (callback: () => string) => void;
+    registerUserCodeGetter: (callback: () => string) => void;
     registerGraph: (callback: () => { nodes: Node<NodeData>[]; edges: Edge<EdgeData>[] }) => void;
     handleRun: () => Promise<void>;
     clearOutput: () => void;
@@ -21,9 +23,11 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
     data: null,
     error: null,
     getCodeCallback: null,
+    getUserCodeCallback: null,
     getGraphCallback: null,
 
     registerEditor: (callback) => set({ getCodeCallback: callback }),
+    registerUserCodeGetter: (callback) => set({ getUserCodeCallback: callback }),
     registerGraph: (callback) => set({ getGraphCallback: callback }),
 
     handleRun: async () => {
