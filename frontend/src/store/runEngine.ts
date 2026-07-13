@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type {Node, Edge} from "@xyflow/react";
 import type {NodeData, EdgeData} from "@/components/main/node_editor/nodeEditor.tsx";
+import {isCodeValid} from "@/components/main/text_editor/protocolParser.ts";
 
 interface RunEngineState {
     loading: boolean;
@@ -31,7 +32,7 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
     registerGraph: (callback) => set({ getGraphCallback: callback }),
 
     handleRun: async () => {
-        const { getCodeCallback } = get();
+        const { getCodeCallback, getGraphCallback } = get();
         if (!getCodeCallback) {
             set({
                 error: "The code editor is still initializing language servers. Please wait a moment and try again. (Wait 10seconds)",
@@ -43,6 +44,24 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
         const code = getCodeCallback();
 
         set({ loading: true, error: null, data: null });
+
+        if (code) {
+            // 1. Fetch live nodes and edges drawn on the canvas
+            const graphSnapshot = getGraphCallback ?.() ?? { nodes: [], edges: [] };
+
+            // 2. Pass them into the completed validator
+            const validation = isCodeValid(code, graphSnapshot.nodes, graphSnapshot.edges);
+
+            // 3. Handle validation rejection cleanly
+            if (!validation.valid) {
+                set({
+                    error: validation.error,
+                    loading: false
+                });
+                return;
+            }
+        }
+
         try {
             const response = await fetch(RUN_PROTOCOL_URL, {
                 method: "POST",

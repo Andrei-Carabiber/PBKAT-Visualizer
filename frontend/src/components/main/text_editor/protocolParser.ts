@@ -1,3 +1,5 @@
+import type {Edge, Node} from "@xyflow/react";
+
 export type ParsedGraph = {
     nodeLabels: string[];
     edgePairs: [string, string][];
@@ -75,5 +77,73 @@ export function parseProtocolGraph(code: string): ParsedGraph {
     return {
         nodeLabels: Array.from(nodeSet),
         edgePairs: Array.from(edgeMap.values()),
+    };
+}
+
+export type ValidationResult =
+    | { valid: true; nodeLabels: string[]; edgePairs: [string, string][] }
+    | { valid: false; error: string };
+
+export function isCodeValid(
+    code: string,
+    existingNodes: Node[],
+    existingEdges: Edge[]
+): ValidationResult {
+    const { nodeLabels, edgePairs } = parseProtocolGraph(code);
+
+    //Validate nodes
+    const stringNodes: string[] = existingNodes.map((node) => node.data.nodeLabel as string);
+
+    for (const node of stringNodes) {
+        if (!nodeLabels.includes(node)) {
+            return {
+                valid: false,
+                error: `Node "${node}" exists on the canvas but is missing from your code.`
+            };
+        }
+    }
+
+    //Validate Edges
+    const codeEdgeKeys = new Set(
+        edgePairs.map(([a, b]) => [a, b].sort().join('::'))
+    );
+
+    const nodeIdToLabelMap = new Map<string, string>(
+        existingNodes.map((node) => [node.id, node.data.nodeLabel as string])
+    );
+
+    const uiEdgeKeys = new Set<string>();
+
+    for (const edge of existingEdges) {
+        const sourceLabel = nodeIdToLabelMap.get(edge.source);
+        const targetLabel = nodeIdToLabelMap.get(edge.target);
+
+        if (!sourceLabel || !targetLabel) continue;
+
+        const uiKey = [sourceLabel, targetLabel].sort().join('::');
+        uiEdgeKeys.add(uiKey);
+
+        if (!codeEdgeKeys.has(uiKey)) {
+            return {
+                valid: false,
+                error: `The connection between "${sourceLabel}" and "${targetLabel}" is drawn on the canvas but missing from your code.`
+            };
+        }
+    }
+
+    for (const [a, b] of edgePairs) {
+        const codeKey = [a, b].sort().join('::');
+        if (!uiEdgeKeys.has(codeKey)) {
+            return {
+                valid: false,
+                error: `Your code declares a connection between "${a}" and "${b}", but it hasn't been drawn on the canvas.`
+            };
+        }
+    }
+
+    return {
+        valid: true,
+        nodeLabels,
+        edgePairs
     };
 }
