@@ -89,16 +89,27 @@ export function isCodeValid(
     existingNodes: Node[],
     existingEdges: Edge[]
 ): ValidationResult {
-    const { nodeLabels, edgePairs } = parseProtocolGraph(code);
+    const {nodeLabels, edgePairs} = parseProtocolGraph(code);
 
-    //Validate nodes
-    const stringNodes: string[] = existingNodes.map((node) => node.data.nodeLabel as string);
 
-    for (const node of stringNodes) {
+    //Check nodes
+    const uiNodeLabels: string[] = existingNodes.map((node) => node.data.nodeLabel as string);
+    const uiNodeSet = new Set(uiNodeLabels);
+
+    for (const node of uiNodeLabels) {
         if (!nodeLabels.includes(node)) {
             return {
                 valid: false,
                 error: `Node "${node}" exists on the canvas but is missing from your code.`
+            };
+        }
+    }
+
+    for (const node of nodeLabels) {
+        if (!uiNodeSet.has(node)) {
+            return {
+                valid: false,
+                error: `Your code declares node "${node}", but it hasn't been placed on the canvas.`
             };
         }
     }

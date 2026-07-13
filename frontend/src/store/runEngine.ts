@@ -46,10 +46,8 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
         set({ loading: true, error: null, data: null });
 
         if (code) {
-            // 1. Fetch live nodes and edges drawn on the canvas
             const graphSnapshot = getGraphCallback ?.() ?? { nodes: [], edges: [] };
 
-            // 2. Pass them into the completed validator
             const validation = isCodeValid(code, graphSnapshot.nodes, graphSnapshot.edges);
 
             // 3. Handle validation rejection cleanly
