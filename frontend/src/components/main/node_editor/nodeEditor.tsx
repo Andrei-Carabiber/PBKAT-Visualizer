@@ -140,7 +140,7 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
         toDelete?.remove()
     }, []);
 
-    const {getEdges, screenToFlowPosition} = useReactFlow();
+    const {getEdges, screenToFlowPosition, fitView} = useReactFlow();
 
     //Check if 2 nodes already have the connection
     const isValidConnection = useCallback(
@@ -327,8 +327,8 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
             id: `node_${Date.now()}_${i}`,
             type: 'custom',
             position: {
-                x: 100 + ((nodes.length + i) % 4) * 200,
-                y: 100 + Math.floor((nodes.length + i) / 4) * 200,
+                x: 350 + ((nodes.length + i) % 4) * 200,
+                y: 350 + Math.floor((nodes.length + i) / 4) * 200,
             },
             data: {
                 nodeLabel: label,
@@ -367,6 +367,12 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
 
         if (newNodes.length) setNodes(allNodes);
         if (newEdges.length) setEdges(edges.concat(newEdges));
+
+
+        //Center image
+        fitView();
+
+
     }, [nodes, edges, setNodes, setEdges, takeSnapshot]);
 
 
