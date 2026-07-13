@@ -105,14 +105,17 @@ wss.on('connection', (ws) => {
             return;
         }
         if (msg.method === 'initialized' && seenInitialize) {
-            return; // already told HLS this on first real client, don't resend
+            return; 
         }
         if (msg.method === 'shutdown' ) {
             writer.write({ jsonrpc: '2.0', id: msg.id, result: null }); // ack locally
             return;
         }
         if (msg.method === 'exit') {
-            return; // don't kill the shared process when a tab closes
+            return;
+        }
+        if (msg.method === '$/setTrace') {
+            return;
         }
         if (msg.method === 'textDocument/didOpen') {
             activeDocUri = msg.params?.textDocument?.uri ?? activeDocUri;
