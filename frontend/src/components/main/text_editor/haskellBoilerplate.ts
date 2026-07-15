@@ -106,7 +106,7 @@ actionConfig = PAC
     }
 
 goal :: ProbBellKATTest
-goal = hasSubset [${capacities}]
+goal = hasSubset ["A" ~ "C", "B" ~ "C"]
 
 main :: IO ()
 main = pbkatMain actionConfig Nothing goal p

@@ -8,40 +8,40 @@ export type ParsedGraph = {
 const STRING = `"([^"]+)"`;
 const TUPLE2 = `\\(\\s*${STRING}\\s*,\\s*${STRING}\\s*\\)`;
 
-type Extractor = {
-    regex: RegExp;
+type PatternConfig = {
+    patternStr: string;
     extract: (m: RegExpMatchArray) => { nodes: string[]; edges: [string, string][] };
 };
 
-const PATTERNS: Extractor[] = [
+const PATTERNS: PatternConfig[] = [
     {
-        regex: new RegExp(`\\bcreate\\s*${STRING}`, 'g'),
+        patternStr: `\\bcreate\\s*${STRING}`,
         extract: (m) => ({nodes: [m[1]], edges: []}),
     },
     {
-        regex: new RegExp(`\\btrans\\s*${STRING}\\s*${TUPLE2}`, 'g'),
+        patternStr: `\\btrans\\s*${STRING}\\s*${TUPLE2}`,
         extract: (m) => {
             const [x, y, z] = [m[1], m[2], m[3]];
             return {nodes: [x, y, z], edges: [[x, y], [x, z]]};
         },
     },
     {
-        regex: new RegExp(`\\bswap\\s*${STRING}\\s*${TUPLE2}`, 'g'),
+        patternStr: `\\bswap\\s*${STRING}\\s*${TUPLE2}`,
         extract: (m) => {
             const [z, x, y] = [m[1], m[2], m[3]];
             return {nodes: [z, x, y], edges: [[z, x], [z, y]]};
         },
     },
     {
-        regex: new RegExp(`\\bdistill\\s*${TUPLE2}`, 'g'),
+        patternStr: `\\bdistill\\s*${TUPLE2}`,
         extract: (m) => ({nodes: [m[1], m[2]], edges: [[m[1], m[2]]]}),
     },
     {
-        regex: new RegExp(`\\bucreate\\s*${TUPLE2}`, 'g'),
+        patternStr: `\\bucreate\\s*${TUPLE2}`,
         extract: (m) => ({nodes: [m[1], m[2]], edges: [[m[1], m[2]]]}),
     },
     {
-        regex: new RegExp(`${STRING}\\s*~\\s*${STRING}`, 'g'),
+        patternStr: `${STRING}\\s*~\\s*${STRING}`,
         extract: (m) => ({nodes: [m[1], m[2]], edges: [[m[1], m[2]]]}),
     },
 ];
@@ -58,11 +58,12 @@ function stripLineComments(code: string): string {
 
 export function parseProtocolGraph(code: string): ParsedGraph {
     const cleaned = stripLineComments(code);
-
     const nodeSet = new Set<string>();
     const edgeMap = new Map<string, [string, string]>();
 
-    for (const {regex, extract} of PATTERNS) {
+    for (const {patternStr, extract} of PATTERNS) {
+        const regex = new RegExp(patternStr, 'g');
+
         for (const m of cleaned.matchAll(regex)) {
             const {nodes, edges} = extract(m);
             nodes.forEach((n) => nodeSet.add(n));

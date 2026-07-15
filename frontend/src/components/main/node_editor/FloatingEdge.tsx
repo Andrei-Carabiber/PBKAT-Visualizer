@@ -38,7 +38,7 @@ function FloatingEdge({id, source, target, markerEnd, style}: EdgeProps) {
                     className="nodrag nopan bg-background border px-2 py-1 rounded shadow-sm text-xs flex gap-2 items-center"
                 >
                     <div className="flex flex-col">
-                        <span>{`${sourceNode.data.nodeLabel} ~ ${targetNode.data.nodeLabel}`}</span>
+                        <span>{`Link ${sourceNode.data.nodeLabel} - ${targetNode.data.nodeLabel}`}</span>
                     </div>
                 </div>
             </EdgeLabelRenderer>

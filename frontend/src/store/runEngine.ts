@@ -32,7 +32,7 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
     registerGraph: (callback) => set({ getGraphCallback: callback }),
 
     handleRun: async () => {
-        const { getCodeCallback, getGraphCallback } = get();
+        const { getCodeCallback, getGraphCallback, getUserCodeCallback } = get();
         if (!getCodeCallback) {
             set({
                 error: "The code editor is still initializing language servers. Please wait a moment and try again. (Wait 10seconds)",
@@ -41,14 +41,15 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
             return;
         }
 
-        const code = getCodeCallback();
+        const fullCode = getCodeCallback();
+        const userRawCode = getUserCodeCallback ?.() ?? fullCode;
 
         set({ loading: true, error: null, data: null });
 
-        if (code) {
+        if (fullCode) {
             const graphSnapshot = getGraphCallback ?.() ?? { nodes: [], edges: [] };
 
-            const validation = isCodeValid(code, graphSnapshot.nodes, graphSnapshot.edges);
+            const validation = isCodeValid(userRawCode, graphSnapshot.nodes, graphSnapshot.edges);
 
             // 3. Handle validation rejection cleanly
             if (!validation.valid) {
@@ -64,7 +65,7 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
             const response = await fetch(RUN_PROTOCOL_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ code, command: 'run' }),
+                body: JSON.stringify({ code: fullCode, command: 'run' }),
             });
 
             if (!response.ok) {
@@ -73,6 +74,8 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
             }
 
             const result = await response.json();
+            console.log(result)
+
             set({ data: result.output, loading: false });
         } catch (e: any) {
             set({ error: e.message || "An error occurred.", loading: false });
