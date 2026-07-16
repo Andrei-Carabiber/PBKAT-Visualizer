@@ -23,7 +23,18 @@ import { Badge } from "@/components/ui/badge.tsx";
 import { Field } from "@/components/ui/field.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 
+// Define an interface for our active connections to keep track of duplicates safely
+interface ActiveConnection {
+    id: string;
+    label: string;
+}
+
 const NetworkGoalBox = () => {
+    // Store active connections as objects with unique IDs
+    const [activeConnections, setActiveConnections] = useState<ActiveConnection[]>([]);
+    const [disabled, setDisabled] = useState(true);
+    const [open, setOpen] = useState(false);
+
     const { getGraphCallback } = useRunEngine();
 
     let nodes: Node<NodeData>[] = [];
@@ -45,9 +56,18 @@ const NetworkGoalBox = () => {
         return connections.sort();
     }, [nodes]);
 
-    const [activeConnections, setActiveConnections] = useState<string[]>([]);
-    const [disabled, setDisabled] = useState(true);
-    const [open, setOpen] = useState(false);
+    // Helper to add a new connection instance with a unique ID
+    const handleAddConnection = (label: string) => {
+        setActiveConnections((prev) => [
+            ...prev,
+            { id: crypto.randomUUID(), label }
+        ]);
+    };
+
+    // Helper to remove a connection by its specific ID
+    const handleRemoveConnection = (idToRemove: string) => {
+        setActiveConnections((prev) => prev.filter((c) => c.id !== idToRemove));
+    };
 
     return (
         <div className="w-full h-full rounded-lg border bg-background px-3 py-4 shadow-sm">
@@ -88,7 +108,7 @@ const NetworkGoalBox = () => {
                             </Button>
                         </PopoverTrigger>
 
-                        <PopoverContent className="w-80 p-0">
+                        <PopoverContent className="w-60 md:w-80 lg:w-100 p-0">
                             <Command>
                                 <CommandInput placeholder="Search connections..." />
 
@@ -98,30 +118,26 @@ const NetworkGoalBox = () => {
                                     </CommandEmpty>
 
                                     <CommandGroup>
-                                        {possibleConnections
-                                            .filter(
-                                                (c) =>
-                                                    !activeConnections.includes(
-                                                        c
-                                                    )
-                                            )
-                                            .map((c) => (
+                                        {possibleConnections.map((c) => {
+                                            // Count how many times this specific connection has been added
+                                            const count = activeConnections.filter(ac => ac.label === c).length;
+
+                                            return (
                                                 <CommandItem
                                                     key={c}
                                                     value={c}
-                                                    onSelect={() => {
-                                                        setActiveConnections(
-                                                            (prev) => [
-                                                                ...prev,
-                                                                c,
-                                                            ]
-                                                        );
-                                                        setOpen(false);
-                                                    }}
+                                                    onSelect={() => handleAddConnection(c)}
+                                                    className="flex items-center justify-between"
                                                 >
-                                                    {c}
+                                                    <span>{c}</span>
+                                                    {count > 0 && (
+                                                        <Badge variant="secondary" className="ml-2 font-mono">
+                                                            {count}x
+                                                        </Badge>
+                                                    )}
                                                 </CommandItem>
-                                            ))}
+                                            );
+                                        })}
                                     </CommandGroup>
                                 </CommandList>
                             </Command>
@@ -145,19 +161,19 @@ const NetworkGoalBox = () => {
                     </p>
                 ) : (
                     <div className="mt-6 flex flex-wrap gap-2">
-                        {activeConnections.map((connection) => (
+                        {activeConnections.sort((a, b) => {
+                            let first = a.label
+                            let second = b.label
+                            return first.localeCompare(second)
+                        }).map((connection) => (
                             <Badge
-                                key={connection}
+                                key={connection.id}
                                 variant="secondary"
-                                className="cursor-pointer select-none px-3 py-2 text-base transition-colors hover:bg-destructive hover:text-destructive-foreground"
-                                onClick={() =>
-                                    setActiveConnections((prev) =>
-                                        prev.filter((c) => c !== connection)
-                                    )
-                                }
+                                className="cursor-pointer select-none px-3 py-3 text-base transition-colors hover:bg-destructive hover:text-destructive-foreground"
+                                onClick={() => handleRemoveConnection(connection.id)}
                             >
-                                {connection}
-                                <span className="ml-2 text-xs">✕</span>
+                                {connection.label}
+                                <span className="ml-2 text-sm">✕</span>
                             </Badge>
                         ))}
                     </div>
