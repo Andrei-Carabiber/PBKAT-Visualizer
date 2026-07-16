@@ -335,16 +335,13 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, { panelSize: number }>(({pan
 
             const lcWrapper = new LanguageClientWrapper(languageClientConfig);
 
-            console.log("Trying to start editor")
             if (editorRef.current) {
                 const editorApp = new EditorApp(editorAppConfig);
                 await editorApp.start(editorRef.current)
                 editorRefInstance.current = editorApp.getEditor();
                 restrictToEditableRegion(editorRefInstance.current!);
                 await lcWrapper.start()
-
-                console.log("Started everything")
-
+                
                 setIsEditorReady(true);
             }
         };
@@ -359,11 +356,18 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, { panelSize: number }>(({pan
             const model = editorRefInstance.current?.getModel();
             const userCode = model ? extractUserCode(model) : '';
 
-            // Fetch the graph data right out of our new Zustand hook callback setup
+            // Fetch the graph data right out of our Zustand hook callback setup
             const graphData = useRunEngine.getState().getGraphCallback?.() ?? { nodes: [], edges: [] };
 
-            // Pass the nodes and edges context to build the correct boilerplate configuration blocks
-            return buildFullSource(userCode, graphData.nodes, graphData.edges);
+            // Retrieve current network goal state directly from Zustand
+            const isGoalDisabled = useRunEngine.getState().networkGoalDisabled;
+            const connections = useRunEngine.getState().activeConnections;
+
+            // Resolve whether to pass the goal array or undefined/null depending on what buildFullSource expects
+            const networkGoal = isGoalDisabled ? [] : connections.map(c => c.label);
+
+            // Pass the nodes, edges, and networkGoal context to build the correct boilerplate configuration blocks
+            return buildFullSource(userCode, graphData.nodes, graphData.edges, [], networkGoal);
         });
 
         registerUserCodeGetter(() => {

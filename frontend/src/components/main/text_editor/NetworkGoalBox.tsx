@@ -1,3 +1,4 @@
+// NetworkGoalBox.tsx
 import { useMemo, useState } from "react";
 import { useRunEngine } from "@/store/runEngine.ts";
 import type { Node } from "@xyflow/react";
@@ -23,19 +24,16 @@ import { Badge } from "@/components/ui/badge.tsx";
 import { Field } from "@/components/ui/field.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 
-// Define an interface for our active connections to keep track of duplicates safely
-interface ActiveConnection {
-    id: string;
-    label: string;
-}
-
 const NetworkGoalBox = () => {
-    // Store active connections as objects with unique IDs
-    const [activeConnections, setActiveConnections] = useState<ActiveConnection[]>([]);
-    const [disabled, setDisabled] = useState(true);
     const [open, setOpen] = useState(false);
 
-    const { getGraphCallback } = useRunEngine();
+    const {
+        getGraphCallback,
+        activeConnections,
+        setActiveConnections,
+        networkGoalDisabled: disabled,
+        setNetworkGoalDisabled: setDisabled
+    } = useRunEngine();
 
     let nodes: Node<NodeData>[] = [];
     if (getGraphCallback) {
@@ -44,27 +42,23 @@ const NetworkGoalBox = () => {
 
     const possibleConnections = useMemo(() => {
         const connections: string[] = [];
-
         for (let i = 0; i < nodes.length; i++) {
             for (let j = i; j < nodes.length; j++) {
                 connections.push(
-                    `${nodes[i].data.nodeLabel} ~ ${nodes[j].data.nodeLabel}`
+                    `"${nodes[i].data.nodeLabel}" ~ "${nodes[j].data.nodeLabel}"`
                 );
             }
         }
-
         return connections.sort();
     }, [nodes]);
 
-    // Helper to add a new connection instance with a unique ID
     const handleAddConnection = (label: string) => {
         setActiveConnections((prev) => [
             ...prev,
             { id: crypto.randomUUID(), label }
-        ]);
+        ].sort((a,b) => a.label.localeCompare(b.label)));
     };
 
-    // Helper to remove a connection by its specific ID
     const handleRemoveConnection = (idToRemove: string) => {
         setActiveConnections((prev) => prev.filter((c) => c.id !== idToRemove));
     };
@@ -74,7 +68,6 @@ const NetworkGoalBox = () => {
             <div className="flex items-center justify-between mb-4">
                 <div className="flex justify-between gap-3">
                     <p className="font-medium w-fit">Set Network Goal</p>
-
                     <Badge className="w-fit text-sm p-2" variant="outline">
                         {activeConnections.length} selected
                     </Badge>
@@ -84,7 +77,7 @@ const NetworkGoalBox = () => {
                     Disabled
                     <Checkbox
                         checked={disabled}
-                        onClick={() => setDisabled((v) => !v)}
+                        onClick={() => setDisabled(!disabled)}
                     />
                 </Field>
             </div>
@@ -111,17 +104,11 @@ const NetworkGoalBox = () => {
                         <PopoverContent className="w-60 md:w-80 lg:w-100 p-0">
                             <Command>
                                 <CommandInput placeholder="Search connections..." />
-
                                 <CommandList>
-                                    <CommandEmpty>
-                                        No connection found.
-                                    </CommandEmpty>
-
+                                    <CommandEmpty>No connection found.</CommandEmpty>
                                     <CommandGroup>
                                         {possibleConnections.map((c) => {
-                                            // Count how many times this specific connection has been added
                                             const count = activeConnections.filter(ac => ac.label === c).length;
-
                                             return (
                                                 <CommandItem
                                                     key={c}
@@ -161,10 +148,8 @@ const NetworkGoalBox = () => {
                     </p>
                 ) : (
                     <div className="mt-6 flex flex-wrap gap-2">
-                        {activeConnections.sort((a, b) => {
-                            let first = a.label
-                            let second = b.label
-                            return first.localeCompare(second)
+                        {[...activeConnections].sort((a, b) => {
+                            return a.label.localeCompare(b.label);
                         }).map((connection) => (
                             <Badge
                                 key={connection.id}

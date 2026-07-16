@@ -16,16 +16,11 @@ ${EDITABLE_START_MARKER}
 export function buildFullSource(
     userCode: string,
     nodes: Node<NodeData>[] = [],
-    edges: Edge<EdgeData>[] = []
+    edges: Edge<EdgeData>[] = [],
+    networkCapacity: string[] = [],
+    networkGoal: string[] = [],
 ): string {
 
-    const capacities = edges.map(e => {
-        const sourceNode = nodes.find(n => n.id === e.source);
-        const targetNode = nodes.find(n => n.id === e.target);
-        const srcLabel = sourceNode?.data?.nodeLabel ?? 'Unknown';
-        const tgtLabel = targetNode?.data?.nodeLabel ?? 'Unknown';
-        return `"${srcLabel}" ~ "${tgtLabel}"`;
-    }).join(", ");
 
     const transmitProbs = edges
         .flatMap(e => {
@@ -86,12 +81,18 @@ export function buildFullSource(
 
     //TODO: Look at goal and networkCapacity. Clarify with TA
 
+    const capacity = networkCapacity?.length === 0 ? "" :
+        `networkCapacity :: NetworkCapacity BellKATTag\n" +
+        "networkCapacity = [${networkCapacity}]"
+    `
+
     // 4. Generate the dynamic suffix string
     const dynamicSuffix = `
 ${EDITABLE_END_MARKER}
 
--- networkCapacity :: NetworkCapacity BellKATTag
--- networkCapacity = [${capacities}]
+
+
+${capacity}
 
 actionConfig :: ProbabilisticActionConfiguration
 actionConfig = PAC
@@ -106,7 +107,7 @@ actionConfig = PAC
     }
 
 goal :: ProbBellKATTest
-goal = hasSubset ["A" ~ "C", "B" ~ "C"]
+goal = hasSubset [${networkGoal}]
 
 main :: IO ()
 main = pbkatMain actionConfig Nothing goal p

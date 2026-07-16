@@ -1,26 +1,18 @@
+import {useRunEngine} from "@/store/runEngine.ts";
+
 type OutputProps = {
     data: string;
     estimatedMode: boolean;
 };
 
-// ---- Grammar tokens ------------------------------------------------------
-// ⦅ ... ⦆        outer wrapper around the whole result
-// ⦃ ... ⦄        a connection set, e.g. "A~C,B~C" (comma-separated, possibly empty)
-// +              separates terms within one distribution
-// @()×           separates a connection set from its probability
-// NUM % DENOM    a fraction, e.g. "969 % 40000"
-// ,  (top level) separates the two bounds of an interval result
+
 const OUTER_OPEN = "⦅";
 const OUTER_CLOSE = "⦆";
 const SET_OPEN = "⦃";
 const SET_CLOSE = "⦄";
 const PROB_MARKER = "@()×";
 
-/**
- * Splits `str` on `separator`, but only where we are NOT inside a ⦃...⦄ set.
- * This is what lets us safely split on "+" or "," without being fooled by
- * commas that belong to a connection set like "A~C,B~C".
- */
+
 const splitTopLevel = (str: string, separator: string): string[] => {
     const parts: string[] = [];
     let depth = 0;
@@ -75,7 +67,7 @@ const parseTerm = (term: string): Term | null => {
         ? "None"
         : setContent.split(",").map((s) => s.trim()).join(", ");
 
-    return { key: setContent, label, numerator, denominator };
+    return {key: setContent, label, numerator, denominator};
 };
 
 const parseDistribution = (data: string): Term[] => {
@@ -86,6 +78,17 @@ const parseDistribution = (data: string): Term[] => {
 };
 
 const isValidTerm = (t: Term): boolean => !Number.isNaN(t.numerator) && !Number.isNaN(t.denominator) && t.denominator !== 0;
+
+
+const parseFraction = (frac: string, key: string): Term => {
+    const [numText, denomText] = frac.split("%");
+    return {
+        key,
+        label: "",
+        numerator: Number((numText ?? "0").trim()),
+        denominator: Number((denomText ?? "1").trim()),
+    };
+};
 
 
 const estimatedPercent = (t: Term | undefined): string => {
@@ -101,11 +104,6 @@ type RangeRow = {
     second?: Term;
 };
 
-/**
- * Pairs the terms from both sides of an interval by their connection-set
- * key rather than by array position, since each side can list its sets in a
- * different order (or omit sets the other side has).
- */
 const buildRangeRows = (firstTerms: Term[], secondTerms: Term[]): RangeRow[] => {
     const firstByKey = new Map(firstTerms.map((t) => [t.key, t]));
     const secondByKey = new Map(secondTerms.map((t) => [t.key, t]));
@@ -114,7 +112,7 @@ const buildRangeRows = (firstTerms: Term[], secondTerms: Term[]): RangeRow[] => 
     return allKeys.map((key) => {
         const first = firstByKey.get(key);
         const second = secondByKey.get(key);
-        return { key, label: (first ?? second)!.label, first, second };
+        return {key, label: (first ?? second)!.label, first, second};
     });
 };
 
@@ -128,23 +126,23 @@ const parseResult = (data: string): ParsedResult => {
     if (isIntervalResult(inner)) {
         const [firstRaw, secondRaw] = splitTopLevel(inner, ",");
         const rows = buildRangeRows(parseDistribution(firstRaw), parseDistribution(secondRaw));
-        return { isInterval: true, rows };
+        return {isInterval: true, rows};
     }
 
-    return { isInterval: false, terms: parseDistribution(inner) };
+    return {isInterval: false, terms: parseDistribution(inner)};
 };
 
-const Fraction = ({ numerator, denominator }: { numerator: string; denominator: string }) => {
+const Fraction = ({numerator, denominator}: { numerator: string; denominator: string }) => {
     return (
-        <span className="inline-flex flex-col items-center justify-center align-middle mx-1 text-xs">
-            <span className="px-1 text-[11px] leading-none">{numerator}</span>
-            <span className="w-full h-px bg-foreground/60 my-0.5" />
-            <span className="px-1 text-[11px] leading-none">{denominator}</span>
+        <span className="inline-flex flex-col items-center justify-center align-middle mx-1 text-sm">
+            <span className="px-1 text-[13px] lg:text-[16px] leading-none">{numerator}</span>
+            <span className="w-full h-px bg-foreground/60 my-0.5"/>
+            <span className="px-1 text-[13px] lg:text-[16px] leading-none">{denominator}</span>
         </span>
     );
 };
 
-const RowShell = ({ children }: { children: React.ReactNode }) => (
+const RowShell = ({children}: { children: React.ReactNode }) => (
     <div className="flex items-center gap-2 py-1 border-b last:border-0 border-muted/50 text-sm">
         {children}
     </div>
@@ -154,16 +152,72 @@ const EmptyState = () => (
     <div className="text-sm text-muted-foreground py-1">No connections could have been formed</div>
 );
 
-const FormattedOutput = ({ data, estimatedMode }: OutputProps) => {
-    if (!data) return <div className="flex flex-col gap-2 bg-background p-4 rounded-lg border shadow-inner"><EmptyState /></div>;
+const FormattedOutput = ({data, estimatedMode}: OutputProps) => {
+    if (!data) return <div className="flex flex-col gap-2 bg-background p-4 rounded-lg border shadow-inner">
+        <EmptyState/></div>;
 
     const result = parseResult(data);
+
+    const {activeConnections} = useRunEngine()
+
+    //If network goal is selected
+    if (data[0] === "(" && data[data.length - 1] === ")") {
+        const inner = data.slice(1, -1);
+        const [lowerRaw, upperRaw] = splitTopLevel(inner, ",");
+        const lower = parseFraction(lowerRaw, "lower");
+        const upper = parseFraction(upperRaw, "upper");
+
+        if (lower.denominator === upper.denominator && lower.numerator === upper.numerator) {
+            return (
+                <div className="flex flex-col gap-2 bg-background p-4 rounded-lg border shadow-inner">
+                    <p>The probability of achieving your Network goal ({
+                        activeConnections.map((connection, index) => {
+                            if (index === activeConnections.length - 1) {
+                                return <span>{connection.label}</span>
+                            }
+                            else {
+                                return <span>{connection.label}, </span>
+                            }
+                        })
+                    }) is : </p>
+                    {estimatedMode ? (
+                        <div className="flex gap-3 text-primary font-bold">
+                            <p>{estimatedPercent(lower)}%</p>
+                        </div>
+                    ) : (
+                        <div className="flex gap-3 font-bold">
+                            <Fraction numerator={String(lower.numerator)} denominator={String(lower.denominator)}/>
+                        </div>
+                    )}
+                </div>
+            )
+        }
+
+        return (
+            <div className="flex flex-col gap-2 bg-background p-4 rounded-lg border shadow-inner">
+                <p>The probability of achieving your Network goal is : </p>
+                {estimatedMode ? (
+                    <div className="flex gap-3 text-primary font-bold">
+                        <p>{estimatedPercent(lower)}%</p>
+                        -
+                        <p>{estimatedPercent(upper)}%</p>
+                    </div>
+                ) : (
+                    <div className="flex gap-3 font-bold">
+                        <Fraction numerator={String(lower.numerator)} denominator={String(lower.denominator)}/>
+                        -
+                        <Fraction numerator={String(upper.numerator)} denominator={String(upper.denominator)}/>
+                    </div>
+                )}
+            </div>
+        )
+    }
 
     return (
         <div className="flex flex-col gap-2 bg-background p-4 rounded-lg border shadow-inner">
             {result.isInterval ? (
                 result.rows.length === 0 ? (
-                    <EmptyState />
+                    <EmptyState/>
                 ) : (
                     result.rows.map((row) => (
                         <RowShell key={row.key}>
@@ -195,7 +249,7 @@ const FormattedOutput = ({ data, estimatedMode }: OutputProps) => {
                     ))
                 )
             ) : result.terms.length === 0 ? (
-                <EmptyState />
+                <EmptyState/>
             ) : (
                 result.terms.map((term) => (
                     <RowShell key={term.key}>
@@ -210,7 +264,7 @@ const FormattedOutput = ({ data, estimatedMode }: OutputProps) => {
                         ) : (
                             <>
                                 <span className="text-muted-foreground">Probability:</span>
-                                <Fraction numerator={String(term.numerator)} denominator={String(term.denominator)} />
+                                <Fraction numerator={String(term.numerator)} denominator={String(term.denominator)}/>
                             </>
                         )}
                     </RowShell>
