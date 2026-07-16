@@ -31,6 +31,7 @@ import {
 } from './haskellBoilerplate';
 import {useRunEngine} from "@/store/runEngine.ts";
 import {LoaderCircle} from "lucide-react";
+import NetworkGoalBox from "@/components/main/text_editor/NetworkGoalBox.tsx";
 
 export type editorSettings = {
     fontSize: number;
@@ -408,19 +409,24 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, { panelSize: number }>(({pan
 
     return (
         <div className="h-full w-full flex flex-col gap-3 p-4 pt-2 bg-card rounded-lg">
-            <div className="shrink-0 h-20">
+            <div className="flex flex-1 shrink-0 h-20">
                 <CustomizationBar settings={settings}
                                   setSettings={setSettings}
                                   panelSize={panelSize}
                 />
             </div>
-            <div className="flex-1 min-h-0 w-full flex rounded-lg border overflow-hidden nokey">
+            <div className="flex-20 min-h-0 w-full flex rounded-lg border overflow-hidden nokey">
                 <div id="monaco-editor-root" ref={editorRef} className="flex-1 min-h-0 w-full flex nokey"/>
                 {!isEditorReady && (
-                    <div className="w-full h-full flex items-center justify-center">
-                        <LoaderCircle className="animate-spin w-1/2 h-1/2"/>
+                    <div className="w-full h-full flex flex-col items-center justify-center">
+                        <p className="font-semibold text-xl">Editor is Loading. Please wait...</p>
+                        <LoaderCircle className="animate-spin w-1/6 h-1/6"/>
                     </div>
                 )}
+            </div>
+
+            <div className="shrink-0 flex-1">
+                <NetworkGoalBox />
             </div>
         </div>);
 });
