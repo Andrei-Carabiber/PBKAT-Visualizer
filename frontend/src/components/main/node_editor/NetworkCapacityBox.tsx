@@ -143,7 +143,7 @@ const NetworkCapacityBox = () => {
 
                 {networkCapacityConnections.length === 0 ? (
                     <p className="mt-6 text-sm text-muted-foreground">
-                        No required connections selected.
+                        No capacity active. If not selected, it is supposed that a link or node has unlimited capacity
                     </p>
                 ) : (
                     <div className="mt-6 flex flex-wrap gap-2">

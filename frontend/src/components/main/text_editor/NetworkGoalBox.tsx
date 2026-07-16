@@ -143,7 +143,7 @@ const NetworkGoalBox = () => {
 
                 {activeConnections.length === 0 ? (
                     <p className="mt-6 text-sm text-muted-foreground">
-                        No required connections selected.
+                        No network goal active.
                     </p>
                 ) : (
                     <div className="mt-6 flex flex-wrap gap-2">

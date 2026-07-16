@@ -79,8 +79,6 @@ export function buildFullSource(
         }).join(", ");
 
 
-    //TODO: Look at goal and networkCapacity. Clarify with TA
-
     const capacity = networkCapacity?.length === 0 ? "" :
         `networkCapacity :: NetworkCapacity BellKATTag\nnetworkCapacity = [${networkCapacity}]`
 
@@ -121,5 +119,5 @@ f :: ProbBellKATPolicy
 f = create "C" <> trans "C" ("B", "C")
 
 p :: ProbBellKATPolicy
-p = (e <.> f) <> (e <.> f)
+p = (e <||> f) <> (e <.> f)
 `;

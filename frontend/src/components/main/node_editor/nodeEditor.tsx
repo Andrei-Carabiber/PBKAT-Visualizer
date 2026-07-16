@@ -23,7 +23,7 @@ import EdgePropertiesSheet from "@/components/main/node_editor/EdgePropertiesShe
 import {useRunEngine} from "@/store/runEngine.ts";
 import {parseProtocolGraph} from "@/components/main/text_editor/protocolParser.ts";
 import * as React from "react";
-import NetworkCapacityBox from "@/components/main/node_editor/networkCapacity.tsx";
+import NetworkCapacityBox from "@/components/main/node_editor/NetworkCapacityBox.tsx";
 
 
 const initialNodes: Node<NodeData>[] = [
@@ -55,6 +55,7 @@ const initialNodes: Node<NodeData>[] = [
         data: {
             nodeLabel: "C",
             coherence_time: 1,
+            create_prob: 0.8
 
         }
     },

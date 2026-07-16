@@ -9,8 +9,6 @@ import {Switch} from "@/components/ui/switch.tsx";
 import {Label} from "@/components/ui/label.tsx";
 import FormattedOutput from "@/components/main/FormattedOutput.tsx";
 
-//TODO : Manage parallel execution, it gives result as a range divided by ","
-
 const MainView = () => {
     const {data, error, loading, clearOutput} = useRunEngine();
 

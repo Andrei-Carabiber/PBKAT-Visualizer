@@ -48,8 +48,8 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
     getGraphCallback: null,
 
     //NetworkGoal state
-    networkGoalDisabled: true,
-    activeConnections: [],
+    networkGoalDisabled: false,
+    activeConnections: [{label: '"A" ~ "C"', id: crypto.randomUUID(),}],
     setNetworkGoalDisabled: (disabled) => set({networkGoalDisabled: disabled}),
     setActiveConnections: (updater) => {
         if (typeof updater === 'function') {
@@ -60,8 +60,8 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
     },
 
     //Network capacity state
-    networkCapacityDisabled: true,
-    networkCapacityConnections: [],
+    networkCapacityDisabled: false,
+    networkCapacityConnections: [{label: '"A" ~ "C"', id: crypto.randomUUID()},{label: '"C" ~ "C"', id: crypto.randomUUID()},{label: '"C" ~ "C"', id: crypto.randomUUID()},],
     setNetworkCapacityDisabled:(disabled) => set({networkCapacityDisabled: disabled}),
     setNetworkCapacityConnections: (updater) => {
         if (typeof updater === 'function') {
