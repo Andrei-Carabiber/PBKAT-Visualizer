@@ -172,12 +172,8 @@ const FormattedOutput = ({data, estimatedMode}: OutputProps) => {
                 <div className="flex flex-col gap-2 bg-background p-4 rounded-lg border shadow-inner">
                     <p>The probability of achieving your Network goal ({
                         activeConnections.map((connection, index) => {
-                            if (index === activeConnections.length - 1) {
-                                return <span>{connection.label}</span>
-                            }
-                            else {
-                                return <span>{connection.label}, </span>
-                            }
+                            return <span key={connection.id}>{connection.label}
+                                {index === activeConnections.length - 1 ? "" : ", "}</span>
                         })
                     }) is : </p>
                     {estimatedMode ? (
