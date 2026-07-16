@@ -23,6 +23,7 @@ import EdgePropertiesSheet from "@/components/main/node_editor/EdgePropertiesShe
 import {useRunEngine} from "@/store/runEngine.ts";
 import {parseProtocolGraph} from "@/components/main/text_editor/protocolParser.ts";
 import * as React from "react";
+import NetworkCapacityBox from "@/components/main/node_editor/networkCapacity.tsx";
 
 
 const initialNodes: Node<NodeData>[] = [
@@ -424,6 +425,9 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
                                      updateNodeData={updateNodeData} takeSnapshot={takeSnapshot}/>
                 <EdgePropertiesSheet sheetOpen={edgeSheetOpen} setSheetOpen={setEdgeSheetOpen}
                                      selectedEdge={selectedEdge} updateEdgeData={updateEdgeData} takeSnapshot={takeSnapshot}/>
+            </div>
+            <div>
+                <NetworkCapacityBox />
             </div>
         </div>
     )

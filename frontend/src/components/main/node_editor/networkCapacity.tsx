@@ -23,15 +23,15 @@ import { Badge } from "@/components/ui/badge.tsx";
 import { Field } from "@/components/ui/field.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 
-const NetworkGoalBox = () => {
+const NetworkCapacityBox = () => {
     const [open, setOpen] = useState(false);
 
     const {
         getGraphCallback,
-        activeConnections,
-        setActiveConnections,
-        networkGoalDisabled: disabled,
-        setNetworkGoalDisabled: setDisabled
+        networkCapacityConnections,
+        setNetworkCapacityConnections,
+        networkCapacityDisabled: disabled,
+        setNetworkCapacityDisabled: setDisabled
     } = useRunEngine();
 
     let nodes: Node<NodeData>[] = [];
@@ -52,23 +52,23 @@ const NetworkGoalBox = () => {
     }, [nodes]);
 
     const handleAddConnection = (label: string) => {
-        setActiveConnections((prev) => [
+        setNetworkCapacityConnections((prev) => [
             ...prev,
             { id: crypto.randomUUID(), label }
         ].sort((a,b) => a.label.localeCompare(b.label)));
     };
 
     const handleRemoveConnection = (idToRemove: string) => {
-        setActiveConnections((prev) => prev.filter((c) => c.id !== idToRemove));
+        setNetworkCapacityConnections((prev) => prev.filter((c) => c.id !== idToRemove));
     };
 
     return (
         <div className="w-full h-full rounded-lg border bg-background px-3 py-4 shadow-sm">
             <div className="flex items-center justify-between mb-4">
                 <div className="flex justify-between gap-3">
-                    <p className="font-medium w-fit">Network Goal</p>
+                    <p className="font-medium w-fit">Network Capacity</p>
                     <Badge className="w-fit text-sm p-2" variant="outline">
-                        {activeConnections.length} selected
+                        {networkCapacityConnections.length} selected
                     </Badge>
                 </div>
 
@@ -107,7 +107,7 @@ const NetworkGoalBox = () => {
                                     <CommandEmpty>No connection found.</CommandEmpty>
                                     <CommandGroup>
                                         {possibleConnections.map((c) => {
-                                            const count = activeConnections.filter(ac => ac.label === c).length;
+                                            const count = networkCapacityConnections.filter(ac => ac.label === c).length;
                                             return (
                                                 <CommandItem
                                                     key={c}
@@ -130,24 +130,24 @@ const NetworkGoalBox = () => {
                         </PopoverContent>
                     </Popover>
 
-                    {activeConnections.length > 0 && (
+                    {networkCapacityConnections.length > 0 && (
                         <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => setActiveConnections([])}
+                            onClick={() => setNetworkCapacityConnections([])}
                         >
                             Clear all
                         </Button>
                     )}
                 </div>
 
-                {activeConnections.length === 0 ? (
+                {networkCapacityConnections.length === 0 ? (
                     <p className="mt-6 text-sm text-muted-foreground">
                         No required connections selected.
                     </p>
                 ) : (
                     <div className="mt-6 flex flex-wrap gap-2">
-                        {[...activeConnections].sort((a, b) => {
+                        {[...networkCapacityConnections].sort((a, b) => {
                             return a.label.localeCompare(b.label);
                         }).map((connection) => (
                             <Badge
@@ -167,4 +167,4 @@ const NetworkGoalBox = () => {
     );
 };
 
-export default NetworkGoalBox;
+export default NetworkCapacityBox;

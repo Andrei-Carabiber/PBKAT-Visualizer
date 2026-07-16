@@ -82,9 +82,7 @@ export function buildFullSource(
     //TODO: Look at goal and networkCapacity. Clarify with TA
 
     const capacity = networkCapacity?.length === 0 ? "" :
-        `networkCapacity :: NetworkCapacity BellKATTag\n" +
-        "networkCapacity = [${networkCapacity}]"
-    `
+        `networkCapacity :: NetworkCapacity BellKATTag\nnetworkCapacity = [${networkCapacity}]`
 
     // 4. Generate the dynamic suffix string
     const dynamicSuffix = `
@@ -110,7 +108,7 @@ goal :: ProbBellKATTest
 goal = hasSubset [${networkGoal}]
 
 main :: IO ()
-main = pbkatMain actionConfig Nothing goal p
+main = pbkatMain actionConfig ${capacity === "" ? "Nothing" : "(Just networkCapacity)"} goal p
 `;
 
     return `${PRELUDE}\n${userCode}\n${dynamicSuffix}`;

@@ -1,7 +1,7 @@
-import { create } from 'zustand';
-import type { Node, Edge } from "@xyflow/react";
-import type { NodeData, EdgeData } from "@/components/main/node_editor/nodeEditor.tsx";
-import { isCodeValid } from "@/components/main/text_editor/protocolParser.ts";
+import {create} from 'zustand';
+import type {Node, Edge} from "@xyflow/react";
+import type {NodeData, EdgeData} from "@/components/main/node_editor/nodeEditor.tsx";
+import {isCodeValid} from "@/components/main/text_editor/protocolParser.ts";
 
 export interface ActiveConnection {
     id: string;
@@ -21,6 +21,13 @@ interface RunEngineState {
     activeConnections: ActiveConnection[];
     setNetworkGoalDisabled: (disabled: boolean) => void;
     setActiveConnections: (connections: ActiveConnection[] | ((prev: ActiveConnection[]) => ActiveConnection[])) => void;
+
+    // Network Capacity
+    networkCapacityDisabled: boolean;
+    networkCapacityConnections: ActiveConnection[];
+    setNetworkCapacityDisabled: (disabled: boolean) => void;
+    setNetworkCapacityConnections: (connections: ActiveConnection[] | ((prev: ActiveConnection[]) => ActiveConnection[])) => void;
+
 
     // Editor and Graph
     registerEditor: (callback: () => string) => void;
@@ -43,21 +50,33 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
     //NetworkGoal state
     networkGoalDisabled: true,
     activeConnections: [],
-    setNetworkGoalDisabled: (disabled) => set({ networkGoalDisabled: disabled }),
+    setNetworkGoalDisabled: (disabled) => set({networkGoalDisabled: disabled}),
     setActiveConnections: (updater) => {
         if (typeof updater === 'function') {
-            set((state) => ({ activeConnections: updater(state.activeConnections) }));
+            set((state) => ({activeConnections: updater(state.activeConnections)}));
         } else {
-            set({ activeConnections: updater });
+            set({activeConnections: updater});
         }
     },
 
-    registerEditor: (callback) => set({ getCodeCallback: callback }),
-    registerUserCodeGetter: (callback) => set({ getUserCodeCallback: callback }),
-    registerGraph: (callback) => set({ getGraphCallback: callback }),
+    //Network capacity state
+    networkCapacityDisabled: true,
+    networkCapacityConnections: [],
+    setNetworkCapacityDisabled:(disabled) => set({networkCapacityDisabled: disabled}),
+    setNetworkCapacityConnections: (updater) => {
+        if (typeof updater === 'function') {
+            set((state) => ({networkCapacityConnections: updater(state.networkCapacityConnections)}));
+        } else {
+            set({networkCapacityConnections: updater});
+        }
+    },
+
+    registerEditor: (callback) => set({getCodeCallback: callback}),
+    registerUserCodeGetter: (callback) => set({getUserCodeCallback: callback}),
+    registerGraph: (callback) => set({getGraphCallback: callback}),
 
     handleRun: async () => {
-        const { getCodeCallback, getGraphCallback, getUserCodeCallback, activeConnections, networkGoalDisabled } = get();
+        const {getCodeCallback, getGraphCallback, getUserCodeCallback, activeConnections, networkGoalDisabled} = get();
         if (!getCodeCallback) {
             set({
                 error: "The code editor is still initializing language servers. Please wait a moment and try again. (Wait 10seconds)",
@@ -69,10 +88,10 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
         const fullCode = getCodeCallback();
         const userRawCode = getUserCodeCallback?.() ?? fullCode;
 
-        set({ loading: true, error: null, data: null });
+        set({loading: true, error: null, data: null});
 
         if (fullCode) {
-            const graphSnapshot = getGraphCallback?.() ?? { nodes: [], edges: [] };
+            const graphSnapshot = getGraphCallback?.() ?? {nodes: [], edges: []};
             const validation = isCodeValid(userRawCode, graphSnapshot.nodes, graphSnapshot.edges);
 
             if (!validation.valid) {
@@ -92,7 +111,7 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
             }
             const response = await fetch(RUN_PROTOCOL_URL, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {"Content-Type": "application/json"},
                 body: JSON.stringify(payload),
             });
 
@@ -102,10 +121,10 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
             }
 
             const result = await response.json();
-            set({ data: result.output, loading: false });
+            set({data: result.output, loading: false});
         } catch (e: any) {
-            set({ error: e.message || "An error occurred.", loading: false });
+            set({error: e.message || "An error occurred.", loading: false});
         }
     },
-    clearOutput: () => set({ data: null, error: null }),
+    clearOutput: () => set({data: null, error: null}),
 }));

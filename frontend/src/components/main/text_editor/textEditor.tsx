@@ -363,11 +363,15 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, { panelSize: number }>(({pan
             const isGoalDisabled = useRunEngine.getState().networkGoalDisabled;
             const connections = useRunEngine.getState().activeConnections;
 
+            const isNetworkDisabled = useRunEngine.getState().networkCapacityDisabled;
+            const capacities = isNetworkDisabled ? [] : useRunEngine.getState().networkCapacityConnections.map(c => c.label);
+
             // Resolve whether to pass the goal array or undefined/null depending on what buildFullSource expects
             const networkGoal = isGoalDisabled ? [] : connections.map(c => c.label);
 
+
             // Pass the nodes, edges, and networkGoal context to build the correct boilerplate configuration blocks
-            return buildFullSource(userCode, graphData.nodes, graphData.edges, [], networkGoal);
+            return buildFullSource(userCode, graphData.nodes, graphData.edges, capacities, networkGoal);
         });
 
         registerUserCodeGetter(() => {
