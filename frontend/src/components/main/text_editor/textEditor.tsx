@@ -66,16 +66,17 @@ function buildUserConfigurationJson(theme: string): string {
     return JSON.stringify({
         'workbench.colorTheme': themeSettingFor(theme),
 
+        'editor.fontSize': 15,
+        'editor.lineHeight': 22,
+        'editor.fontFamily': 'JetBrains Mono, Fira Code, monospace',
+
         'editor.wordBasedSuggestions': 'off',
         'editor.tabSize': 4,
         'editor.insertSpaces': true,
-
         'editor.cursorSmoothCaretAnimation': 'on',
         'editor.bracketPairColorization.enabled': true,
-
         'editor.renderLineHighlight': 'all',
-        'editor.letterSpacing': 0.3,
-
+        'editor.letterSpacing': 0,
         'editor.minimap.enabled': false
     });
 }
@@ -210,7 +211,7 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, { panelSize: number }>(({pan
     const initialized = useRef(false);
     const {theme} = useTheme();
     const [settings, setSettings] = useState<editorSettings>({
-        fontSize: 14,
+        fontSize: 15,
         fontFamily: 'JetBrains Mono, Fira Code, monospace',
         lineHeight: 22,
         letterSpacing: 0,
@@ -341,7 +342,7 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, { panelSize: number }>(({pan
                 editorRefInstance.current = editorApp.getEditor();
                 restrictToEditableRegion(editorRefInstance.current!);
                 await lcWrapper.start()
-                
+
                 setIsEditorReady(true);
             }
         };
@@ -357,7 +358,7 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, { panelSize: number }>(({pan
             const userCode = model ? extractUserCode(model) : '';
 
             // Fetch the graph data right out of our Zustand hook callback setup
-            const graphData = useRunEngine.getState().getGraphCallback?.() ?? { nodes: [], edges: [] };
+            const graphData = useRunEngine.getState().getGraphCallback?.() ?? {nodes: [], edges: []};
 
             // Retrieve current network goal state directly from Zustand
             const isGoalDisabled = useRunEngine.getState().networkGoalDisabled;
@@ -392,7 +393,8 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, { panelSize: number }>(({pan
 
     useEffect(() => {
         const editor = editorRefInstance.current;
-        if (!editor) return;
+
+        if (!isEditorReady || !editor) return;
 
         editor.updateOptions({
             fontSize: settings.fontSize,
@@ -413,7 +415,7 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, { panelSize: number }>(({pan
             renderLineHighlight: 'all',
             bracketPairColorization: {enabled: true},
         });
-    }, [settings]);
+    }, [settings, isEditorReady]);
 
     return (
         <div className="h-full w-full flex flex-col gap-3 p-4 pt-2 bg-card rounded-lg">
@@ -434,7 +436,7 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, { panelSize: number }>(({pan
             </div>
 
             <div className="shrink-0 flex-1">
-                <NetworkGoalBox />
+                <NetworkGoalBox/>
             </div>
         </div>);
 });
