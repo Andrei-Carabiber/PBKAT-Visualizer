@@ -23,6 +23,68 @@ const ALLOWED_COMMANDS = new Set(['run', 'execution-trace', 'probability']);
 const SHARED_BUILD_DIR = '/opt/pbkat/shared-build-cache';
 const execAsync = promisify(exec);
 
+// ── HLS Worker Pool ──────────────────────────────────────────────────
+const POOL_SIZE = 10;
+const workerPool = [];  // Array of { id, workspacePath, hlsProcess, cachedInitializeResult }
+
+async function spawnWorker() {
+    const id = crypto.randomUUID();
+    const workspacePath = await createIsolatedWorkspace(id);
+
+    const hlsProcess = createServerProcess(
+        'Haskell', 'haskell-language-server-wrapper', ['--lsp'],
+        { cwd: workspacePath }
+    );
+
+    const worker = { id, workspacePath, hlsProcess, cachedInitializeResult: null, clientWriter: null };
+
+    // Single listener for the lifetime of this HLS process.
+    // During pre-warming: respond to HLS requests with stubs so it doesn't hang.
+    // After a client connects: forward everything to the client's writer.
+    hlsProcess.reader.listen((msg) => {
+        // Cache the initialize result (has capabilities)
+        if (msg.id !== undefined && msg.result && worker.cachedInitializeResult === null && msg.result.capabilities) {
+            worker.cachedInitializeResult = msg;
+        }
+
+        // If a client is connected, forward all messages to them
+        if (worker.clientWriter) {
+            worker.clientWriter.write(msg);
+            return;
+        }
+
+        // Pre-warming phase: HLS sends requests (with id + method) that need responses
+        // e.g. window/workDoneProgress/create, client/registerCapability
+        if (msg.id !== undefined && msg.method) {
+            hlsProcess.writer.write({
+                jsonrpc: '2.0',
+                id: msg.id,
+                result: null
+            });
+        }
+    });
+
+    hlsProcess.onExit?.(() => {
+        console.log(`Pool worker ${id} HLS exited.`);
+        const idx = workerPool.indexOf(worker);
+        if (idx !== -1) workerPool.splice(idx, 1);
+    });
+
+    return worker;
+}
+
+function replenishPool() {
+    const needed = POOL_SIZE - workerPool.length;
+    for (let i = 0; i < needed; i++) {
+        spawnWorker().then(worker => {
+            workerPool.push(worker);
+            console.log(`Pool: ${workerPool.length}/${POOL_SIZE} workers ready`);
+        }).catch(err => {
+            console.error('Failed to spawn pool worker:', err);
+        });
+    }
+}
+// ─────────────────────────────────────────────────────────────────────
 
 async function createIsolatedWorkspace(id) {
     const workspacePath = path.resolve(`/tmp/pbkat-workspace-${id}`);
@@ -174,9 +236,9 @@ const wss = new WebSocketServer({ server });
 
 
 wss.on('connection', async (ws) => {
-    console.log("New client connected. Setting up isolated environment...");
+    console.log("New client connected. Assigning worker...");
 
-    const connectionId = crypto.randomUUID();
+    let worker = workerPool.shift();
     let workspacePath;
     let hlsProcess = null;
     let cachedInitializeResult = null;
@@ -193,35 +255,60 @@ wss.on('connection', async (ws) => {
     const reader = new WebSocketMessageReader(socket);
     const writer = new WebSocketMessageWriter(socket);
 
-    try {
-        // Create a unique folder for this WebSocket connection
-        workspacePath = await createIsolatedWorkspace(connectionId);
+    if (worker) {
+        // Use pre-warmed worker from pool
+        console.log(`Assigned pool worker ${worker.id} (pool: ${workerPool.length}/${POOL_SIZE})`);
+        workspacePath = worker.workspacePath;
+        hlsProcess = worker.hlsProcess;
+        cachedInitializeResult = worker.cachedInitializeResult;
 
-        // Spawn a DEDICATED HLS process pointing exclusively to this workspace
-        hlsProcess = createServerProcess(
-            'Haskell', 'haskell-language-server-wrapper', ['--lsp'],
-            { cwd: workspacePath }
-        );
+        // Redirect the existing listener to pipe messages to this client
+        // (no second hlsProcess.reader.listen — the one from spawnWorker handles it)
+        worker.clientWriter = writer;
 
         hlsProcess.onExit?.(() => {
-            console.log(`HLS Process for connection ${connectionId} exited.`);
+            console.log(`HLS Process for connection ${worker.id} exited.`);
             hlsProcess = null;
             cachedInitializeResult = null;
             activeDocUri = null;
         });
 
-        // Pipe HLS stdout/diagnostics back ONLY to this connected client
-        hlsProcess.reader.listen((msg) => {
-            if (msg.id !== undefined && msg.result && cachedInitializeResult === null && msg.result.capabilities) {
-                cachedInitializeResult = msg;
-            }
-            writer.write(msg);
-        });
+        // Replenish pool in background
+        replenishPool();
+    } else {
+        // Fallback: no workers available, spawn inline (slow path)
+        console.warn("Pool exhausted! Spawning HLS inline (slow path)...");
+        const connectionId = crypto.randomUUID();
 
-    } catch (err) {
-        console.error("Failed to initialize client environment:", err);
-        ws.close();
-        return;
+        try {
+            workspacePath = await createIsolatedWorkspace(connectionId);
+
+            hlsProcess = createServerProcess(
+                'Haskell', 'haskell-language-server-wrapper', ['--lsp'],
+                { cwd: workspacePath }
+            );
+
+            hlsProcess.onExit?.(() => {
+                console.log(`HLS Process for connection ${connectionId} exited.`);
+                hlsProcess = null;
+                cachedInitializeResult = null;
+                activeDocUri = null;
+            });
+
+            hlsProcess.reader.listen((msg) => {
+                if (msg.id !== undefined && msg.result && cachedInitializeResult === null && msg.result.capabilities) {
+                    cachedInitializeResult = msg;
+                }
+                writer.write(msg);
+            });
+        } catch (err) {
+            console.error("Failed to initialize client environment:", err);
+            ws.close();
+            return;
+        }
+
+        // Also try to replenish pool
+        replenishPool();
     }
 
     let seenInitialize = false;
@@ -263,7 +350,8 @@ wss.on('connection', async (ws) => {
     });
 
     ws.on('close', async () => {
-        console.log(`Client ${connectionId} disconnected. Cleaning up...`);
+        const id = worker?.id ?? 'inline';
+        console.log(`Client ${id} disconnected. Cleaning up...`);
 
         if (hlsProcess) {
             try {
@@ -286,4 +374,19 @@ wss.on('connection', async (ws) => {
 
 server.listen(8080, () => {
     console.log('HTTP & WebSocket Server running on port 8080');
+    console.log(`Pre-warming ${POOL_SIZE} HLS workers...`);
+    replenishPool();
 });
+
+// Graceful shutdown: dispose all pooled workers
+async function shutdownPool() {
+    console.log(`Shutting down ${workerPool.length} pooled workers...`);
+    const workers = workerPool.splice(0);
+    await Promise.allSettled(workers.map(async (w) => {
+        try { w.hlsProcess.dispose(); } catch {}
+        try { await fs.rm(w.workspacePath, { recursive: true, force: true }); } catch {}
+    }));
+}
+
+process.on('SIGTERM', async () => { await shutdownPool(); process.exit(0); });
+process.on('SIGINT', async () => { await shutdownPool(); process.exit(0); });
