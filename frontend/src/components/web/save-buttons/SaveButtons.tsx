@@ -14,6 +14,7 @@ import {type ActiveConnection, useRunEngine} from "@/store/runEngine.ts";
 import type {Edge, Node} from "@xyflow/react";
 import type {EdgeData, NodeData} from "@/components/main/node_editor/nodeEditor.tsx";
 import LocalSaveDisplayCard from "@/components/web/save-buttons/local-save-display-card.tsx";
+import {toast} from "sonner";
 
 export type localStorageSave = {
     id: string,
@@ -140,6 +141,31 @@ const SaveButtons = () => {
         }
     }
 
+    const handleShare = () => {
+        if (!getUserCodeCallback || !getGraphCallback) {
+            toast.error("Editor is not loaded yet. Try again later.")
+            return
+        }
+
+        const shareState = {
+            code: getUserCodeCallback(),
+            graph: getGraphCallback(),
+            goal: activeConnections,
+            goalDisabled: networkGoalDisabled,
+            networkCapacity: networkCapacityConnections,
+            capacityDisabled: networkCapacityDisabled
+        };
+
+        const jsonStr = JSON.stringify(shareState);
+        const base64Token = btoa(encodeURIComponent(jsonStr));
+
+        const shareableUrl = `${window.location.origin}/load/${base64Token}`;
+
+        navigator.clipboard.writeText(shareableUrl);
+
+        toast("Link has been copied to clipboard")
+    };
+
     return (
         <div className="flex gap-4 text-center">
             {/*SAVE*/}
@@ -220,13 +246,19 @@ const SaveButtons = () => {
 
                     <div className="flex justify-end gap-2 mt-4">
                         <DialogClose asChild>
-                            <Button variant="outline" className="text-sm px-10 py-4 border-2 border-secondary-foreground dark:hover:bg-muted">
+                            <Button variant="outline"
+                                    className="text-sm px-10 py-4 border-2 border-secondary-foreground dark:hover:bg-muted">
                                 Cancel
                             </Button>
                         </DialogClose>
                     </div>
                 </DialogContent>
             </Dialog>
+
+            <Button onClick={handleShare} variant="outline"
+                    className="p-5 border-2 border-secondary-foreground dark:hover:bg-muted">
+                Share
+            </Button>
         </div>
     );
 };

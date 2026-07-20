@@ -30,6 +30,10 @@ interface RunEngineState {
     setNetworkCapacityDisabled: (disabled: boolean) => void;
     setNetworkCapacityConnections: (connections: ActiveConnection[] | ((prev: ActiveConnection[]) => ActiveConnection[])) => void;
 
+    //State before loading
+    pendingSharedState: PendingState | null;
+    setPendingSharedState: (state: PendingState | null) => void;
+
 
     // Editor and Graph
     registerEditor: (callback: () => string) => void;
@@ -39,6 +43,12 @@ interface RunEngineState {
     registerUserCodeSetter: (callback: (code: string) => void) => void;
     handleRun: () => Promise<void>;
     clearOutput: () => void;
+}
+
+//State before editors loaded
+interface PendingState {
+    code: string;
+    graph: { nodes: any[]; edges: any[] };
 }
 
 const RUN_PROTOCOL_URL = "http://localhost:8080/run-protocol";
@@ -52,6 +62,10 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
     setGraphCallback: null,
     setUserCodeCallback: null,
     getGraphCallback: null,
+
+    //State before load
+    pendingSharedState: null,
+     setPendingSharedState: (pendingSharedState) => {set({pendingSharedState})},
 
     //NetworkGoal state
     networkGoalDisabled: false,
@@ -80,8 +94,22 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
     registerEditor: (callback) => set({getCodeCallback: callback}),
     registerUserCodeGetter: (callback) => set({getUserCodeCallback: callback}),
     registerGraph: (callback) => set({getGraphCallback: callback}),
-    registerGraphSetter: (callback) => set({setGraphCallback: callback}),
-    registerUserCodeSetter: (callback) => set({setUserCodeCallback: callback}),
+    registerGraphSetter: (callback) => {
+        set({setGraphCallback: callback})
+        const pending = get().pendingSharedState;
+        if (pending?.graph) {
+            callback(pending.graph.nodes, pending.graph.edges);
+            if (get().setUserCodeCallback) set({ pendingSharedState: null });
+        }
+    },
+    registerUserCodeSetter: (callback) => {
+        set({ setUserCodeCallback: callback });
+        const pending = get().pendingSharedState;
+        if (pending?.code) {
+            callback(pending.code);
+            if (get().setGraphCallback) set({ pendingSharedState: null });
+        }
+    },
 
     handleRun: async () => {
         const {getCodeCallback, getGraphCallback, getUserCodeCallback, activeConnections, networkGoalDisabled} = get();
