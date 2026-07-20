@@ -56,7 +56,16 @@ const parseTerm = (term: string): Term | null => {
     if (setEnd === -1) return null;
 
     const setContent = term.slice(SET_OPEN.length, setEnd).trim();
-    const rest = term.slice(setEnd + SET_CLOSE.length);
+    const rest = term.slice(setEnd + SET_CLOSE.length).trim();
+
+    if (rest === "@()") {
+        const label = setContent.length === 0
+            ? "None"
+            : setContent.split(",").map((s) => s.trim()).join(", ");
+
+        return { key: setContent, label, numerator: 1, denominator: 1 };
+    }
+
     if (!rest.startsWith(PROB_MARKER)) return null;
 
     const [numText, denomText] = rest.slice(PROB_MARKER.length).split("%");
@@ -67,7 +76,7 @@ const parseTerm = (term: string): Term | null => {
         ? "None"
         : setContent.split(",").map((s) => s.trim()).join(", ");
 
-    return {key: setContent, label, numerator, denominator};
+    return { key: setContent, label, numerator, denominator };
 };
 
 const parseDistribution = (data: string): Term[] => {
@@ -153,8 +162,13 @@ const EmptyState = () => (
 );
 
 const FormattedOutput = ({data, estimatedMode}: OutputProps) => {
-    if (!data) return <div className="flex flex-col gap-2 bg-background p-4 rounded-lg border shadow-inner">
-        <EmptyState/></div>;
+    if (!data) {
+        return (
+            <div className="flex flex-col gap-2 bg-background p-4 rounded-lg border shadow-inner">
+                <EmptyState/>
+            </div>
+        )
+    }
 
     const result = parseResult(data);
 

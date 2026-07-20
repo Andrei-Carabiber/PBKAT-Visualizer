@@ -15,6 +15,8 @@ interface RunEngineState {
     getCodeCallback: (() => string) | null;
     getUserCodeCallback: (() => string) | null;
     getGraphCallback: (() => { nodes: Node<NodeData>[]; edges: Edge<EdgeData>[] }) | null;
+    setGraphCallback: ((nodes: Node<NodeData>[], edges: Edge<EdgeData>[]) => void) | null;
+    setUserCodeCallback: ((code: string) => void) | null;
 
     // Network Goal
     networkGoalDisabled: boolean;
@@ -33,6 +35,8 @@ interface RunEngineState {
     registerEditor: (callback: () => string) => void;
     registerUserCodeGetter: (callback: () => string) => void;
     registerGraph: (callback: () => { nodes: Node<NodeData>[]; edges: Edge<EdgeData>[] }) => void;
+    registerGraphSetter: (callback: (nodes: Node<NodeData>[], edges: Edge<EdgeData>[]) => void) => void;
+    registerUserCodeSetter: (callback: (code: string) => void) => void;
     handleRun: () => Promise<void>;
     clearOutput: () => void;
 }
@@ -45,6 +49,8 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
     error: null,
     getCodeCallback: null,
     getUserCodeCallback: null,
+    setGraphCallback: null,
+    setUserCodeCallback: null,
     getGraphCallback: null,
 
     //NetworkGoal state
@@ -74,6 +80,8 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
     registerEditor: (callback) => set({getCodeCallback: callback}),
     registerUserCodeGetter: (callback) => set({getUserCodeCallback: callback}),
     registerGraph: (callback) => set({getGraphCallback: callback}),
+    registerGraphSetter: (callback) => set({setGraphCallback: callback}),
+    registerUserCodeSetter: (callback) => set({setUserCodeCallback: callback}),
 
     handleRun: async () => {
         const {getCodeCallback, getGraphCallback, getUserCodeCallback, activeConnections, networkGoalDisabled} = get();

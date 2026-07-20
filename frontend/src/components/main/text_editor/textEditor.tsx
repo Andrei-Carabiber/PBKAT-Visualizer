@@ -96,29 +96,64 @@ function restrictToEditableRegion(editorInstance: monacoEditor.IStandaloneCodeEd
     const model = editorInstance.getModel();
     if (!model) return;
 
-    const startMatch = model.findMatches(EDITABLE_START_MARKER, false, false, true, null, false)[0];
-    const endMatch = model.findMatches(EDITABLE_END_MARKER, false, false, true, null, false)[0];
-    if (!startMatch || !endMatch) {
-        console.warn('Editable region markers not found; skipping lock/hide setup.');
-        return;
+    // Decoration ids for the "locked" prelude/suffix regions. These are mutable
+    // because they must be recreated whenever the underlying decorations are lost
+    // (e.g. a full `model.setValue()` call clears all decorations on the model).
+    let preludeDecorationId: string | undefined;
+    let suffixDecorationId: string | undefined;
+
+    // (Re)computes the marker positions and (re)creates the prelude/suffix
+    // decorations from scratch. Returns false if the markers can't be found
+    // (e.g. mid-update, or markers were stripped out).
+    function setupDecorations(): boolean {
+        const startMatch = model!.findMatches(EDITABLE_START_MARKER, false, false, true, null, false)[0];
+        const endMatch = model!.findMatches(EDITABLE_END_MARKER, false, false, true, null, false)[0];
+        if (!startMatch || !endMatch) {
+            console.warn('Editable region markers not found; skipping lock/hide setup.');
+            return false;
+        }
+
+        const lastLine = model!.getLineCount();
+        const oldIds = [preludeDecorationId, suffixDecorationId].filter((id): id is string => !!id);
+        const [newPreludeId, newSuffixId] = model!.deltaDecorations(oldIds, [
+            {
+                range: new Range(1, 1, startMatch.range.startLineNumber, 1),
+                options: {stickiness: monacoEditor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges}
+            },
+            {
+                range: new Range(endMatch.range.startLineNumber, 1, lastLine, model!.getLineMaxColumn(lastLine)),
+                options: {stickiness: monacoEditor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges}
+            },
+        ]);
+        preludeDecorationId = newPreludeId;
+        suffixDecorationId = newSuffixId;
+        return true;
     }
 
-
-    const lastLine = model.getLineCount();
-    const [preludeDecorationId, suffixDecorationId] = model.deltaDecorations([], [
-        {
-            range: new Range(1, 1, startMatch.range.startLineNumber, 1),
-            options: {stickiness: monacoEditor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges}
-        },
-        {
-            range: new Range(endMatch.range.startLineNumber, 1, lastLine, model.getLineMaxColumn(lastLine)),
-            options: {stickiness: monacoEditor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges}
-        },
-    ]);
+    if (!setupDecorations()) return;
 
     function currentBounds() {
-        const preludeRange = model!.getDecorationRange(preludeDecorationId)!;
-        const suffixRange = model!.getDecorationRange(suffixDecorationId)!;
+        let preludeRange = preludeDecorationId ? model!.getDecorationRange(preludeDecorationId) : null;
+        let suffixRange = suffixDecorationId ? model!.getDecorationRange(suffixDecorationId) : null;
+
+        // A full model.setValue() (used e.g. when programmatically setting code)
+        // clears decorations entirely, so the tracked ranges above can come back
+        // null. Self-heal by re-deriving fresh decorations from the markers.
+        if (!preludeRange || !suffixRange) {
+            if (!setupDecorations()) {
+                // Markers vanished; fall back to something safe rather than throwing.
+                const fallback = new Range(1, 1, 1, 1);
+                return {
+                    preludeRange: fallback,
+                    suffixRange: fallback,
+                    editableStartLine: 1,
+                    editableEndLine: model!.getLineCount(),
+                };
+            }
+            preludeRange = model!.getDecorationRange(preludeDecorationId!)!;
+            suffixRange = model!.getDecorationRange(suffixDecorationId!)!;
+        }
+
         return {
             preludeRange,
             suffixRange,
@@ -226,6 +261,8 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, { panelSize: number }>(({pan
     const [isEditorReady, setIsEditorReady] = useState(false);
     const registerEditor = useRunEngine(state => state.registerEditor);
     const registerUserCodeGetter = useRunEngine(state => state.registerUserCodeGetter);
+    const registerUserCodeSetter = useRunEngine(state => state.registerUserCodeSetter);
+
 
     useImperativeHandle(ref, () => ({
         getUserCode: () => {
@@ -379,7 +416,21 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, { panelSize: number }>(({pan
             const model = editorRefInstance.current?.getModel();
             return model ? extractUserCode(model) : '';
         });
-    }, [isEditorReady, registerEditor, registerUserCodeGetter]);
+
+        registerUserCodeSetter((newCode) => {
+            const model = editorRefInstance.current?.getModel();
+            if (!model) return;
+
+            const fullSourceCode = buildFullSource(
+                newCode,
+                useRunEngine.getState().getGraphCallback?.().nodes ?? [],
+                useRunEngine.getState().getGraphCallback?.().edges ?? []
+            );
+
+            editorRefInstance.current?.setValue(fullSourceCode);
+        });
+
+    }, [isEditorReady, registerEditor, registerUserCodeGetter, registerUserCodeSetter]);
 
 
     const mounted = useRef(false);

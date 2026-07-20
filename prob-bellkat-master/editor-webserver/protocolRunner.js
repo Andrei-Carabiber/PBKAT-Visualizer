@@ -37,13 +37,6 @@ export function createProtocolRouter() {
 
             try {
                 if (command === 'probability') {
-                    // "probability" is not a standalone mode: PBKAT computes it by reading
-                    // the convex-set JSON produced by a prior "--json run" invocation from
-                    // stdin. These two cabal invocations MUST run one after the other, not
-                    // concurrently (e.g. via a shell pipe) - running two "cabal run"
-                    // processes at once against the same SHARED_BUILD_DIR races on writing
-                    // the package registration file (ghc-pkg: cannot create ... already
-                    // exists) and reliably breaks the build.
                     const runResult = await execAsync(
                         `cabal run playground --builddir=${SHARED_BUILD_DIR} -- --json run`,
                         execOpts

@@ -304,11 +304,23 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
 
     //Connect to zustand
     const registerGraph = useRunEngine((state) => state.registerGraph)
+    const registerGraphSetter = useRunEngine((state) => state.registerGraphSetter);
+
     useEffect(() => {
         if (registerGraph) {
-            registerGraph(() => ({nodes,edges}));
+            registerGraph(() => ({ nodes, edges }));
         }
     }, [nodes, edges, registerGraph]);
+
+    useEffect(() => {
+        if (registerGraphSetter) {
+            registerGraphSetter((newNodes, newEdges) => {
+                setNodes(newNodes);
+                setEdges(newEdges);
+                setTimeout(() => fitView(), 50);
+            });
+        }
+    }, [setNodes, setEdges, fitView, registerGraphSetter]);
 
 
     //Auto-create button
