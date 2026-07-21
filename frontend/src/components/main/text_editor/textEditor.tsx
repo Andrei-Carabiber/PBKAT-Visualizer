@@ -1,4 +1,4 @@
-import {forwardRef, useEffect, useImperativeHandle, useRef, useState} from 'react';
+import {forwardRef, useEffect, useRef, useState} from 'react';
 import * as vscode from 'vscode';
 import {EditorApp, type EditorAppConfig} from 'monaco-languageclient/editorApp';
 import {configureDefaultWorkerFactory} from 'monaco-languageclient/workerFactory';
@@ -46,10 +46,6 @@ export type editorSettings = {
     automaticLayout: boolean;
 }
 
-export type MonacoEditorHandle = {
-    getUserCode: () => string;
-};
-
 type HiddenAreasCapableEditor = monacoEditor.IStandaloneCodeEditor & {
     setHiddenAreas: (ranges: InstanceType<typeof Range>[]) => void;
 };
@@ -92,9 +88,15 @@ const ALWAYS_ALLOWED_KEYCODES = new Set<number>([
     KeyCode.Alt, KeyCode.Meta,
 ]);
 
-function restrictToEditableRegion(editorInstance: monacoEditor.IStandaloneCodeEditor) {
+function restrictToEditableRegion(
+    editorInstance: monacoEditor.IStandaloneCodeEditor
+): () => void {
     const model = editorInstance.getModel();
-    if (!model) return;
+
+    if (!model) {
+        return () => {
+        }
+    }
 
     // Decoration ids for the "locked" prelude/suffix regions. These are mutable
     // because they must be recreated whenever the underlying decorations are lost
@@ -130,7 +132,10 @@ function restrictToEditableRegion(editorInstance: monacoEditor.IStandaloneCodeEd
         return true;
     }
 
-    if (!setupDecorations()) return;
+    if (!setupDecorations()) {
+        return () => {
+        };
+    }
 
     function currentBounds() {
         let preludeRange = preludeDecorationId ? model!.getDecorationRange(preludeDecorationId) : null;
@@ -163,10 +168,18 @@ function restrictToEditableRegion(editorInstance: monacoEditor.IStandaloneCodeEd
     }
 
     function applyHiddenAreas() {
-        const {preludeRange, suffixRange} = currentBounds();
-        (editorInstance as HiddenAreasCapableEditor).setHiddenAreas([preludeRange, suffixRange]);
-    }
+        const { preludeRange, suffixRange } = currentBounds();
 
+        const hiddenEditor = editorInstance as HiddenAreasCapableEditor;
+
+        requestAnimationFrame(() => {
+            hiddenEditor.setHiddenAreas([]);
+            hiddenEditor.setHiddenAreas([
+                preludeRange,
+                suffixRange,
+            ]);
+        });
+    }
     function editableRangeNow(): InstanceType<typeof Range> {
         const {editableStartLine, editableEndLine} = currentBounds();
         return new Range(editableStartLine, 1, editableEndLine, model!.getLineMaxColumn(editableEndLine));
@@ -181,8 +194,6 @@ function restrictToEditableRegion(editorInstance: monacoEditor.IStandaloneCodeEd
     }
 
     applyHiddenAreas();
-
-    model.onDidChangeContent(() => applyHiddenAreas());
 
     editorInstance.addCommand(KeyMod.CtrlCmd | KeyCode.KeyA, () => {
         editorInstance.setSelection(editableRangeNow());
@@ -226,6 +237,7 @@ function restrictToEditableRegion(editorInstance: monacoEditor.IStandaloneCodeEd
         await navigator.clipboard.writeText(text);
         editorInstance.executeEdits('cut-guard', selections.map(sel => ({range: sel, text: ''})));
     });
+    return applyHiddenAreas;
 }
 
 function extractUserCode(model: monacoEditor.ITextModel): string {
@@ -240,9 +252,10 @@ function extractUserCode(model: monacoEditor.ITextModel): string {
     return model.getValueInRange(new Range(from, 1, to, model.getLineMaxColumn(to)));
 }
 
-const MonacoEditor = forwardRef<MonacoEditorHandle, { panelSize: number }>(({panelSize}, ref) => {
+const MonacoEditor = forwardRef<any, { panelSize: number }>(({panelSize}, _ref) => {
     const editorRef = useRef<HTMLDivElement>(null);
     const editorRefInstance = useRef<monacoEditor.IStandaloneCodeEditor | undefined>(undefined);
+    const applyHiddenAreasRef = useRef<(() => void) | null>(null);
     const initialized = useRef(false);
     const {theme} = useTheme();
     const [settings, setSettings] = useState<editorSettings>({
@@ -263,13 +276,6 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, { panelSize: number }>(({pan
     const registerUserCodeGetter = useRunEngine(state => state.registerUserCodeGetter);
     const registerUserCodeSetter = useRunEngine(state => state.registerUserCodeSetter);
 
-
-    useImperativeHandle(ref, () => ({
-        getUserCode: () => {
-            const model = editorRefInstance.current?.getModel();
-            return model ? extractUserCode(model) : '';
-        },
-    }));
 
     useEffect(() => {
         if (initialized.current) return;
@@ -377,7 +383,7 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, { panelSize: number }>(({pan
                 const editorApp = new EditorApp(editorAppConfig);
                 await editorApp.start(editorRef.current)
                 editorRefInstance.current = editorApp.getEditor();
-                restrictToEditableRegion(editorRefInstance.current!);
+                applyHiddenAreasRef.current = restrictToEditableRegion(editorRefInstance.current!);
                 await lcWrapper.start()
 
                 setIsEditorReady(true);
@@ -418,16 +424,44 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, { panelSize: number }>(({pan
         });
 
         registerUserCodeSetter((newCode) => {
-            const model = editorRefInstance.current?.getModel();
-            if (!model) return;
+            const editor = editorRefInstance.current;
+            const model = editor?.getModel();
+            if (!editor || !model) return;
+
+            const { nodes, edges } =
+            useRunEngine.getState().getGraphCallback?.() ?? {
+                nodes: [],
+                edges: [],
+            };
+
+            const isGoalDisabled = useRunEngine.getState().networkGoalDisabled;
+            const connections = useRunEngine.getState().activeConnections;
+            const networkGoal = isGoalDisabled
+                ? []
+                : connections.map(c => c.label);
+
+            const isNetworkDisabled = useRunEngine.getState().networkCapacityDisabled;
+            const capacities = isNetworkDisabled
+                ? []
+                : useRunEngine.getState().networkCapacityConnections.map(c => c.label);
 
             const fullSourceCode = buildFullSource(
                 newCode,
-                useRunEngine.getState().getGraphCallback?.().nodes ?? [],
-                useRunEngine.getState().getGraphCallback?.().edges ?? []
+                nodes,
+                edges,
+                capacities,
+                networkGoal
             );
 
-            editorRefInstance.current?.setValue(fullSourceCode);
+            const disposable = model.onDidChangeContent(() => {
+                disposable.dispose();
+
+                applyHiddenAreasRef.current?.();
+                editor.render(true);
+            });
+
+            model.setValue(fullSourceCode);
+
         });
 
     }, [isEditorReady, registerEditor, registerUserCodeGetter, registerUserCodeSetter]);

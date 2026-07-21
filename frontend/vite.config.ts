@@ -5,12 +5,35 @@ import tailwindcss from "@tailwindcss/vite";
 import path from "node:path";
 import importMetaUrlPlugin from '@codingame/esbuild-import-meta-url-plugin';
 
-// https://vite.dev/config/
+//import * as fs from "node:fs";
+
 export default defineConfig({
     plugins: [
         react(),
         babel({presets: [reactCompilerPreset()]}),
         tailwindcss(),
+        // For adding examples
+        // {
+        //     name: 'save-json-plugin',
+        //     configureServer(server) {
+        //         server.middlewares.use('/api/save-json', (req, res) => {
+        //             if (req.method === 'POST') {
+        //                 let body = '';
+        //                 req.on('data', chunk => {
+        //                     body += chunk;
+        //                 });
+        //                 req.on('end', () => {
+        //                     const {fileName, data} = JSON.parse(body);
+        //                     const filePath = path.resolve(__dirname, 'src/examples', fileName);
+        //
+        //                     fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+        //                     res.statusCode = 200;
+        //                     res.end(JSON.stringify({status: 'success'}));
+        //                 });
+        //             }
+        //         });
+        //     }
+        // }
     ],
     server: {
         port: 3000,

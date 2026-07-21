@@ -85,6 +85,9 @@ export function buildFullSource(
 
     // 4. Generate the dynamic suffix string
     const dynamicSuffix = `
+    
+    
+    
 ${EDITABLE_END_MARKER}
 
 

@@ -16,9 +16,9 @@ import type {EdgeData, NodeData} from "@/components/main/node_editor/nodeEditor.
 import LocalSaveDisplayCard from "@/components/web/header-buttons/local-save-display-card.tsx";
 import {toast} from "sonner";
 import type {exampleSave} from "@/examples/type.ts";
-import ExampleDisplayCard from "@/components/web/header-buttons/example-display-card.tsx";
+import ExampleSelectionCard from "@/components/web/header-buttons/example-selection-card.tsx";
 
-const exampleModules = import.meta.glob<{ default: exampleSave }>('@/examples/*.json', { eager: true });
+const exampleModules = import.meta.glob<{ default: exampleSave }>('@/examples/*.json', {eager: true});
 
 const exampleSaves: exampleSave[] = Object.values(exampleModules).map(
     (mod) => mod.default
@@ -59,11 +59,12 @@ const SaveButtons = () => {
     const [isLoadOpen, setIsLoadOpen] = useState(false);
     const [allSaves, setAllSaves] = useState<localStorageSave[]>([])
     const [isSaveOpen, setIsSaveOpen] = useState(false);
-    const [isSaveToDiskOpen, setIsSaveToDiskOpen] = useState(false);
+    // const [isSaveToDiskOpen, setIsSaveToDiskOpen] = useState(false);
     const [isExamplesOpen, setIsExamplesOpen] = useState(false)
 
 
-    const handleSaveToDisk = async () => {
+    //Save to disk function
+    {/* const handleSaveToDisk = async () => {
         const savedName = nameInputRef.current?.value;
 
         if (savedName === "" || !savedName) {
@@ -101,7 +102,10 @@ const SaveButtons = () => {
             })
         })
         setIsSaveToDiskOpen(false);
+    } */
     }
+
+
     const handleSave = () => {
         const savedName = nameInputRef.current?.value;
 
@@ -180,8 +184,11 @@ const SaveButtons = () => {
             setNetworkGoalDisabled(save.goalDisabled)
 
             if (setGraphCallback && setUserCodeCallback) {
-                setGraphCallback(save.graph.nodes, save.graph.edges)
-                setUserCodeCallback(save.code)
+                setGraphCallback(save.graph.nodes, save.graph.edges);
+
+                setTimeout(() => {
+                    setUserCodeCallback(save.code);
+                }, 0);
             }
 
             setIsLoadOpen(false);
@@ -279,7 +286,7 @@ const SaveButtons = () => {
                 </DialogTrigger>
                 <DialogContent showCloseButton={false} className="sm:max-w-xl">
                     <DialogHeader className="flex flex-col items-center gap-4">
-                        <DialogTitle className="text-xl">Load a save</DialogTitle>
+                        <DialogTitle className="text-xl w-full text-left">Load a save</DialogTitle>
                         <div className="flex flex-col gap-2 w-full px-10">
                             {allSaves.map((save) => (
                                 <LocalSaveDisplayCard
@@ -323,16 +330,11 @@ const SaveButtons = () => {
                 </DialogTrigger>
                 <DialogContent showCloseButton={false} className="sm:max-w-xl">
                     <DialogHeader className="flex flex-col items-center gap-4">
-                        <DialogTitle className="text-xl">Load an Example</DialogTitle>
-                        <div className="grid grid-cols-2 gap-4 w-full px-10">
-                            {exampleSaves.map((example) => (
-                                <ExampleDisplayCard
-                                    save={example}
-                                    handleLoad={() => handleLoad(example)}
-                                    key={example.id}
-                                />
-                            ))}
-                        </div>
+                        <DialogTitle className="text-xl text-left w-full pl-3">Load an Example</DialogTitle>
+                        <ExampleSelectionCard probabilisticSaves={exampleSaves}
+                                              quantisticSaves={exampleSaves}
+                                              handleLoad={handleLoad}
+                        />
                     </DialogHeader>
 
                     <div className="flex justify-end gap-2 mt-4">
@@ -347,9 +349,8 @@ const SaveButtons = () => {
             </Dialog>
 
 
-
-
-            {/*TEMP*/}
+            {/*Save to disk Button Temp*/}
+            {/*
             <Dialog open={isSaveToDiskOpen} onOpenChange={(open) => {
                 setIsSaveToDiskOpen(open);
                 if (!open) setError("");
@@ -394,7 +395,7 @@ const SaveButtons = () => {
                         </Button>
                     </div>
                 </DialogContent>
-            </Dialog>
+            </Dialog> */}
         </div>
     );
 };
