@@ -4,7 +4,8 @@ import type {NodeData, EdgeData} from '@/components/main/node_editor/nodeEditor.
 export const EDITABLE_START_MARKER = '-- >>> EDITABLE REGION START >>>';
 export const EDITABLE_END_MARKER = '-- <<< EDITABLE REGION END <<<';
 
-export const PRELUDE = `{-# LANGUAGE OverloadedStrings #-}
+export const PRELUDE = `
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE OverloadedLists #-}
 
 import BellKAT.Prelude
