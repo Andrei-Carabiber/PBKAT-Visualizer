@@ -1,5 +1,5 @@
 import {Card, CardContent, CardTitle} from "@/components/ui/card.tsx";
-import type {localStorageSave} from "@/components/web/save-buttons/SaveButtons.tsx";
+import type {localStorageSave} from "@/components/web/header-buttons/SaveButtons.tsx";
 import {Button} from "@/components/ui/button.tsx";
 
 type props = {

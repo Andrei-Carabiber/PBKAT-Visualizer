@@ -13,8 +13,16 @@ import {useEffect, useRef, useState} from "react";
 import {type ActiveConnection, useRunEngine} from "@/store/runEngine.ts";
 import type {Edge, Node} from "@xyflow/react";
 import type {EdgeData, NodeData} from "@/components/main/node_editor/nodeEditor.tsx";
-import LocalSaveDisplayCard from "@/components/web/save-buttons/local-save-display-card.tsx";
+import LocalSaveDisplayCard from "@/components/web/header-buttons/local-save-display-card.tsx";
 import {toast} from "sonner";
+import type {exampleSave} from "@/examples/type.ts";
+import ExampleDisplayCard from "@/components/web/header-buttons/example-display-card.tsx";
+
+const exampleModules = import.meta.glob<{ default: exampleSave }>('@/examples/*.json', { eager: true });
+
+const exampleSaves: exampleSave[] = Object.values(exampleModules).map(
+    (mod) => mod.default
+);
 
 export type localStorageSave = {
     id: string,
@@ -51,8 +59,49 @@ const SaveButtons = () => {
     const [isLoadOpen, setIsLoadOpen] = useState(false);
     const [allSaves, setAllSaves] = useState<localStorageSave[]>([])
     const [isSaveOpen, setIsSaveOpen] = useState(false);
+    const [isSaveToDiskOpen, setIsSaveToDiskOpen] = useState(false);
+    const [isExamplesOpen, setIsExamplesOpen] = useState(false)
 
 
+    const handleSaveToDisk = async () => {
+        const savedName = nameInputRef.current?.value;
+
+        if (savedName === "" || !savedName) {
+            setError("Please enter a valid name")
+            return
+        }
+
+        if (!getUserCodeCallback || !getGraphCallback) {
+            setError("Could not save. Please wait a few seconds and try again")
+            return
+        }
+
+        setError("");
+        const userCode = getUserCodeCallback();
+        const graph = getGraphCallback();
+        const save: exampleSave = {
+            id: crypto.randomUUID(),
+            name: savedName,
+            code: userCode,
+            graph,
+            goal: activeConnections,
+            goalDisabled: networkGoalDisabled,
+            networkCapacity: networkCapacityConnections,
+            capacityDisabled: networkCapacityDisabled,
+        }
+
+
+
+        await fetch('/api/save-json', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                fileName: `${savedName}.json`,
+                data: save
+            })
+        })
+        setIsSaveToDiskOpen(false);
+    }
     const handleSave = () => {
         const savedName = nameInputRef.current?.value;
 
@@ -123,7 +172,7 @@ const SaveButtons = () => {
         setAllSaves(newSaves)
     }
 
-    const handleLoad = (save: localStorageSave) => {
+    const handleLoad = (save: localStorageSave | exampleSave) => {
         try {
             setActiveConnections(save.goal);
             setNetworkCapacityConnections(save.networkCapacity);
@@ -255,10 +304,96 @@ const SaveButtons = () => {
                 </DialogContent>
             </Dialog>
 
+            {/*SHARE*/}
             <Button onClick={handleShare} variant="outline"
                     className="p-5 border-2 border-secondary-foreground dark:hover:bg-muted">
                 Share
             </Button>
+
+            {/*EXAMPLES*/}
+            <Dialog open={isExamplesOpen} onOpenChange={(open) => {
+                setIsExamplesOpen(open);
+                if (!open) setError("");
+            }}>
+                <DialogTrigger asChild>
+                    <Button variant="outline" className="p-5 border-2 border-secondary-foreground dark:hover:bg-muted">
+                        Examples
+                    </Button>
+                </DialogTrigger>
+                <DialogContent showCloseButton={false} className="sm:max-w-xl">
+                    <DialogHeader className="flex flex-col items-center gap-4">
+                        <DialogTitle className="text-xl">Load an Example</DialogTitle>
+                        <div className="grid grid-cols-2 gap-4 w-full px-10">
+                            {exampleSaves.map((example) => (
+                                <ExampleDisplayCard
+                                    save={example}
+                                    handleLoad={() => handleLoad(example)}
+                                    key={example.id}
+                                />
+                            ))}
+                        </div>
+                    </DialogHeader>
+
+                    <div className="flex justify-end gap-2 mt-4">
+                        <DialogClose asChild>
+                            <Button variant="outline"
+                                    className="text-sm px-10 py-4 border-2 border-secondary-foreground dark:hover:bg-muted">
+                                Cancel
+                            </Button>
+                        </DialogClose>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+
+
+
+            {/*TEMP*/}
+            <Dialog open={isSaveToDiskOpen} onOpenChange={(open) => {
+                setIsSaveToDiskOpen(open);
+                if (!open) setError("");
+            }}>
+                <DialogTrigger asChild>
+                    <Button variant="outline" className="p-5 border-2 border-secondary-foreground dark:hover:bg-muted">
+                        Save to disk
+                    </Button>
+                </DialogTrigger>
+                <DialogContent showCloseButton={false}>
+                    <DialogHeader>
+                        <DialogTitle className="text-secondary-foreground text-xl">Name your saved state</DialogTitle>
+                        <DialogDescription className="pt-4 space-y-4">
+                            <Input
+                                ref={nameInputRef}
+                                placeholder="Enter state name..."
+                                className="text-secondary-foreground"
+                            />
+
+                            {error && (
+                                <p className="text-sm font-medium text-destructive bg-destructive/10 p-2 rounded-md">
+                                    {error}
+                                </p>
+                            )}
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="flex justify-end gap-2 mt-4">
+                        <DialogClose asChild>
+                            <Button variant="outline"
+                                    className="px-5 border-2 border-secondary-foreground dark:hover:bg-muted">
+                                Cancel
+                            </Button>
+                        </DialogClose>
+
+                        <Button
+                            variant="outline"
+                            className="px-5 border-2 border-secondary-foreground dark:hover:bg-muted"
+                            onClick={handleSaveToDisk}
+                        >
+                            Save
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };

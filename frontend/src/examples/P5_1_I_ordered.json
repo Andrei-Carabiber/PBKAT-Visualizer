@@ -1,0 +1,118 @@
+{
+  "id": "42d6cf3f-5116-43ae-82fa-8ac8f2a3dd4b",
+  "name": "P5_1_I_ordered",
+  "code": "e :: ProbBellKATPolicy\ne = create \"C\" <> trans \"C\" (\"A\", \"C\")\n\nf :: ProbBellKATPolicy\nf = create \"C\" <> trans \"C\" (\"B\", \"C\")\n\np :: ProbBellKATPolicy\np = e <.> f",
+  "graph": {
+    "nodes": [
+      {
+        "id": "node_1784625099547_0",
+        "type": "custom",
+        "position": {
+          "x": 552.1741517759498,
+          "y": 222.36480317174886
+        },
+        "data": {
+          "nodeLabel": "C",
+          "coherence_time": 1,
+          "create_prob": 0.9
+        },
+        "measured": {
+          "width": 150,
+          "height": 80
+        },
+        "selected": true,
+        "dragging": false
+      },
+      {
+        "id": "node_1784625099547_1",
+        "type": "custom",
+        "position": {
+          "x": 314.0247483882619,
+          "y": 404.45417003711214
+        },
+        "data": {
+          "nodeLabel": "A",
+          "coherence_time": 1
+        },
+        "measured": {
+          "width": 150,
+          "height": 80
+        },
+        "selected": false,
+        "dragging": false
+      },
+      {
+        "id": "node_1784625099547_2",
+        "type": "custom",
+        "position": {
+          "x": 795.9486708581703,
+          "y": 392.88542613429235
+        },
+        "data": {
+          "nodeLabel": "B",
+          "coherence_time": 1
+        },
+        "measured": {
+          "width": 150,
+          "height": 80
+        },
+        "selected": false,
+        "dragging": false
+      }
+    ],
+    "edges": [
+      {
+        "id": "edge_1784625099547_C_A",
+        "source": "node_1784625099547_0",
+        "target": "node_1784625099547_1",
+        "type": "floating",
+        "data": {
+          "distance": 1,
+          "transmit_prob": 0.2
+        },
+        "selected": false
+      },
+      {
+        "id": "edge_1784625099547_C_B",
+        "source": "node_1784625099547_0",
+        "target": "node_1784625099547_2",
+        "type": "floating",
+        "data": {
+          "distance": 1,
+          "transmit_prob": 0.5
+        },
+        "selected": false
+      }
+    ]
+  },
+  "goal": [
+    {
+      "id": "d8486cca-67f3-4132-8644-10fb48b48d15",
+      "label": "\"C\" ~ \"A\""
+    },
+    {
+      "id": "6f9637f4-ea2c-4ab8-82ef-85851e24f49f",
+      "label": "\"C\" ~ \"B\""
+    }
+  ],
+  "goalDisabled": false,
+  "networkCapacity": [
+    {
+      "id": "046452b5-dfc5-49b1-8236-3c4e94a9f1e9",
+      "label": "\"C\" ~ \"A\""
+    },
+    {
+      "id": "408a70a3-2d43-4c53-b928-9430994d47ec",
+      "label": "\"C\" ~ \"B\""
+    },
+    {
+      "id": "d32e714d-0ade-4186-b20d-26796ad44d21",
+      "label": "\"C\" ~ \"C\""
+    },
+    {
+      "id": "37af385d-d07f-436a-bca5-5d962d672cde",
+      "label": "\"C\" ~ \"C\""
+    }
+  ],
+  "capacityDisabled": false
+}

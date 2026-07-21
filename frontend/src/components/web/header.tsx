@@ -1,5 +1,5 @@
 import {ModeToggle} from "@/components/theme-toggle.tsx";
-import SaveButtons from "@/components/web/save-buttons/SaveButtons.tsx";
+import SaveButtons from "@/components/web/header-buttons/SaveButtons.tsx";
 
 const Header = () => {
     return (
@@ -8,6 +8,7 @@ const Header = () => {
                 <h1 className="font-bold">PBKAT Visualizer</h1>
 
                 <SaveButtons />
+
             </div>
 
             <ModeToggle />
