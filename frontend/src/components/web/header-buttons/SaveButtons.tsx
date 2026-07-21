@@ -185,6 +185,7 @@ const SaveButtons = () => {
             }
 
             setIsLoadOpen(false);
+            setIsExamplesOpen(false)
         } catch (err) {
             setError("Failed to parse or load data correctly.");
         }

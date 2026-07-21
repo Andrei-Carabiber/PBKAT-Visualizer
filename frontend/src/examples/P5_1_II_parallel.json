@@ -1,0 +1,118 @@
+{
+  "id": "3057d765-8cdc-44df-8d5a-38e02a1ab49b",
+  "name": "P5_1_II_parallel",
+  "code": "e :: ProbBellKATPolicy\ne = create \"C\" <> trans \"C\" (\"A\", \"C\")\n\nf :: ProbBellKATPolicy\nf = create \"C\" <> trans \"C\" (\"B\", \"C\")\n\np :: ProbBellKATPolicy\np = (e <||> f) <> (e <||> f)",
+  "graph": {
+    "nodes": [
+      {
+        "id": "1",
+        "type": "custom",
+        "position": {
+          "x": -168.5603112840467,
+          "y": 353.5667963683528
+        },
+        "data": {
+          "nodeLabel": "A",
+          "coherence_time": 1
+        },
+        "measured": {
+          "width": 150,
+          "height": 80
+        },
+        "selected": false,
+        "dragging": false
+      },
+      {
+        "id": "2",
+        "type": "custom",
+        "position": {
+          "x": 376.083009079118,
+          "y": 354.05966277561606
+        },
+        "data": {
+          "nodeLabel": "B",
+          "coherence_time": 1
+        },
+        "measured": {
+          "width": 150,
+          "height": 80
+        },
+        "selected": false,
+        "dragging": false
+      },
+      {
+        "id": "3",
+        "type": "custom",
+        "position": {
+          "x": 72.9182879377432,
+          "y": 125.12321660181581
+        },
+        "data": {
+          "nodeLabel": "C",
+          "coherence_time": 1,
+          "create_prob": 0.9
+        },
+        "measured": {
+          "width": 150,
+          "height": 80
+        },
+        "selected": false,
+        "dragging": false
+      }
+    ],
+    "edges": [
+      {
+        "id": "A-C",
+        "source": "1",
+        "target": "3",
+        "type": "floating",
+        "data": {
+          "distance": 1,
+          "transmit_prob": 0.8
+        },
+        "selected": false
+      },
+      {
+        "id": "B-C",
+        "source": "2",
+        "target": "3",
+        "type": "floating",
+        "data": {
+          "distance": 1,
+          "transmit_prob": 0.5
+        },
+        "selected": true
+      }
+    ]
+  },
+  "goal": [
+    {
+      "id": "672036cc-c31b-4ca1-b05c-41852ee1b130",
+      "label": "\"A\" ~ \"C\""
+    },
+    {
+      "id": "8d000e09-20f4-4f6b-8a7e-398fd0cb16e8",
+      "label": "\"B\" ~ \"C\""
+    }
+  ],
+  "goalDisabled": false,
+  "networkCapacity": [
+    {
+      "id": "873cec90-897f-4b1b-ae77-79bc765d2d47",
+      "label": "\"A\" ~ \"C\""
+    },
+    {
+      "id": "dbc6aa12-5b81-48f4-b4ae-2b841a5cb5e9",
+      "label": "\"B\" ~ \"C\""
+    },
+    {
+      "id": "2c18a0bb-4d6f-48b0-a2c5-d66ea6571bd7",
+      "label": "\"C\" ~ \"C\""
+    },
+    {
+      "id": "c65d74fc-65b2-4b23-83ef-ca54951b5e96",
+      "label": "\"C\" ~ \"C\""
+    }
+  ],
+  "capacityDisabled": false
+}

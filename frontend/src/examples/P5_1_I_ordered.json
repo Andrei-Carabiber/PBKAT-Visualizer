@@ -68,7 +68,7 @@
         "type": "floating",
         "data": {
           "distance": 1,
-          "transmit_prob": 0.2
+          "transmit_prob": 0.8
         },
         "selected": false
       },

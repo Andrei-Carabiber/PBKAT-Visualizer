@@ -1,0 +1,110 @@
+{
+  "id": "81ee0d9a-c531-4ad1-bc67-ef92670b5e3d",
+  "name": "Pag",
+  "code": "e :: ProbBellKATPolicy\ne = (ite (\"C\" /~? \"C\") (create \"C\") (trans \"C\" (\"A\", \"C\"))) <> trans \"C\" (\"A\", \"C\")\n\nf :: ProbBellKATPolicy\nf = (create \"C\") <> (ite (\"C\" /~? \"C\") (create \"C\") (trans \"C\" (\"B\", \"C\")))\n\np :: ProbBellKATPolicy\np = (e <||> f) <> swap \"C\" (\"A\", \"B\")",
+  "graph": {
+    "nodes": [
+      {
+        "id": "1",
+        "type": "custom",
+        "position": {
+          "x": 100,
+          "y": 0
+        },
+        "data": {
+          "nodeLabel": "A",
+          "coherence_time": 1
+        },
+        "measured": {
+          "width": 150,
+          "height": 80
+        }
+      },
+      {
+        "id": "2",
+        "type": "custom",
+        "position": {
+          "x": 100,
+          "y": 500
+        },
+        "data": {
+          "nodeLabel": "B",
+          "coherence_time": 1
+        },
+        "measured": {
+          "width": 150,
+          "height": 80
+        }
+      },
+      {
+        "id": "3",
+        "type": "custom",
+        "position": {
+          "x": 100,
+          "y": 250
+        },
+        "data": {
+          "nodeLabel": "C",
+          "coherence_time": 1,
+          "create_prob": 0.666666,
+          "swap_prob": 0.6
+        },
+        "measured": {
+          "width": 150,
+          "height": 80
+        },
+        "selected": true
+      }
+    ],
+    "edges": [
+      {
+        "id": "A-C",
+        "source": "1",
+        "target": "3",
+        "type": "floating",
+        "data": {
+          "distance": 1,
+          "transmit_prob": 0.8
+        },
+        "selected": false
+      },
+      {
+        "id": "B-C",
+        "source": "2",
+        "target": "3",
+        "type": "floating",
+        "data": {
+          "distance": 1,
+          "transmit_prob": 0.5
+        },
+        "selected": false
+      }
+    ]
+  },
+  "goal": [
+    {
+      "id": "d663c2fa-14e0-4dcd-b21d-4f228135cc9c",
+      "label": "\"A\" ~ \"B\""
+    }
+  ],
+  "goalDisabled": false,
+  "networkCapacity": [
+    {
+      "label": "\"A\" ~ \"C\"",
+      "id": "5cb60871-a2d2-48f5-b3ed-0dda06b39236"
+    },
+    {
+      "id": "6b0ee263-e9c8-4a33-be87-0026b5c677f0",
+      "label": "\"B\" ~ \"C\""
+    },
+    {
+      "id": "25426a43-78f4-4eb2-afd8-6a48f307b599",
+      "label": "\"C\" ~ \"C\""
+    },
+    {
+      "id": "04bf4519-dc8f-4369-852b-f996657a6435",
+      "label": "\"C\" ~ \"C\""
+    }
+  ],
+  "capacityDisabled": false
+}
