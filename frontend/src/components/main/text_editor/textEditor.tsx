@@ -32,7 +32,6 @@ import {
 import {useRunEngine} from "@/store/runEngine.ts";
 import {LoaderCircle} from "lucide-react";
 import NetworkGoalBox from "@/components/main/text_editor/NetworkGoalBox.tsx";
-import MaxIterationsBox from "@/components/main/text_editor/maxIterationsBox.tsx";
 import ModeSelectionBox from "@/components/main/text_editor/ModeSelectionBox.tsx";
 
 export type editorSettings = {
@@ -255,16 +254,11 @@ function extractUserCode(model: monacoEditor.ITextModel): string {
     return model.getValueInRange(new Range(from, 1, to, model.getLineMaxColumn(to)));
 }
 
-export type ModeType = "normal" | "probability" | "qmdp" | "mdp";
-
-
 const MonacoEditor = forwardRef<any, { panelSize: number }>(({panelSize}, _ref) => {
     const editorRef = useRef<HTMLDivElement>(null);
     const editorRefInstance = useRef<monacoEditor.IStandaloneCodeEditor | undefined>(undefined);
     const applyHiddenAreasRef = useRef<(() => void) | null>(null);
     const initialized = useRef(false);
-    const [maxWhileLoopIterations, setMaxWhileLoopIterations] = useState<number>(0);
-    const [mode, setMode] = useState<ModeType>("normal")
     const {theme} = useTheme();
     const [settings, setSettings] = useState<editorSettings>({
         fontSize: 15,
@@ -422,7 +416,7 @@ const MonacoEditor = forwardRef<any, { panelSize: number }>(({panelSize}, _ref) 
 
 
             // Pass the nodes, edges, and networkGoal context to build the correct boilerplate configuration blocks
-            return buildFullSource(userCode, graphData.nodes, graphData.edges, capacities, networkGoal, maxWhileLoopIterations);
+            return buildFullSource(userCode, graphData.nodes, graphData.edges, capacities, networkGoal);
         });
 
         registerUserCodeGetter(() => {
@@ -458,7 +452,6 @@ const MonacoEditor = forwardRef<any, { panelSize: number }>(({panelSize}, _ref) 
                 edges,
                 capacities,
                 networkGoal,
-                maxWhileLoopIterations
             );
 
             const disposable = model.onDidChangeContent(() => {
@@ -530,12 +523,9 @@ const MonacoEditor = forwardRef<any, { panelSize: number }>(({panelSize}, _ref) 
 
             <div className="flex shrink-0 flex-1">
                 <div className="w-full"><NetworkGoalBox/></div>
+
                 <div>
-                    <MaxIterationsBox maxIterations={maxWhileLoopIterations}
-                                      setMaxIterations={setMaxWhileLoopIterations}/>
-                </div>
-                <div>
-                    <ModeSelectionBox mode={mode} setMode={setMode} />
+                    <ModeSelectionBox />
                 </div>
             </div>
         </div>);

@@ -4,20 +4,12 @@ import type {NodeData, EdgeData} from '@/components/main/node_editor/nodeEditor.
 export const EDITABLE_START_MARKER = '-- >>> EDITABLE REGION START >>>';
 export const EDITABLE_END_MARKER = '-- <<< EDITABLE REGION END <<<';
 
-export const SHARED_COMMANDS = ['run', 'execution-trace', 'probability'] as const;
-export const QUANTUM_ONLY_COMMANDS = ['mdp', 'qmdp'] as const;
-
-export type ProtocolCommand =
-    | typeof SHARED_COMMANDS[number]
-    | typeof QUANTUM_ONLY_COMMANDS[number];
+export type ProtocolCommand = 'run' | "mdp" | 'qmdp';
 
 export function isQuantumCode(userCode: string): boolean {
     return userCode.includes("QBKATPolicy");
 }
 
-export function commandsForMode(quantum: boolean): readonly string[] {
-    return quantum ? [...SHARED_COMMANDS, ...QUANTUM_ONLY_COMMANDS] : SHARED_COMMANDS;
-}
 
 export const PROBABILISTIC_PRELUDE = `
 {-# LANGUAGE OverloadedStrings #-}
@@ -42,7 +34,6 @@ export function buildFullSource(
     edges: Edge<EdgeData>[] = [],
     networkCapacity: string[] = [],
     networkGoal: string[] = [],
-    maxIterations: number = 0,
 ): string {
 
 
@@ -107,8 +98,6 @@ export function buildFullSource(
     let networkSetup = "";
     let mainInvocation = "";
 
-    const policyOutput = maxIterations === 0 ? "outputGoal" : `(outputGoal ${maxIterations})`;
-
     if (isQuantum) {
         // Build NetworkBounds for Quantum execution
         const capacityDef = networkCapacity?.length === 0 ? "" :
@@ -123,7 +112,7 @@ nb = def
     }`;
 
         // qbkatMainD args: config, bounds, test, policy, initial_state
-        mainInvocation = `main = qbkatMainD actionConfig nb goal ${policyOutput} mempty`;
+        mainInvocation = `main = qbkatMainD actionConfig nb goal outputGoal mempty`;
     } else {
         // Build generic capacity for Probabilistic execution
         networkSetup = networkCapacity?.length === 0 ? "" :
@@ -132,7 +121,7 @@ networkCapacity = [${networkCapacity}]`;
 
         // pbkatMain args: config, Maybe capacity, test, policy
         const capacityArg = networkCapacity?.length === 0 ? "Nothing" : "(Just networkCapacity)";
-        mainInvocation = `main = pbkatMain actionConfig ${capacityArg} goal ${policyOutput}`;
+        mainInvocation = `main = pbkatMain actionConfig ${capacityArg} goal outputGoal`;
     }
 
     // 4. Generate the dynamic suffix string

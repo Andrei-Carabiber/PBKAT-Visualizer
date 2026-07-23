@@ -10,9 +10,10 @@ import {
     SelectValue
 } from "@/components/ui/select";
 import {Button} from "@/components/ui/button.tsx";
-import RunButton from "@/components/main/text_editor/calculate_button.tsx";
+import RunButton from "@/components/main/text_editor/run_button.tsx";
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover.tsx";
 import {Settings2} from "lucide-react";
+import FlagsSettingsButtons from "@/components/main/text_editor/FlagsSettingsButtons.tsx";
 
 type Props = {
     settings: editorSettings;
@@ -102,8 +103,9 @@ const CustomizationBar = ({settings, setSettings, panelSize}: Props) => {
                     </PopoverContent>
                 </Popover>
 
-                <div className="h-3/4">
+                <div className="pl-4 gap-1 flex items-center h-3/4">
                     <RunButton/>
+                    <FlagsSettingsButtons/>
                 </div>
             </div>
         );
@@ -149,8 +151,9 @@ const CustomizationBar = ({settings, setSettings, panelSize}: Props) => {
                 </Select>
             </Field>
 
-            <div className="h-3/4">
+            <div className="pl-4 gap-1 flex items-center h-3/4">
                 <RunButton/>
+                <FlagsSettingsButtons/>
             </div>
 
         </div>

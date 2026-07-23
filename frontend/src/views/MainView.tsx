@@ -10,7 +10,7 @@ import {Label} from "@/components/ui/label.tsx";
 import FormattedOutput from "@/components/main/FormattedOutput.tsx";
 
 const MainView = () => {
-    const {data, error, loading, clearOutput} = useRunEngine();
+    const {data, error, loading, clearOutput, resultMode, resultCommand} = useRunEngine();
 
     const [leftPanelSize, setLeftPanelSize] = useState<number>(50);
     const [rightPanelSize, setRightPanelSize] = useState<number>(50)
@@ -48,6 +48,9 @@ const MainView = () => {
                     {data && (
                         <FormattedOutput data={data} estimatedMode={estimatedMode} />
                     )}
+
+                    <p>Mode: {resultMode}</p>
+                    <p>Command : {resultCommand}</p>
                 </div>
             )}
 
