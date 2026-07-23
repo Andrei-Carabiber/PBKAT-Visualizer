@@ -4,6 +4,21 @@ import type {NodeData, EdgeData} from '@/components/main/node_editor/nodeEditor.
 export const EDITABLE_START_MARKER = '-- >>> EDITABLE REGION START >>>';
 export const EDITABLE_END_MARKER = '-- <<< EDITABLE REGION END <<<';
 
+export const SHARED_COMMANDS = ['run', 'execution-trace', 'probability'] as const;
+export const QUANTUM_ONLY_COMMANDS = ['mdp', 'qmdp'] as const;
+
+export type ProtocolCommand =
+    | typeof SHARED_COMMANDS[number]
+    | typeof QUANTUM_ONLY_COMMANDS[number];
+
+export function isQuantumCode(userCode: string): boolean {
+    return userCode.includes("QBKATPolicy");
+}
+
+export function commandsForMode(quantum: boolean): readonly string[] {
+    return quantum ? [...SHARED_COMMANDS, ...QUANTUM_ONLY_COMMANDS] : SHARED_COMMANDS;
+}
+
 export const PROBABILISTIC_PRELUDE = `
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE OverloadedLists #-}
@@ -86,7 +101,7 @@ export function buildFullSource(
             ];
         }).join(", ");
 
-    const isQuantum = userCode.includes("QBKATPolicy");
+    const isQuantum = isQuantumCode(userCode);
 
 
     let networkSetup = "";

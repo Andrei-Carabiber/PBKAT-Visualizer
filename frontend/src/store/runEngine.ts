@@ -2,6 +2,7 @@ import {create} from 'zustand';
 import type {Node, Edge} from "@xyflow/react";
 import type {NodeData, EdgeData} from "@/components/main/node_editor/nodeEditor.tsx";
 import {isCodeValid, isCodeCorrect} from "@/components/main/text_editor/protocolParser.ts";
+import {isQuantumCode, commandsForMode, type ProtocolCommand} from "@/components/main/text_editor/haskellBoilerplate.ts";
 
 export interface ActiveConnection {
     id: string;
@@ -34,6 +35,20 @@ interface RunEngineState {
     pendingSharedState: PendingState | null;
     setPendingSharedState: (state: PendingState | null) => void;
 
+    // Run mode / command selection
+    // null = auto-pick a sensible default for the current mode (see handleRun)
+    selectedCommand: ProtocolCommand | null;
+    pure: boolean;
+    computeExtremal: boolean;
+    dumpDp: boolean;
+    truncation: number | undefined;
+    coverage: number | undefined;
+    setSelectedCommand: (command: ProtocolCommand | null) => void;
+    setPure: (pure: boolean) => void;
+    setComputeExtremal: (value: boolean) => void;
+    setDumpDp: (value: boolean) => void;
+    setTruncation: (value: number | undefined) => void;
+    setCoverage: (value: number | undefined) => void;
 
     // Editor and Graph
     registerEditor: (callback: () => string) => void;
@@ -68,6 +83,20 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
     setPendingSharedState: (pendingSharedState) => {
         set({pendingSharedState})
     },
+
+    // Run mode / command selection
+    selectedCommand: null,
+    pure: false,
+    computeExtremal: false,
+    dumpDp: false,
+    truncation: undefined,
+    coverage: undefined,
+    setSelectedCommand: (selectedCommand) => set({selectedCommand}),
+    setPure: (pure) => set({pure}),
+    setComputeExtremal: (computeExtremal) => set({computeExtremal}),
+    setDumpDp: (dumpDp) => set({dumpDp}),
+    setTruncation: (truncation) => set({truncation}),
+    setCoverage: (coverage) => set({coverage}),
 
     //NetworkGoal state
     networkGoalDisabled: false,
@@ -117,7 +146,11 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
     },
 
     handleRun: async () => {
-        const {getCodeCallback, getGraphCallback, getUserCodeCallback, activeConnections, networkGoalDisabled} = get();
+        const {
+            getCodeCallback, getGraphCallback, getUserCodeCallback,
+            activeConnections, networkGoalDisabled,
+            selectedCommand, pure, computeExtremal, dumpDp, truncation, coverage,
+        } = get();
         if (!getCodeCallback) {
             set({
                 error: "The code editor is still initializing language servers. Please wait a moment and try again. (Wait 10seconds)",
@@ -128,6 +161,8 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
 
         const fullCode = getCodeCallback();
         const userRawCode = getUserCodeCallback?.() ?? fullCode;
+
+        console.log(fullCode)
 
         set({loading: true, error: null, data: null});
 
@@ -153,13 +188,50 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
             }
         }
 
-        set({loading:false})
+        // Detect mode from the user's own code (matches buildFullSource's check)
+        // rather than re-deciding independently, so the mode sent to the backend
+        // can never drift from the mode the Haskell was actually generated for.
+        const quantum = isQuantumCode(userRawCode);
+        const mode = quantum ? "quantum" : "probabilistic";
+
+        // If the user picked a command explicitly, make sure it's actually valid
+        // for this mode (e.g. "mdp"/"qmdp" only exist in quantum mode) before we
+        // even hit the network.
+        const allowedCommands = commandsForMode(quantum);
+        if (selectedCommand && !allowedCommands.includes(selectedCommand)) {
+            set({
+                error: `Command "${selectedCommand}" isn't available in ${mode} mode. Available commands: ${allowedCommands.join(", ")}.`,
+                loading: false,
+            });
+            return;
+        }
+
+        // mdp/qmdp only: --coverage and --truncation are mutually exclusive
+        // (mirrors resolveExtremalQuery in BellKAT.QuantumPrelude).
+        if (truncation !== undefined && coverage !== undefined) {
+            set({
+                error: "Use either --coverage or --truncation, not both.",
+                loading: false,
+            });
+            return;
+        }
+
+        const command: string = selectedCommand ?? (
+            quantum
+                ? "qmdp"
+                : (activeConnections.length === 0 || networkGoalDisabled ? "run" : "probability")
+        );
 
         try {
-            const command = activeConnections.length === 0 || networkGoalDisabled ? "run" : "probability"
             const payload = {
                 code: fullCode,
-                command
+                mode,
+                command,
+                pure,
+                computeExtremal,
+                dumpDp,
+                truncation,
+                coverage,
             }
             const response = await fetch(RUN_PROTOCOL_URL, {
                 method: "POST",
@@ -173,7 +245,6 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
             }
 
             const result = await response.json();
-            console.log(result)
             set({data: result.output, loading: false});
         } catch (e: any) {
             set({error: e.message || "An error occurred.", loading: false});
