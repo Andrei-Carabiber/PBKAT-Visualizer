@@ -1,7 +1,7 @@
 import {create} from 'zustand';
 import type {Node, Edge} from "@xyflow/react";
 import type {NodeData, EdgeData} from "@/components/main/node_editor/nodeEditor.tsx";
-import {isCodeValid} from "@/components/main/text_editor/protocolParser.ts";
+import {isCodeValid, isCodeCorrect} from "@/components/main/text_editor/protocolParser.ts";
 
 export interface ActiveConnection {
     id: string;
@@ -65,7 +65,9 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
 
     //State before load
     pendingSharedState: null,
-     setPendingSharedState: (pendingSharedState) => {set({pendingSharedState})},
+    setPendingSharedState: (pendingSharedState) => {
+        set({pendingSharedState})
+    },
 
     //NetworkGoal state
     networkGoalDisabled: false,
@@ -81,8 +83,11 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
 
     //Network capacity state
     networkCapacityDisabled: false,
-    networkCapacityConnections: [{label: '"A" ~ "C"', id: crypto.randomUUID()},{label: '"C" ~ "C"', id: crypto.randomUUID()},{label: '"C" ~ "C"', id: crypto.randomUUID()},],
-    setNetworkCapacityDisabled:(disabled) => set({networkCapacityDisabled: disabled}),
+    networkCapacityConnections: [{label: '"A" ~ "C"', id: crypto.randomUUID()}, {
+        label: '"C" ~ "C"',
+        id: crypto.randomUUID()
+    }, {label: '"C" ~ "C"', id: crypto.randomUUID()},],
+    setNetworkCapacityDisabled: (disabled) => set({networkCapacityDisabled: disabled}),
     setNetworkCapacityConnections: (updater) => {
         if (typeof updater === 'function') {
             set((state) => ({networkCapacityConnections: updater(state.networkCapacityConnections)}));
@@ -99,15 +104,15 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
         const pending = get().pendingSharedState;
         if (pending?.graph) {
             callback(pending.graph.nodes, pending.graph.edges);
-            if (get().setUserCodeCallback) set({ pendingSharedState: null });
+            if (get().setUserCodeCallback) set({pendingSharedState: null});
         }
     },
     registerUserCodeSetter: (callback) => {
-        set({ setUserCodeCallback: callback });
+        set({setUserCodeCallback: callback});
         const pending = get().pendingSharedState;
         if (pending?.code) {
             callback(pending.code);
-            if (get().setGraphCallback) set({ pendingSharedState: null });
+            if (get().setGraphCallback) set({pendingSharedState: null});
         }
     },
 
@@ -128,6 +133,15 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
 
         if (fullCode) {
             const graphSnapshot = getGraphCallback?.() ?? {nodes: [], edges: []};
+            const codeCorrection = isCodeCorrect(userRawCode);
+            if (!codeCorrection.valid) {
+                set({
+                    error: codeCorrection.error,
+                    loading: false
+                });
+                return
+            }
+
             const validation = isCodeValid(userRawCode, graphSnapshot.nodes, graphSnapshot.edges);
 
             if (!validation.valid) {
@@ -138,6 +152,9 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
                 return;
             }
         }
+
+        console.log(fullCode);
+        set({loading:false})
 
         try {
             const command = activeConnections.length === 0 || networkGoalDisabled ? "run" : "probability"
@@ -157,6 +174,7 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
             }
 
             const result = await response.json();
+            console.log("Result is : " + result)
             set({data: result.output, loading: false});
         } catch (e: any) {
             set({error: e.message || "An error occurred.", loading: false});

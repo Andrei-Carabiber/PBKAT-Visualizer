@@ -32,6 +32,7 @@ import {
 import {useRunEngine} from "@/store/runEngine.ts";
 import {LoaderCircle} from "lucide-react";
 import NetworkGoalBox from "@/components/main/text_editor/NetworkGoalBox.tsx";
+import MaxIterationsBox from "@/components/main/text_editor/maxIterationsBox.tsx";
 
 export type editorSettings = {
     fontSize: number;
@@ -168,7 +169,7 @@ function restrictToEditableRegion(
     }
 
     function applyHiddenAreas() {
-        const { preludeRange, suffixRange } = currentBounds();
+        const {preludeRange, suffixRange} = currentBounds();
 
         const hiddenEditor = editorInstance as HiddenAreasCapableEditor;
 
@@ -180,6 +181,7 @@ function restrictToEditableRegion(
             ]);
         });
     }
+
     function editableRangeNow(): InstanceType<typeof Range> {
         const {editableStartLine, editableEndLine} = currentBounds();
         return new Range(editableStartLine, 1, editableEndLine, model!.getLineMaxColumn(editableEndLine));
@@ -257,6 +259,7 @@ const MonacoEditor = forwardRef<any, { panelSize: number }>(({panelSize}, _ref) 
     const editorRefInstance = useRef<monacoEditor.IStandaloneCodeEditor | undefined>(undefined);
     const applyHiddenAreasRef = useRef<(() => void) | null>(null);
     const initialized = useRef(false);
+    const [maxWhileLoopIterations, setMaxWhileLoopIterations] = useState<number>(0);
     const {theme} = useTheme();
     const [settings, setSettings] = useState<editorSettings>({
         fontSize: 15,
@@ -410,12 +413,12 @@ const MonacoEditor = forwardRef<any, { panelSize: number }>(({panelSize}, _ref) 
             const isNetworkDisabled = useRunEngine.getState().networkCapacityDisabled;
             const capacities = isNetworkDisabled ? [] : useRunEngine.getState().networkCapacityConnections.map(c => c.label);
 
-            // Resolve whether to pass the goal array or undefined/null depending on what buildFullSource expects
             const networkGoal = isGoalDisabled ? [] : connections.map(c => c.label);
 
 
+            console.log(maxWhileLoopIterations)
             // Pass the nodes, edges, and networkGoal context to build the correct boilerplate configuration blocks
-            return buildFullSource(userCode, graphData.nodes, graphData.edges, capacities, networkGoal);
+            return buildFullSource(userCode, graphData.nodes, graphData.edges, capacities, networkGoal, maxWhileLoopIterations);
         });
 
         registerUserCodeGetter(() => {
@@ -428,7 +431,7 @@ const MonacoEditor = forwardRef<any, { panelSize: number }>(({panelSize}, _ref) 
             const model = editor?.getModel();
             if (!editor || !model) return;
 
-            const { nodes, edges } =
+            const {nodes, edges} =
             useRunEngine.getState().getGraphCallback?.() ?? {
                 nodes: [],
                 edges: [],
@@ -450,7 +453,8 @@ const MonacoEditor = forwardRef<any, { panelSize: number }>(({panelSize}, _ref) 
                 nodes,
                 edges,
                 capacities,
-                networkGoal
+                networkGoal,
+                maxWhileLoopIterations
             );
 
             const disposable = model.onDidChangeContent(() => {
@@ -520,8 +524,12 @@ const MonacoEditor = forwardRef<any, { panelSize: number }>(({panelSize}, _ref) 
                 )}
             </div>
 
-            <div className="shrink-0 flex-1">
-                <NetworkGoalBox/>
+            <div className="flex shrink-0 flex-1">
+                <div className="w-full"><NetworkGoalBox/></div>
+                <div>
+                    <MaxIterationsBox maxIterations={maxWhileLoopIterations}
+                                      setMaxIterations={setMaxWhileLoopIterations}/>
+                </div>
             </div>
         </div>);
 });

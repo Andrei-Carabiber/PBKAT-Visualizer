@@ -159,3 +159,37 @@ export function isCodeValid(
         edgePairs
     };
 }
+
+
+type CorrectionResult = {
+    valid: boolean;
+    error?: string;
+}
+
+//Check if code uses ProbBellKATPolicy or QBKATPolicy and if it has the output
+export function isCodeCorrect(code: string): CorrectionResult {
+
+    if (!code.includes("outputGoal")) {
+        return {
+            valid: false,
+            error: "Your code has to include: 'outputGoal' as final variable"
+        }
+    }
+
+    if (code.includes("QBKATPolicy") && code.includes("ProbBellKATPolicy")) {
+        return {
+            valid: false,
+            error: "Your code cannot have both QBKAT and ProbBellKAT policies"
+        }
+    }
+
+    if (!(code.includes("QBKATPolicy") || code.includes("ProbBellKATPolicy"))) {
+        return {
+            valid: false,
+            error: "Your code cannot needs to declare at least one type of policy (ProbBellKATPolicy or QBKATPolicy)"
+        }
+    }
+
+
+    return {valid: true}
+}

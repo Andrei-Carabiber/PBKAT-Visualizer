@@ -4,13 +4,20 @@ import type {NodeData, EdgeData} from '@/components/main/node_editor/nodeEditor.
 export const EDITABLE_START_MARKER = '-- >>> EDITABLE REGION START >>>';
 export const EDITABLE_END_MARKER = '-- <<< EDITABLE REGION END <<<';
 
-export const PRELUDE = `
+export const PROBABILISTIC_PRELUDE = `
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE OverloadedLists #-}
 
 import BellKAT.Prelude
 import BellKAT.ProbabilisticPrelude
+${EDITABLE_START_MARKER}
+`;
 
+export const QUANTUM_PRELUDE = `
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedLists #-}
+
+import BellKAT.QuantumPrelude
 ${EDITABLE_START_MARKER}
 `;
 
@@ -20,6 +27,7 @@ export function buildFullSource(
     edges: Edge<EdgeData>[] = [],
     networkCapacity: string[] = [],
     networkGoal: string[] = [],
+    maxIterations: number = 0,
 ): string {
 
 
@@ -34,7 +42,6 @@ export function buildFullSource(
             ];
         }).join(", ");
 
-    // 3. Parse Node parameters with runtime configuration fallbacks
     const createProbs = nodes
         .map(n => `("${n.data.nodeLabel}", ${n.data.create_prob ?? 1.0})`).join(", ");
 
@@ -79,20 +86,47 @@ export function buildFullSource(
             ];
         }).join(", ");
 
+    const isQuantum = userCode.includes("QBKATPolicy");
 
-    const capacity = networkCapacity?.length === 0 ? "" :
-        `networkCapacity :: NetworkCapacity BellKATTag\nnetworkCapacity = [${networkCapacity}]`
+
+    let networkSetup = "";
+    let mainInvocation = "";
+
+    const policyOutput = maxIterations === 0 ? "outputGoal" : `(outputGoal ${maxIterations})`;
+
+    console.log(maxIterations, policyOutput)
+    if (isQuantum) {
+        // Build NetworkBounds for Quantum execution
+        const capacityDef = networkCapacity?.length === 0 ? "" :
+            `networkCapacity :: NetworkCapacity QBKATTag
+networkCapacity = [${networkCapacity}]
+
+`;
+        networkSetup = `${capacityDef}nb :: NetworkBounds QBKATTag
+nb = def
+    { nbCapacity = ${networkCapacity?.length === 0 ? "Nothing" : "Just networkCapacity"}
+    , nbOperationTiming = InstantaneousOps
+    }`;
+
+        // qbkatMainD args: config, bounds, test, policy, initial_state
+        mainInvocation = `main = qbkatMainD actionConfig nb goal ${policyOutput} mempty`;
+    } else {
+        // Build generic capacity for Probabilistic execution
+        networkSetup = networkCapacity?.length === 0 ? "" :
+            `networkCapacity :: NetworkCapacity BellKATTag
+networkCapacity = [${networkCapacity}]`;
+
+        // pbkatMain args: config, Maybe capacity, test, policy
+        const capacityArg = networkCapacity?.length === 0 ? "Nothing" : "(Just networkCapacity)";
+        mainInvocation = `main = pbkatMain actionConfig ${capacityArg} goal ${policyOutput}`;
+    }
 
     // 4. Generate the dynamic suffix string
     const dynamicSuffix = `
     
-    
-    
 ${EDITABLE_END_MARKER}
 
-
-
-${capacity}
+${networkSetup}
 
 actionConfig :: ProbabilisticActionConfiguration
 actionConfig = PAC
@@ -106,14 +140,18 @@ actionConfig = PAC
     , pacDistances = [${distances}]
     }
 
-goal :: ProbBellKATTest
+goal :: ${isQuantum ? "QBKATTest" : "ProbBellKATTest"}
 goal = hasSubset [${networkGoal}]
 
 main :: IO ()
-main = pbkatMain actionConfig ${capacity === "" ? "Nothing" : "(Just networkCapacity)"} goal p
+${mainInvocation}
 `;
 
-    return `${PRELUDE}\n${userCode}\n${dynamicSuffix}`;
+    if (isQuantum) {
+        return `${QUANTUM_PRELUDE}\n${userCode}\n${dynamicSuffix}`;
+    } else {
+        return `${PROBABILISTIC_PRELUDE}\n${userCode}\n${dynamicSuffix}`;
+    }
 }
 
 export const DEFAULT_USER_CODE = `e :: ProbBellKATPolicy
@@ -122,6 +160,6 @@ e = create "C" <> trans "C" ("A", "C")
 f :: ProbBellKATPolicy
 f = create "C" <> trans "C" ("B", "C")
 
-p :: ProbBellKATPolicy
-p = (e <||> f) <> (e <.> f)
+outputGoal :: ProbBellKATPolicy
+outputGoal = (e <||> f) <> (e <.> f)
 `;
