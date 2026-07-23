@@ -153,7 +153,6 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
             }
         }
 
-        console.log(fullCode);
         set({loading:false})
 
         try {
@@ -174,7 +173,7 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
             }
 
             const result = await response.json();
-            console.log("Result is : " + result)
+            console.log(result)
             set({data: result.output, loading: false});
         } catch (e: any) {
             set({error: e.message || "An error occurred.", loading: false});

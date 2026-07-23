@@ -416,7 +416,6 @@ const MonacoEditor = forwardRef<any, { panelSize: number }>(({panelSize}, _ref) 
             const networkGoal = isGoalDisabled ? [] : connections.map(c => c.label);
 
 
-            console.log(maxWhileLoopIterations)
             // Pass the nodes, edges, and networkGoal context to build the correct boilerplate configuration blocks
             return buildFullSource(userCode, graphData.nodes, graphData.edges, capacities, networkGoal, maxWhileLoopIterations);
         });

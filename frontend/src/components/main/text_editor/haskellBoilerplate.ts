@@ -94,7 +94,6 @@ export function buildFullSource(
 
     const policyOutput = maxIterations === 0 ? "outputGoal" : `(outputGoal ${maxIterations})`;
 
-    console.log(maxIterations, policyOutput)
     if (isQuantum) {
         // Build NetworkBounds for Quantum execution
         const capacityDef = networkCapacity?.length === 0 ? "" :
