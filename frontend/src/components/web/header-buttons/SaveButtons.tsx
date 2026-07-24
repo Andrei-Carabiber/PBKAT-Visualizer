@@ -17,6 +17,7 @@ import LocalSaveDisplayCard from "@/components/web/header-buttons/local-save-dis
 import {toast} from "sonner";
 import type {exampleSave} from "@/examples/type.ts";
 import ExampleSelectionCard from "@/components/web/header-buttons/example-selection-card.tsx";
+import type {ProtocolCommand} from "@/components/main/text_editor/haskellBoilerplate.ts";
 
 const exampleModules = import.meta.glob<{ default: exampleSave }>('@/examples/*.json', {eager: true});
 
@@ -37,6 +38,7 @@ export type localStorageSave = {
     goalDisabled: boolean,
     networkCapacity: ActiveConnection[],
     capacityDisabled: boolean,
+    mode: ProtocolCommand
 }
 
 const SaveButtons = () => {
@@ -54,7 +56,9 @@ const SaveButtons = () => {
         setActiveConnections,
         setNetworkCapacityConnections,
         setUserCodeCallback,
-        setGraphCallback
+        setGraphCallback,
+        setSelectedCommand,
+        selectedCommand
     } = useRunEngine()
     const [isLoadOpen, setIsLoadOpen] = useState(false);
     const [allSaves, setAllSaves] = useState<localStorageSave[]>([])
@@ -139,6 +143,7 @@ const SaveButtons = () => {
             goalDisabled: networkGoalDisabled,
             networkCapacity: networkCapacityConnections,
             capacityDisabled: networkCapacityDisabled,
+            mode: selectedCommand
         }
 
         let saves: localStorageSave[] = [];
@@ -182,6 +187,7 @@ const SaveButtons = () => {
             setNetworkCapacityConnections(save.networkCapacity);
             setNetworkCapacityDisabled(save.capacityDisabled)
             setNetworkGoalDisabled(save.goalDisabled)
+            setSelectedCommand(save.mode)
 
             if (setGraphCallback && setUserCodeCallback) {
                 setGraphCallback(save.graph.nodes, save.graph.edges);
@@ -210,7 +216,8 @@ const SaveButtons = () => {
             goal: activeConnections,
             goalDisabled: networkGoalDisabled,
             networkCapacity: networkCapacityConnections,
-            capacityDisabled: networkCapacityDisabled
+            capacityDisabled: networkCapacityDisabled,
+            mode: selectedCommand
         };
 
         const jsonStr = JSON.stringify(shareState);

@@ -114,5 +114,7 @@
       "label": "\"C\" ~ \"C\""
     }
   ],
-  "capacityDisabled": false
+  "capacityDisabled": false,
+  "mode": "run"
+
 }
