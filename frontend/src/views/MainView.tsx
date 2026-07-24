@@ -8,6 +8,7 @@ import {useState} from "react";
 import {Switch} from "@/components/ui/switch.tsx";
 import {Label} from "@/components/ui/label.tsx";
 import FormattedOutput from "@/components/main/FormattedOutput.tsx";
+import FormattedQuantumOutput from "@/components/main/FormattedQuantumOutput.tsx";
 
 const MainView = () => {
     const {data, error, loading, clearOutput, resultMode, resultCommand} = useRunEngine();
@@ -45,8 +46,12 @@ const MainView = () => {
                         <p className="text-destructive bg-destructive/10 p-3 rounded-lg border border-destructive/20">{error}</p>}
 
 
-                    {data && (
+                    {data && resultMode == 'probabilistic' && (
                         <FormattedOutput data={data} estimatedMode={estimatedMode} />
+                    )}
+
+                    {data && resultMode == 'quantum' && (
+                        <FormattedQuantumOutput data={data} />
                     )}
 
                     <p>Mode: {resultMode}</p>
