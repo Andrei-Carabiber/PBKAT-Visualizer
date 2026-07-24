@@ -1,12 +1,12 @@
-import { Button } from "@/components/ui/button.tsx";
-import { CircleQuestionMark, Settings } from "lucide-react";
-import { useRunEngine } from "@/store/runEngine.ts";
-import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog.tsx";
-import { useState } from "react";
-import { Switch } from "@/components/ui/switch.tsx";
-import { Label } from "@/components/ui/label.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
-import { Input } from "@/components/ui/input.tsx";
+import {Button} from "@/components/ui/button.tsx";
+import {CircleQuestionMark, Settings} from "lucide-react";
+import {useRunEngine} from "@/store/runEngine.ts";
+import {Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger} from "@/components/ui/dialog.tsx";
+import {useState} from "react";
+import {Switch} from "@/components/ui/switch.tsx";
+import {Label} from "@/components/ui/label.tsx";
+import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip.tsx";
+import {Input} from "@/components/ui/input.tsx";
 
 const FlagsSettingsButtons = () => {
     const {
@@ -19,14 +19,23 @@ const FlagsSettingsButtons = () => {
         <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
             <DialogTrigger asChild>
                 <Button variant="ghost" className="p-5 dark:hover:bg-muted">
-                    <Settings />
+                    <Settings/>
                 </Button>
             </DialogTrigger>
 
             <DialogContent showCloseButton={false} className="sm:max-w-lg px-4">
                 <DialogHeader>
-                    <DialogTitle className="text-xl w-full text-left">
+                    <DialogTitle className="flex items-center gap-2 text-xl w-full text-left">
                         Manage execution settings
+
+                        <Tooltip>
+                            <TooltipTrigger>
+                                <CircleQuestionMark />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                Only for modes MDP and QMDP
+                            </TooltipContent>
+                        </Tooltip>
                     </DialogTitle>
                 </DialogHeader>
 
@@ -42,7 +51,8 @@ const FlagsSettingsButtons = () => {
                     />
                     <Tooltip>
                         <TooltipTrigger type="button">
-                            <CircleQuestionMark className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors"/>
+                            <CircleQuestionMark
+                                className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors"/>
                         </TooltipTrigger>
                         <TooltipContent>
                             <p>Pure options does : X.</p>
@@ -58,7 +68,8 @@ const FlagsSettingsButtons = () => {
                     />
                     <Tooltip>
                         <TooltipTrigger type="button">
-                            <CircleQuestionMark className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors"/>
+                            <CircleQuestionMark
+                                className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors"/>
                         </TooltipTrigger>
                         <TooltipContent>
                             <p>Compute Extremal options does : X.</p>
@@ -74,7 +85,8 @@ const FlagsSettingsButtons = () => {
                     />
                     <Tooltip>
                         <TooltipTrigger type="button">
-                            <CircleQuestionMark className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors"/>
+                            <CircleQuestionMark
+                                className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors"/>
                         </TooltipTrigger>
                         <TooltipContent>
                             <p>DumpDp options does : X.</p>
@@ -87,11 +99,14 @@ const FlagsSettingsButtons = () => {
                         type="number"
                         className="w-24 text-right"
                         value={truncation}
+                        step={1}
+                        min={-1}
                         onChange={(e) => setTruncation(Number(e.target.value))}
                     />
                     <Tooltip>
                         <TooltipTrigger type="button">
-                            <CircleQuestionMark className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors"/>
+                            <CircleQuestionMark
+                                className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors"/>
                         </TooltipTrigger>
                         <TooltipContent>
                             <p>Truncation options does : X. -1 to disable</p>
@@ -100,15 +115,50 @@ const FlagsSettingsButtons = () => {
 
                     {/* COVERAGE */}
                     <Label className="text-lg">Coverage</Label>
-                    <Input
-                        type="number"
-                        className="w-24 text-right"
-                        value={coverage}
-                        onChange={(e) => setCoverage(Number(e.target.value))}
-                    />
+                    <div>
+                        <Input
+                            type="number"
+                            step={0.01}
+                            min={-1}
+                            max={1}
+                            className="w-24 text-right"
+                            value={coverage}
+                            onChange={(e) => {
+                                const val = e.target.value;
+
+                                // Pass the raw string directly!
+                                // This allows the box to be empty, hold a minus sign, or hold a decimal temporarily.
+                                if (val === "" || val === "-" || val.endsWith(".")) {
+                                    setCoverage(val);
+                                    return;
+                                }
+
+                                const nr = Number(val);
+
+                                // Your custom arrow snapping logic
+                                if (nr > -1 && nr < -0.5) {
+                                    setCoverage(0);
+                                } else if (nr < 0) {
+                                    setCoverage(-1);
+                                } else if (nr > 1) {
+                                    setCoverage(1);
+                                } else {
+                                    setCoverage(val); // Also pass the string here to preserve trailing zeros like "0.50"
+                                }
+                            }}
+                            onBlur={() => {
+                                if (coverage === "" || coverage === "-") {
+                                    setCoverage(-1);
+                                } else if (typeof coverage === "string") {
+                                    setCoverage(Number(coverage));
+                                }
+                            }}
+                        />
+                    </div>
                     <Tooltip>
                         <TooltipTrigger type="button">
-                            <CircleQuestionMark className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors"/>
+                            <CircleQuestionMark
+                                className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors"/>
                         </TooltipTrigger>
                         <TooltipContent>
                             <p>Coverage options does : X. -1 to disable</p>

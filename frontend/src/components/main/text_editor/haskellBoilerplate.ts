@@ -10,6 +10,16 @@ export function isQuantumCode(userCode: string): boolean {
     return userCode.includes("QBKATPolicy");
 }
 
+export const EDITOR_PRELUDE_ALL_IMPORTS = `
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedLists #-}
+
+import BellKAT.Prelude
+import BellKAT.ProbabilisticPrelude
+import BellKAT.QuantumPrelude
+${EDITABLE_START_MARKER}
+`
+
 
 export const PROBABILISTIC_PRELUDE = `
 {-# LANGUAGE OverloadedStrings #-}
@@ -34,6 +44,7 @@ export function buildFullSource(
     edges: Edge<EdgeData>[] = [],
     networkCapacity: string[] = [],
     networkGoal: string[] = [],
+    initialSave: boolean = false,
 ): string {
 
 
@@ -149,6 +160,11 @@ goal = hasSubset [${networkGoal}]
 main :: IO ()
 ${mainInvocation}
 `;
+
+    //Made for Haskell Language Server (Do not run this ever!)
+    if (initialSave) {
+        return `${EDITOR_PRELUDE_ALL_IMPORTS}\n${userCode}\n${dynamicSuffix}`;
+    }
 
     if (isQuantum) {
         return `${QUANTUM_PRELUDE}\n${userCode}\n${dynamicSuffix}`;

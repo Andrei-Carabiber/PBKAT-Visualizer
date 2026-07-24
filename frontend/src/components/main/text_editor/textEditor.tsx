@@ -285,7 +285,7 @@ const MonacoEditor = forwardRef<any, { panelSize: number }>(({panelSize}, _ref) 
 
         const startEditor = async () => {
             const languageId = 'haskell';
-            const initialHaskellCode = buildFullSource(DEFAULT_USER_CODE);
+            const initialHaskellCode = buildFullSource(DEFAULT_USER_CODE, [], [], [], [], true);
 
             const fileUri = vscode.Uri.file('/opt/pbkat/examples/P1.hs');
             const fileSystemProvider = new RegisteredFileSystemProvider(false)

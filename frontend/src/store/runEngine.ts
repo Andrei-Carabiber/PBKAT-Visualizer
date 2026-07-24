@@ -49,13 +49,13 @@ interface RunEngineState {
     computeExtremal: boolean;
     dumpDp: boolean;
     truncation: number;
-    coverage: number;
+    coverage: number | string;
     setSelectedCommand: (command: ProtocolCommand) => void;
     setPure: (pure: boolean) => void;
     setComputeExtremal: (value: boolean) => void;
     setDumpDp: (value: boolean) => void;
     setTruncation: (value: number | undefined) => void;
-    setCoverage: (value: number | undefined) => void;
+    setCoverage: (value: number | string) => void;
 
     // Editor and Graph
     registerEditor: (callback: () => string) => void;
@@ -206,11 +206,10 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
         // anywhere in the code, mdp/qmdp are excluded even when QBKATPolicy
         // also appears, since a ProbBellKATPolicy value can't be passed where
         // qbkatMainD expects a QBKATPolicy.
-        let allowedCommands : ProtocolCommand[];
+        let allowedCommands: ProtocolCommand[];
         if (mode === "quantum") {
             allowedCommands = ['qmdp', 'mdp']
-        }
-        else {
+        } else {
             allowedCommands = ['run']
         }
 
@@ -226,12 +225,20 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
 
         // mdp/qmdp only: --coverage and --truncation are mutually exclusive
         // (mirrors resolveExtremalQuery in BellKAT.QuantumPrelude).
-        if (truncation !== -1 && coverage !== -1) {
+        if (truncation !== -1 && coverage !== -1 && mode === 'quantum') {
             set({
                 error: "Use either --coverage or --truncation, not both.",
                 loading: false,
             });
             return;
+        }
+
+        if (computeExtremal && truncation === -1 && coverage === -1 && mode === 'quantum') {
+            set({
+                error: "If you use Compute Extremal setting you have to enable either truncation or coverage",
+                loading: false
+            });
+            return
         }
 
         const command: string = selectedCommand === 'run' ?
