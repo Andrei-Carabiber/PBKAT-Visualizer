@@ -1,7 +1,7 @@
 {
   "id": "d1ffcdb1-015d-4b26-bb15-5e5df7dedcf7",
   "name": "P5_1_II_ordered",
-  "code": "e :: ProbBellKATPolicy\ne = create \"C\" <> trans \"C\" (\"A\", \"C\")\n\nf :: ProbBellKATPolicy\nf = create \"C\" <> trans \"C\" (\"B\", \"C\")\n\np :: ProbBellKATPolicy\np = (e <.> f) <> (e <.> f)",
+  "code": "e :: ProbBellKATPolicy\ne = create \"C\" <> trans \"C\" (\"A\", \"C\")\n\nf :: ProbBellKATPolicy\nf = create \"C\" <> trans \"C\" (\"B\", \"C\")\n\noutputGoal :: ProbBellKATPolicy\noutputGoal = (e <.> f) <> (e <.> f)",
   "graph": {
     "nodes": [
       {

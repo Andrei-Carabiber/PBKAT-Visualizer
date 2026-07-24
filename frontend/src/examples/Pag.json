@@ -1,7 +1,7 @@
 {
   "id": "81ee0d9a-c531-4ad1-bc67-ef92670b5e3d",
   "name": "Pag",
-  "code": "e :: ProbBellKATPolicy\ne = (ite (\"C\" /~? \"C\") (create \"C\") (trans \"C\" (\"A\", \"C\"))) <> trans \"C\" (\"A\", \"C\")\n\nf :: ProbBellKATPolicy\nf = (create \"C\") <> (ite (\"C\" /~? \"C\") (create \"C\") (trans \"C\" (\"B\", \"C\")))\n\np :: ProbBellKATPolicy\np = (e <||> f) <> swap \"C\" (\"A\", \"B\")",
+  "code": "e :: ProbBellKATPolicy\ne = (ite (\"C\" /~? \"C\") (create \"C\") (trans \"C\" (\"A\", \"C\"))) <> trans \"C\" (\"A\", \"C\")\n\nf :: ProbBellKATPolicy\nf = (create \"C\") <> (ite (\"C\" /~? \"C\") (create \"C\") (trans \"C\" (\"B\", \"C\")))\n\noutputGoal :: ProbBellKATPolicy\noutputGoal = (e <||> f) <> swap \"C\" (\"A\", \"B\")",
   "graph": {
     "nodes": [
       {

@@ -1,7 +1,7 @@
 {
   "id": "a2ed3918-e9c7-4816-a0ae-23e30c6f1a74",
   "name": "Pa1",
-  "code": "p :: ProbBellKATPolicy\np = (create \"C\" <||> create \"C\") \n    <> \n    (trans \"C\" (\"A\", \"C\") <||> trans \"C\" (\"B\", \"C\"))\n    <>\n    ite (hasSubset [\"A\" ~ \"C\", \"B\" ~ \"C\"]) \n        (swap \"C\" (\"A\", \"B\")) \n        (destroy (\"A\", \"C\") <||> destroy (\"B\", \"C\"))",
+  "code": "outputGoal :: ProbBellKATPolicy\noutputGoal = (create \"C\" <||> create \"C\") \n    <> \n    (trans \"C\" (\"A\", \"C\") <||> trans \"C\" (\"B\", \"C\"))\n    <>\n    ite (hasSubset [\"A\" ~ \"C\", \"B\" ~ \"C\"]) \n        (swap \"C\" (\"A\", \"B\")) \n        (destroy (\"A\", \"C\") <||> destroy (\"B\", \"C\"))",
   "graph": {
     "nodes": [
       {

@@ -1,7 +1,7 @@
 {
   "id": "17fa26bd-3f5b-46c5-91ad-585e6fc67189",
   "name": "P5_1_II_ordered_three",
-  "code": "e :: ProbBellKATPolicy\ne = create \"C\" <> trans \"C\" (\"A\", \"C\")\n\nf :: ProbBellKATPolicy\nf = create \"C\" <> trans \"C\" (\"B\", \"C\")\n\np :: ProbBellKATPolicy\np = (e <.> f) <> (e <.> f) <> (e <.> f)",
+  "code": "e :: ProbBellKATPolicy\ne = create \"C\" <> trans \"C\" (\"A\", \"C\")\n\nf :: ProbBellKATPolicy\nf = create \"C\" <> trans \"C\" (\"B\", \"C\")\n\noutputGoal :: ProbBellKATPolicy\noutputGoal = (e <.> f) <> (e <.> f) <> (e <.> f)",
   "graph": {
     "nodes": [
       {

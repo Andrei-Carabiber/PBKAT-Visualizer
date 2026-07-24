@@ -1,7 +1,7 @@
 {
   "id": "ff719025-605f-485c-ab22-3e798e54c253",
   "name": "P5_1_IV",
-  "code": "e :: ProbBellKATPolicy\ne = create \"C\" <> ite (\"A\" /~? \"C\") (trans \"C\" (\"A\", \"C\")) (trans \"C\" (\"B\", \"C\"))\n\nf :: ProbBellKATPolicy\nf = create \"C\" <> ite (\"B\" /~? \"C\") (trans \"C\" (\"B\", \"C\")) (trans \"C\" (\"A\", \"C\"))\n\np :: ProbBellKATPolicy\np = whileN 3 (\"A\" /~? \"C\" ||* \"B\" /~? \"C\") (e <||> f)",
+  "code": "e :: ProbBellKATPolicy\ne = create \"C\" <> ite (\"A\" /~? \"C\") (trans \"C\" (\"A\", \"C\")) (trans \"C\" (\"B\", \"C\"))\n\nf :: ProbBellKATPolicy\nf = create \"C\" <> ite (\"B\" /~? \"C\") (trans \"C\" (\"B\", \"C\")) (trans \"C\" (\"A\", \"C\"))\n\noutputGoal :: ProbBellKATPolicy\noutputGoal = whileN 3 (\"A\" /~? \"C\" ||* \"B\" /~? \"C\") (e <||> f)",
   "graph": {
     "nodes": [
       {

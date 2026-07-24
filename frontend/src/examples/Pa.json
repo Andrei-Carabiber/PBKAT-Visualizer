@@ -1,7 +1,7 @@
 {
   "id": "518469fc-e527-4e5a-91d2-fc24e9e6ecf0",
   "name": "Pa",
-  "code": "p :: ProbBellKATPolicy\np = (create \"C\" <||> create \"C\") \n    <> \n    (trans \"C\" (\"A\", \"C\") <||> trans \"C\" (\"B\", \"C\"))\n    <>\n    (swap \"C\" (\"A\", \"B\"))",
+  "code": "outputGoal :: ProbBellKATPolicy\noutputGoal = (create \"C\" <||> create \"C\") \n    <> \n    (trans \"C\" (\"A\", \"C\") <||> trans \"C\" (\"B\", \"C\"))\n    <>\n    (swap \"C\" (\"A\", \"B\"))",
   "graph": {
     "nodes": [
       {
