@@ -110,7 +110,6 @@ export function buildFullSource(
     let mainInvocation = "";
 
     if (isQuantum) {
-        // Build NetworkBounds for Quantum execution
         const capacityDef = networkCapacity?.length === 0 ? "" :
             `networkCapacity :: NetworkCapacity QBKATTag
 networkCapacity = [${networkCapacity}]
