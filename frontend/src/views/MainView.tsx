@@ -11,7 +11,7 @@ import FormattedOutput from "@/components/main/result_display/FormattedOutput.ts
 import FormattedQuantumOutput from "@/components/main/result_display/FormattedQuantumOutput.tsx";
 
 const MainView = () => {
-    const {data, error, loading, clearOutput, resultCommand} = useRunEngine();
+    const {data, error, loading, clearOutput} = useRunEngine();
 
     const [leftPanelSize, setLeftPanelSize] = useState<number>(50);
     const [rightPanelSize, setRightPanelSize] = useState<number>(50)
@@ -22,7 +22,7 @@ const MainView = () => {
         <div className="flex flex-1 flex-col h-full min-h-0 gap-4">
             {(data || error || loading) && (
                 <div
-                    className="w-full bg-muted/40 border rounded-xl p-4 max-h-fit overflow-y-auto font-mono text-base shadow-sm">
+                    className="w-full bg-muted border rounded-xl p-4 max-h-fit overflow-y-auto font-mono text-base shadow-sm">
                     <div
                         className="flex items-center justify-between pb-2 mb-2 border-b text-xs uppercase text-muted-foreground">
                         <div className="flex gap-8">
@@ -46,15 +46,13 @@ const MainView = () => {
                         <p className="text-destructive bg-destructive/10 p-3 rounded-lg border border-destructive/20">{error}</p>}
 
 
-                    {data && (resultCommand == 'run' || resultCommand == 'probability') && (
+                    {data && (data.mode === "probability" || data.mode === 'run') && (
                         <FormattedOutput data={data} estimatedMode={estimatedMode} />
                     )}
 
-                    {data && resultCommand == 'quantum' && (
-                        <FormattedQuantumOutput data={data} />
+                    {data && (data.mode === "probQuality" || data.mode === 'probOnly') && (
+                        <FormattedQuantumOutput data={data} estimatedMode={estimatedMode} />
                     )}
-
-                    <p>Command : {resultCommand}</p>
                 </div>
             )}
 

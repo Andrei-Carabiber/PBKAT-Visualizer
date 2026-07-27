@@ -1,53 +1,40 @@
 import ProbabilityGraph from "@/components/main/result_display/ProbabilityGraph.tsx";
 import WernerGraph from "@/components/main/result_display/WernerGraph.tsx";
+import type {QBKATProbOutput, QBKATProbQualityOutput} from "@/components/main/result_display/DataType.ts";
 
-type ResultType = {
-    extremal: {
-        coverage_status: {
-            budget: number
-            status: string
-            target: number
-            value: number
-        },
+const FormattedQuantumOutput = ({data, estimatedMode}: {
+    data: QBKATProbQualityOutput | QBKATProbOutput;
+    estimatedMode: boolean
+}) => {
 
-        goal_states: any[],
+    const graphs = () => {
+        if (data.mode === "probOnly") {
+            const cdf_max = data.probabilityMax
+            const cdf_min = data.probabilityMin
 
-        initial_state: Object,
-        series: {
-            cdf_max: number[]
-            cdf_min: number[]
-        },
+            return (<ProbabilityGraph cdf_max={cdf_max} cdf_min={cdf_min} estimatedMode={estimatedMode}/>)
+        } else if (data.mode === 'probQuality') {
+            const probabilities = data.probability;
+            return (
+                <div className="w-full h-[700px] flex gap-4">
+                    <div className="flex min-h-0 flex-1 flex-col gap-4">
+                        <div className="min-h-0 flex-1">
+                            <ProbabilityGraph cdf_max={probabilities} cdf_min={null} estimatedMode={estimatedMode}/>
+                        </div>
 
-        states: {
-            bell_pairs: any[],
-            pc: number,
-            rendered: string
-        }[],
-    },
-    mdp_rendered: string,
-    transition_count: number
+                        <div className="min-h-0 flex-1">
+                            <WernerGraph wernerArray={data.wernerArray} estimatedMode={estimatedMode}/>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+    }
 
-
-}
-
-const FormattedQuantumOutput = ({data}: { data: string }) => {
-    const dataObj: ResultType = JSON.parse(data) as ResultType;
-
-    const {cdf_max, cdf_min} = dataObj.extremal.series
-
-    const isIdentical = cdf_max.every((val, index) => val === cdf_min[index]);
 
     return (
-        <div className="w-full h-[400px] flex flex-col space-y-4">
-            <h2 className="text-xl font-bold">Graphs</h2>
-
-            <div className="flex-1 w-full min-h-0">
-                <ProbabilityGraph cdf_max={cdf_max} cdf_min={isIdentical ? null : cdf_min}/>
-            </div>
-
-            {isIdentical && (
-                <WernerGraph/>
-            )}
+        <div>
+            {graphs()}
         </div>
     );
 };

@@ -5,6 +5,7 @@ import {isCodeValid, isCodeCorrect} from "@/components/main/text_editor/protocol
 import {
     isQuantumCode,
 } from "@/components/main/text_editor/haskellBoilerplate.ts";
+import type {DataType} from "@/components/main/result_display/DataType.ts";
 
 export interface ActiveConnection {
     id: string;
@@ -13,9 +14,8 @@ export interface ActiveConnection {
 
 interface RunEngineState {
     loading: boolean;
-    data: string | null;
+    data: DataType | null;
     error: string | null;
-    resultCommand: string | null;
     getCodeCallback: (() => string) | null;
     getUserCodeCallback: (() => string) | null;
     getGraphCallback: (() => { nodes: Node<NodeData>[]; edges: Edge<EdgeData>[] }) | null;
@@ -66,7 +66,6 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
     loading: false,
     data: null,
     error: null,
-    resultCommand: null,
     getCodeCallback: null,
     getUserCodeCallback: null,
     setGraphCallback: null,
@@ -148,7 +147,7 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
         const fullCode = getCodeCallback();
         const userRawCode = getUserCodeCallback?.() ?? fullCode;
 
-        set({loading: true, error: null, data: null, resultCommand: null});
+        set({loading: true, error: null, data: null});
 
         if (fullCode) {
             const graphSnapshot = getGraphCallback?.() ?? {nodes: [], edges: []};
@@ -196,7 +195,7 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
             return
         }
 
-        let command : "run" | "probability" | "quantum" = 'run'
+        let command: "run" | "probability" | "quantum" = 'run'
         if (mode === 'quantum') {
             command = 'quantum'
         } else if (!networkGoalDisabled) {
@@ -220,21 +219,20 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
                 const body = await response.json().catch(() => ({}));
                 set({
                     error: body.error ?? `Request failed with status ${response.status}`,
-                    resultCommand: body.command ?? null,
                     loading: false,
                 });
                 return;
             }
 
-            const result = await response.json();
+            const result = await response.json() as DataType;
+
             set({
-                data: result.output,
-                resultCommand: result.command ?? null,
+                data: result,
                 loading: false,
             });
         } catch (e: any) {
             set({error: e.message || "An error occurred.", loading: false});
         }
     },
-    clearOutput: () => set({data: null, error: null, resultCommand: null}),
+    clearOutput: () => set({data: null, error: null}),
 }));

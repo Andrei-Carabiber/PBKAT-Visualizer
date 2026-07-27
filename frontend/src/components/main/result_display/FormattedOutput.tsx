@@ -1,7 +1,8 @@
 import {useRunEngine} from "@/store/runEngine.ts";
+import type {PBKATOutput} from "@/components/main/result_display/DataType.ts";
 
 type OutputProps = {
-    data: string;
+    data: PBKATOutput;
     estimatedMode: boolean;
 };
 
@@ -170,13 +171,15 @@ const FormattedOutput = ({data, estimatedMode}: OutputProps) => {
         )
     }
 
-    const result = parseResult(data);
+    const message = data.output
+
+    const result = parseResult(message);
 
     const {goalConnections} = useRunEngine()
 
     //If network goal is selected
-    if (data[0] === "(" && data[data.length - 1] === ")") {
-        const inner = data.slice(1, -1);
+    if (message[0] === "(" && message[message.length - 1] === ")") {
+        const inner = message.slice(1, -1);
         const [lowerRaw, upperRaw] = splitTopLevel(inner, ",");
         const lower = parseFraction(lowerRaw, "lower");
         const upper = parseFraction(upperRaw, "upper");
