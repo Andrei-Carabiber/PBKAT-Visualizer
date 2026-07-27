@@ -2,6 +2,4 @@ docker run --rm -it -p 8080:8080 --mount type=bind,source=$(pwd),target=/opt/pbk
 
 nix-shell -p nodejs_20
 
-npm install -g nodemon
-
-nodemon --watch editor-webserver --ext js,mjs,cjs editor-webserver/server.js
+npm run dev --prefix editor-webserver
