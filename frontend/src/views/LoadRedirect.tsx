@@ -7,7 +7,7 @@ export default function LoadRedirect() {
     const [isDoneProcessing, setIsDoneProcessing] = useState(false);
 
     const {
-        setActiveConnections,
+        setGoalConnections,
         setNetworkCapacityConnections,
         setNetworkCapacityDisabled,
         setNetworkGoalDisabled,
@@ -27,7 +27,7 @@ export default function LoadRedirect() {
             const jsonStr = decodeURIComponent(atob(token));
             const save = JSON.parse(jsonStr);
 
-            setActiveConnections(save.goal || []);
+            setGoalConnections(save.goal || []);
             setNetworkCapacityConnections(save.networkCapacity || []);
             setNetworkCapacityDisabled(save.capacityDisabled ?? false);
             setNetworkGoalDisabled(save.goalDisabled ?? false);
@@ -49,7 +49,7 @@ export default function LoadRedirect() {
         }
     }, [
         token,
-        setActiveConnections,
+        setGoalConnections,
         setNetworkCapacityConnections,
         setNetworkCapacityDisabled,
         setNetworkGoalDisabled,

@@ -32,7 +32,6 @@ import {
 import {useRunEngine} from "@/store/runEngine.ts";
 import {LoaderCircle} from "lucide-react";
 import NetworkGoalBox from "@/components/main/text_editor/NetworkGoalBox.tsx";
-import ModeSelectionBox from "@/components/main/text_editor/ModeSelectionBox.tsx";
 
 export type editorSettings = {
     fontSize: number;
@@ -407,7 +406,7 @@ const MonacoEditor = forwardRef<any, { panelSize: number }>(({panelSize}, _ref) 
 
             // Retrieve current network goal state directly from Zustand
             const isGoalDisabled = useRunEngine.getState().networkGoalDisabled;
-            const connections = useRunEngine.getState().activeConnections;
+            const connections = useRunEngine.getState().goalConnections;
 
             const isNetworkDisabled = useRunEngine.getState().networkCapacityDisabled;
             const capacities = isNetworkDisabled ? [] : useRunEngine.getState().networkCapacityConnections.map(c => c.label);
@@ -436,7 +435,7 @@ const MonacoEditor = forwardRef<any, { panelSize: number }>(({panelSize}, _ref) 
             };
 
             const isGoalDisabled = useRunEngine.getState().networkGoalDisabled;
-            const connections = useRunEngine.getState().activeConnections;
+            const connections = useRunEngine.getState().goalConnections;
             const networkGoal = isGoalDisabled
                 ? []
                 : connections.map(c => c.label);
@@ -521,12 +520,8 @@ const MonacoEditor = forwardRef<any, { panelSize: number }>(({panelSize}, _ref) 
                 )}
             </div>
 
-            <div className="flex shrink-0 flex-1">
-                <div className="w-full"><NetworkGoalBox/></div>
-
-                <div>
-                    <ModeSelectionBox />
-                </div>
+            <div className="shrink-0 flex-1">
+                <NetworkGoalBox/>
             </div>
         </div>);
 });

@@ -7,11 +7,11 @@ import {Group, Panel, Separator} from "react-resizable-panels";
 import {useState} from "react";
 import {Switch} from "@/components/ui/switch.tsx";
 import {Label} from "@/components/ui/label.tsx";
-import FormattedOutput from "@/components/main/FormattedOutput.tsx";
-import FormattedQuantumOutput from "@/components/main/FormattedQuantumOutput.tsx";
+import FormattedOutput from "@/components/main/result_display/FormattedOutput.tsx";
+import FormattedQuantumOutput from "@/components/main/result_display/FormattedQuantumOutput.tsx";
 
 const MainView = () => {
-    const {data, error, loading, clearOutput, resultMode, resultCommand} = useRunEngine();
+    const {data, error, loading, clearOutput, resultCommand} = useRunEngine();
 
     const [leftPanelSize, setLeftPanelSize] = useState<number>(50);
     const [rightPanelSize, setRightPanelSize] = useState<number>(50)
@@ -46,15 +46,14 @@ const MainView = () => {
                         <p className="text-destructive bg-destructive/10 p-3 rounded-lg border border-destructive/20">{error}</p>}
 
 
-                    {data && resultMode == 'probabilistic' && (
+                    {data && (resultCommand == 'run' || resultCommand == 'probability') && (
                         <FormattedOutput data={data} estimatedMode={estimatedMode} />
                     )}
 
-                    {data && resultMode == 'quantum' && (
+                    {data && resultCommand == 'quantum' && (
                         <FormattedQuantumOutput data={data} />
                     )}
 
-                    <p>Mode: {resultMode}</p>
                     <p>Command : {resultCommand}</p>
                 </div>
             )}

@@ -4,7 +4,6 @@ import type {NodeData, EdgeData} from "@/components/main/node_editor/nodeEditor.
 import {isCodeValid, isCodeCorrect} from "@/components/main/text_editor/protocolParser.ts";
 import {
     isQuantumCode,
-    type ProtocolCommand
 } from "@/components/main/text_editor/haskellBoilerplate.ts";
 
 export interface ActiveConnection {
@@ -16,10 +15,6 @@ interface RunEngineState {
     loading: boolean;
     data: string | null;
     error: string | null;
-    // What the server actually ran, from its response — read this for
-    // formatting decisions rather than re-deriving mode from the editor,
-    // since the editor's code may have changed since this result came back.
-    resultMode: "quantum" | "probabilistic" | null;
     resultCommand: string | null;
     getCodeCallback: (() => string) | null;
     getUserCodeCallback: (() => string) | null;
@@ -29,9 +24,9 @@ interface RunEngineState {
 
     // Network Goal
     networkGoalDisabled: boolean;
-    activeConnections: ActiveConnection[];
+    goalConnections: ActiveConnection[];
     setNetworkGoalDisabled: (disabled: boolean) => void;
-    setActiveConnections: (connections: ActiveConnection[] | ((prev: ActiveConnection[]) => ActiveConnection[])) => void;
+    setGoalConnections: (connections: ActiveConnection[] | ((prev: ActiveConnection[]) => ActiveConnection[])) => void;
 
     // Network Capacity
     networkCapacityDisabled: boolean;
@@ -44,16 +39,8 @@ interface RunEngineState {
     setPendingSharedState: (state: PendingState | null) => void;
 
     // Run mode / command selection
-    selectedCommand: ProtocolCommand;
-    pure: boolean;
-    computeExtremal: boolean;
-    dumpDp: boolean;
     truncation: number;
     coverage: number | string;
-    setSelectedCommand: (command: ProtocolCommand) => void;
-    setPure: (pure: boolean) => void;
-    setComputeExtremal: (value: boolean) => void;
-    setDumpDp: (value: boolean) => void;
     setTruncation: (value: number | undefined) => void;
     setCoverage: (value: number | string) => void;
 
@@ -79,7 +66,6 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
     loading: false,
     data: null,
     error: null,
-    resultMode: null,
     resultCommand: null,
     getCodeCallback: null,
     getUserCodeCallback: null,
@@ -94,28 +80,20 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
     },
 
     // Run mode / command selection
-    selectedCommand: 'run',
-    pure: false,
-    computeExtremal: true,
-    dumpDp: false,
     truncation: -1,
     coverage: -1,
-    setSelectedCommand: (selectedCommand) => set({selectedCommand}),
-    setPure: (pure) => set({pure}),
-    setComputeExtremal: (computeExtremal) => set({computeExtremal}),
-    setDumpDp: (dumpDp) => set({dumpDp}),
     setTruncation: (truncation) => set({truncation}),
     setCoverage: (coverage) => set({coverage}),
 
     //NetworkGoal state
     networkGoalDisabled: false,
-    activeConnections: [{label: '"A" ~ "C"', id: crypto.randomUUID(),}],
+    goalConnections: [{label: '"A" ~ "C"', id: crypto.randomUUID(),}],
     setNetworkGoalDisabled: (disabled) => set({networkGoalDisabled: disabled}),
-    setActiveConnections: (updater) => {
+    setGoalConnections: (updater) => {
         if (typeof updater === 'function') {
-            set((state) => ({activeConnections: updater(state.activeConnections)}));
+            set((state) => ({goalConnections: updater(state.goalConnections)}));
         } else {
-            set({activeConnections: updater});
+            set({goalConnections: updater});
         }
     },
 
@@ -156,9 +134,8 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
 
     handleRun: async () => {
         const {
-            getCodeCallback, getGraphCallback, getUserCodeCallback,
-            activeConnections, networkGoalDisabled,
-            selectedCommand, pure, computeExtremal, dumpDp, truncation, coverage,
+            getCodeCallback, getGraphCallback, getUserCodeCallback, networkGoalDisabled,
+            truncation, coverage,
         } = get();
         if (!getCodeCallback) {
             set({
@@ -171,7 +148,7 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
         const fullCode = getCodeCallback();
         const userRawCode = getUserCodeCallback?.() ?? fullCode;
 
-        set({loading: true, error: null, data: null, resultMode: null, resultCommand: null});
+        set({loading: true, error: null, data: null, resultCommand: null});
 
         if (fullCode) {
             const graphSnapshot = getGraphCallback?.() ?? {nodes: [], edges: []};
@@ -199,29 +176,7 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
         // rather than re-deciding independently, so the mode sent to the backend
         // can never drift from the mode the Haskell was actually generated for.
         const quantum = isQuantumCode(userRawCode);
-        const mode = quantum ? "quantum" : "probabilistic";
-
-        // Which commands are actually legal for this code. This is stricter
-        // than "quantum vs probabilistic": if ProbBellKATPolicy appears
-        // anywhere in the code, mdp/qmdp are excluded even when QBKATPolicy
-        // also appears, since a ProbBellKATPolicy value can't be passed where
-        // qbkatMainD expects a QBKATPolicy.
-        let allowedCommands: ProtocolCommand[];
-        if (mode === "quantum") {
-            allowedCommands = ['qmdp', 'mdp']
-        } else {
-            allowedCommands = ['run']
-        }
-
-        // If the user picked a command explicitly, make sure it's actually valid
-        // for this code before we even hit the network.
-        if (selectedCommand && !allowedCommands.includes(selectedCommand)) {
-            set({
-                error: `Mode "${selectedCommand === 'run' ? "Normal" : selectedCommand}" isn't available for this code.`,
-                loading: false,
-            });
-            return;
-        }
+        const mode: "quantum" | "probabilistic" = quantum ? "quantum" : "probabilistic";
 
         // mdp/qmdp only: --coverage and --truncation are mutually exclusive
         // (mirrors resolveExtremalQuery in BellKAT.QuantumPrelude).
@@ -233,25 +188,25 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
             return;
         }
 
-        if (computeExtremal && truncation === -1 && coverage === -1 && mode === 'quantum') {
+        if (truncation === -1 && coverage === -1 && mode === 'quantum') {
             set({
-                error: "If you use Compute Extremal setting you have to enable either truncation or coverage",
+                error: "You have to enable either truncation or coverage",
                 loading: false
             });
             return
         }
 
-        const command: string = selectedCommand === 'run' ?
-            (activeConnections.length === 0 || networkGoalDisabled ? "run" : "probability") : selectedCommand
+        let command : "run" | "probability" | "quantum" = 'run'
+        if (mode === 'quantum') {
+            command = 'quantum'
+        } else if (!networkGoalDisabled) {
+            command = 'probability'
+        }
 
         try {
             const payload = {
                 code: fullCode,
-                mode,
                 command,
-                pure,
-                computeExtremal,
-                dumpDp,
                 truncation,
                 coverage,
             }
@@ -265,7 +220,6 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
                 const body = await response.json().catch(() => ({}));
                 set({
                     error: body.error ?? `Request failed with status ${response.status}`,
-                    resultMode: body.mode ?? null,
                     resultCommand: body.command ?? null,
                     loading: false,
                 });
@@ -275,7 +229,6 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
             const result = await response.json();
             set({
                 data: result.output,
-                resultMode: result.mode ?? null,
                 resultCommand: result.command ?? null,
                 loading: false,
             });
@@ -283,5 +236,5 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
             set({error: e.message || "An error occurred.", loading: false});
         }
     },
-    clearOutput: () => set({data: null, error: null, resultMode: null, resultCommand: null}),
+    clearOutput: () => set({data: null, error: null, resultCommand: null}),
 }));

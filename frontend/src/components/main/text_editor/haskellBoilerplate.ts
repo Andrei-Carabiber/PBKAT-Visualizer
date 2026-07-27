@@ -117,9 +117,7 @@ networkCapacity = [${networkCapacity}]
 `;
         networkSetup = `${capacityDef}nb :: NetworkBounds QBKATTag
 nb = def
-    { nbCapacity = ${networkCapacity?.length === 0 ? "Nothing" : "Just networkCapacity"}
-    , nbOperationTiming = InstantaneousOps
-    }`;
+    { nbCapacity = ${networkCapacity?.length === 0 ? "Nothing" : "Just networkCapacity"}}`;
 
         // qbkatMainD args: config, bounds, test, policy, initial_state
         mainInvocation = `main = qbkatMainD actionConfig nb goal outputGoal mempty`;

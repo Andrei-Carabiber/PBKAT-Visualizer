@@ -172,7 +172,7 @@ const FormattedOutput = ({data, estimatedMode}: OutputProps) => {
 
     const result = parseResult(data);
 
-    const {activeConnections} = useRunEngine()
+    const {goalConnections} = useRunEngine()
 
     //If network goal is selected
     if (data[0] === "(" && data[data.length - 1] === ")") {
@@ -185,9 +185,9 @@ const FormattedOutput = ({data, estimatedMode}: OutputProps) => {
             return (
                 <div className="flex flex-col gap-2 bg-background p-4 rounded-lg border shadow-inner">
                     <p>The probability of achieving your Network goal ({
-                        activeConnections.map((connection, index) => {
+                        goalConnections.map((connection, index) => {
                             return <span key={connection.id}>{connection.label}
-                                {index === activeConnections.length - 1 ? "" : ", "}</span>
+                                {index === goalConnections.length - 1 ? "" : ", "}</span>
                         })
                     }) is : </p>
                     {estimatedMode ? (

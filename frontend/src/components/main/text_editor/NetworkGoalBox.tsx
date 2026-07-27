@@ -28,8 +28,8 @@ const NetworkGoalBox = () => {
 
     const {
         getGraphCallback,
-        activeConnections,
-        setActiveConnections,
+        goalConnections,
+        setGoalConnections,
         networkGoalDisabled: disabled,
         setNetworkGoalDisabled: setDisabled
     } = useRunEngine();
@@ -52,14 +52,14 @@ const NetworkGoalBox = () => {
     }, [nodes]);
 
     const handleAddConnection = (label: string) => {
-        setActiveConnections((prev) => [
+        setGoalConnections((prev) => [
             ...prev,
             { id: crypto.randomUUID(), label }
         ].sort((a,b) => a.label.localeCompare(b.label)));
     };
 
     const handleRemoveConnection = (idToRemove: string) => {
-        setActiveConnections((prev) => prev.filter((c) => c.id !== idToRemove));
+        setGoalConnections((prev) => prev.filter((c) => c.id !== idToRemove));
     };
 
     return (
@@ -68,7 +68,7 @@ const NetworkGoalBox = () => {
                 <div className="flex justify-between gap-3">
                     <p className="font-medium w-fit">Network Goal</p>
                     <Badge className="w-fit text-sm p-2" variant="outline">
-                        {activeConnections.length} selected
+                        {goalConnections.length} selected
                     </Badge>
                 </div>
 
@@ -107,7 +107,7 @@ const NetworkGoalBox = () => {
                                     <CommandEmpty>No connection found.</CommandEmpty>
                                     <CommandGroup>
                                         {possibleConnections.map((c) => {
-                                            const count = activeConnections.filter(ac => ac.label === c).length;
+                                            const count = goalConnections.filter(ac => ac.label === c).length;
                                             return (
                                                 <CommandItem
                                                     key={c}
@@ -130,24 +130,24 @@ const NetworkGoalBox = () => {
                         </PopoverContent>
                     </Popover>
 
-                    {activeConnections.length > 0 && (
+                    {goalConnections.length > 0 && (
                         <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => setActiveConnections([])}
+                            onClick={() => setGoalConnections([])}
                         >
                             Clear all
                         </Button>
                     )}
                 </div>
 
-                {activeConnections.length === 0 ? (
+                {goalConnections.length === 0 ? (
                     <p className="mt-6 text-sm text-muted-foreground">
                         No network goal active.
                     </p>
                 ) : (
                     <div className="mt-6 flex flex-wrap gap-2">
-                        {[...activeConnections].sort((a, b) => {
+                        {[...goalConnections].sort((a, b) => {
                             return a.label.localeCompare(b.label);
                         }).map((connection) => (
                             <Badge

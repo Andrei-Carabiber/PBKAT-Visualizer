@@ -17,7 +17,6 @@ import LocalSaveDisplayCard from "@/components/web/header-buttons/local-save-dis
 import {toast} from "sonner";
 import type {exampleSave} from "@/examples/type.ts";
 import ExampleSelectionCard from "@/components/web/header-buttons/example-selection-card.tsx";
-import type {ProtocolCommand} from "@/components/main/text_editor/haskellBoilerplate.ts";
 
 const exampleModules = import.meta.glob<{ default: exampleSave }>('@/examples/*.json', {eager: true});
 
@@ -38,14 +37,13 @@ export type localStorageSave = {
     goalDisabled: boolean,
     networkCapacity: ActiveConnection[],
     capacityDisabled: boolean,
-    mode: ProtocolCommand
 }
 
 const SaveButtons = () => {
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [error, setError] = useState<string>("")
     const {
-        activeConnections,
+        goalConnections,
         networkGoalDisabled,
         setNetworkGoalDisabled,
         networkCapacityDisabled,
@@ -53,12 +51,10 @@ const SaveButtons = () => {
         networkCapacityConnections,
         getUserCodeCallback,
         getGraphCallback,
-        setActiveConnections,
+        setGoalConnections,
         setNetworkCapacityConnections,
         setUserCodeCallback,
         setGraphCallback,
-        setSelectedCommand,
-        selectedCommand
     } = useRunEngine()
     const [isLoadOpen, setIsLoadOpen] = useState(false);
     const [allSaves, setAllSaves] = useState<localStorageSave[]>([])
@@ -139,11 +135,10 @@ const SaveButtons = () => {
             savedDate: Date.now(),
             code: userCode,
             graph,
-            goal: activeConnections,
+            goal: goalConnections,
             goalDisabled: networkGoalDisabled,
             networkCapacity: networkCapacityConnections,
             capacityDisabled: networkCapacityDisabled,
-            mode: selectedCommand
         }
 
         let saves: localStorageSave[] = [];
@@ -183,11 +178,10 @@ const SaveButtons = () => {
 
     const handleLoad = (save: localStorageSave | exampleSave) => {
         try {
-            setActiveConnections(save.goal);
+            setGoalConnections(save.goal);
             setNetworkCapacityConnections(save.networkCapacity);
             setNetworkCapacityDisabled(save.capacityDisabled)
             setNetworkGoalDisabled(save.goalDisabled)
-            setSelectedCommand(save.mode)
 
             if (setGraphCallback && setUserCodeCallback) {
                 setGraphCallback(save.graph.nodes, save.graph.edges);
@@ -213,11 +207,10 @@ const SaveButtons = () => {
         const shareState = {
             code: getUserCodeCallback(),
             graph: getGraphCallback(),
-            goal: activeConnections,
+            goal: goalConnections,
             goalDisabled: networkGoalDisabled,
             networkCapacity: networkCapacityConnections,
             capacityDisabled: networkCapacityDisabled,
-            mode: selectedCommand
         };
 
         const jsonStr = JSON.stringify(shareState);
