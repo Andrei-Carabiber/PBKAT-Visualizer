@@ -6,6 +6,7 @@ import {
     isQuantumCode,
 } from "@/components/main/text_editor/haskellBoilerplate.ts";
 import type {DataType} from "@/components/main/result_display/DataType.ts";
+import {useCustomization} from "@/store/customization.ts";
 
 export interface ActiveConnection {
     id: string;
@@ -39,9 +40,9 @@ interface RunEngineState {
     setPendingSharedState: (state: PendingState | null) => void;
 
     // Run mode / command selection
-    truncation: number;
+    truncation: number | string;
     coverage: number | string;
-    setTruncation: (value: number | undefined) => void;
+    setTruncation: (value: number | string) => void;
     setCoverage: (value: number | string) => void;
 
     // Editor and Graph
@@ -202,12 +203,15 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
             command = 'probability'
         }
 
+        const computeWernerQuality = useCustomization.getState().computeWernerQuality;
+
         try {
             const payload = {
                 code: fullCode,
                 command,
                 truncation,
                 coverage,
+                probOnly: !computeWernerQuality
             }
             const response = await fetch(RUN_PROTOCOL_URL, {
                 method: "POST",

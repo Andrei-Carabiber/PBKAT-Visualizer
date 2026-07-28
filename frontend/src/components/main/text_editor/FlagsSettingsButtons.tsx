@@ -6,12 +6,16 @@ import {useState} from "react";
 import {Label} from "@/components/ui/label.tsx";
 import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip.tsx";
 import {Input} from "@/components/ui/input.tsx";
+import {useCustomization} from "@/store/customization.ts";
+import {Switch} from "@/components/ui/switch.tsx";
 
 const FlagsSettingsButtons = () => {
     const {
         truncation, coverage, setTruncation, setCoverage
     } = useRunEngine();
     const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
+
+    const {computeWernerQuality, setComputeWernerQuality, showStatistics, setShowStatistics} = useCustomization()
 
     return (
         <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
@@ -48,7 +52,31 @@ const FlagsSettingsButtons = () => {
                         value={truncation}
                         step={1}
                         min={-1}
-                        onChange={(e) => setTruncation(Number(e.target.value))}
+                        onChange={(e) => {
+                            const val = e.target.value;
+
+                            if (val === "" || val === "-" || val.endsWith(".")) {
+                                setTruncation(val);
+                                return;
+                            }
+
+                            const nr = Number(val);
+
+                            if (nr > -1 && nr < -0.5) {
+                                setTruncation(0);
+                            } else if (nr < 0) {
+                                setTruncation(-1);
+                            } else {
+                                setTruncation(nr);
+                            }
+                        }}
+                        onBlur={() => {
+                            if (truncation === "" || truncation === "-") {
+                                setTruncation(-1);
+                            } else if (typeof truncation === "string") {
+                                setTruncation(Number(truncation));
+                            }
+                        }}
                     />
                     <Tooltip>
                         <TooltipTrigger type="button">
@@ -73,8 +101,6 @@ const FlagsSettingsButtons = () => {
                             onChange={(e) => {
                                 const val = e.target.value;
 
-                                // Pass the raw string directly!
-                                // This allows the box to be empty, hold a minus sign, or hold a decimal temporarily.
                                 if (val === "" || val === "-" || val.endsWith(".")) {
                                     setCoverage(val);
                                     return;
@@ -82,7 +108,6 @@ const FlagsSettingsButtons = () => {
 
                                 const nr = Number(val);
 
-                                // Your custom arrow snapping logic
                                 if (nr > -1 && nr < -0.5) {
                                     setCoverage(0);
                                 } else if (nr < 0) {
@@ -90,7 +115,7 @@ const FlagsSettingsButtons = () => {
                                 } else if (nr > 1) {
                                     setCoverage(1);
                                 } else {
-                                    setCoverage(val); // Also pass the string here to preserve trailing zeros like "0.50"
+                                    setCoverage(val);
                                 }
                             }}
                             onBlur={() => {
@@ -109,6 +134,37 @@ const FlagsSettingsButtons = () => {
                         </TooltipTrigger>
                         <TooltipContent>
                             <p>Coverage: Stop after you have a certain probability covered. -1 to disable</p>
+                        </TooltipContent>
+                    </Tooltip>
+
+                    {/*Compute Quality Switch*/}
+                    <Label className="text-lg">Compute Quality</Label>
+                    <div className="flex items-center justify-around">
+                        <Switch checked={computeWernerQuality} onCheckedChange={() => setComputeWernerQuality(!computeWernerQuality)} />
+                    </div>
+                    <Tooltip>
+                        <TooltipTrigger type="button">
+                            <CircleQuestionMark
+                                className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors"/>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>If disabled it will not calculate quality of entangled pair. It will however speed up the calculation.</p>
+                        </TooltipContent>
+                    </Tooltip>
+
+
+                    {/*Show Statistics switch*/}
+                    <Label className="text-lg">Show Time Statistics</Label>
+                    <div className="flex items-center justify-around">
+                        <Switch checked={showStatistics} onCheckedChange={() => setShowStatistics(!showStatistics)} />
+                    </div>
+                    <Tooltip>
+                        <TooltipTrigger type="button">
+                            <CircleQuestionMark
+                                className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors"/>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>If enabled it will show time it took for computation</p>
                         </TooltipContent>
                     </Tooltip>
 

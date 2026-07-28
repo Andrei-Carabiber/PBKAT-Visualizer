@@ -1,61 +1,18 @@
 import TextEditor from "@/components/main/text_editor/textEditor.tsx";
 import NodeEditor from "@/components/main/node_editor/nodeEditor.tsx";
-import {useRunEngine} from "@/store/runEngine";
-import {X} from 'lucide-react'
-import {Button} from "@/components/ui/button.tsx";
 import {Group, Panel, Separator} from "react-resizable-panels";
 import {useState} from "react";
-import {Switch} from "@/components/ui/switch.tsx";
-import {Label} from "@/components/ui/label.tsx";
-import FormattedOutput from "@/components/main/result_display/FormattedOutput.tsx";
-import FormattedQuantumOutput from "@/components/main/result_display/FormattedQuantumOutput.tsx";
+import ResultDisplayWindow from "@/components/main/result_display/ResultDisplayWindow.tsx";
 
 const MainView = () => {
-    const {data, error, loading, clearOutput} = useRunEngine();
 
     const [leftPanelSize, setLeftPanelSize] = useState<number>(50);
     const [rightPanelSize, setRightPanelSize] = useState<number>(50)
 
-    const [estimatedMode, setEstimatedMode] = useState<boolean>(false)
-
     return (
         <div className="flex flex-1 flex-col h-full min-h-0 gap-4">
-            {(data || error || loading) && (
-                <div
-                    className="w-full bg-muted border rounded-xl p-4 max-h-fit overflow-y-auto font-mono text-base shadow-sm">
-                    <div
-                        className="flex items-center justify-between pb-2 mb-2 border-b text-xs uppercase text-muted-foreground">
-                        <div className="flex gap-8">
-                            <span className="font-bold">Output</span>
-                            <div className="flex gap-2">
-                                <Label htmlFor="estimated-mode" className="font-semibold">
-                                    Estimated Mode
-                                </Label>
-                                <Switch id="estimated-mode"
-                                        onCheckedChange={(checked) => setEstimatedMode(checked)}/>
-                            </div>
-                        </div>
-                        {loading ? <span className="animate-pulse text-primary">Running...</span> :
-                            <Button variant="ghost"
-                                    onClick={clearOutput}
-                                    className="hover:text-foreground text-xs underline">
-                                <X/>
-                            </Button>}
-                    </div>
-                    {error &&
-                        <p className="text-destructive bg-destructive/10 p-3 rounded-lg border border-destructive/20">{error}</p>}
 
-
-                    {data && (data.mode === "probability" || data.mode === 'run') && (
-                        <FormattedOutput data={data} estimatedMode={estimatedMode} />
-                    )}
-
-                    {data && (data.mode === "probQuality" || data.mode === 'probOnly') && (
-                        <FormattedQuantumOutput data={data} estimatedMode={estimatedMode} />
-                    )}
-                </div>
-            )}
-
+            <ResultDisplayWindow />
 
             <Group className="flex flex-1 min-h-0 gap-1">
                 <Panel

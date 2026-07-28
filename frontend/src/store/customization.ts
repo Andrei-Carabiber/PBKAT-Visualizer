@@ -10,6 +10,12 @@ interface customizationState {
     setDefaultNodeValues: (newDefault: GenericNodeData) => void,
     setDefaultEdgeValues: (newDefault: EdgeData) => void,
 
+    computeWernerQuality: boolean,
+    setComputeWernerQuality: (bool: boolean) => void,
+
+    showStatistics: boolean,
+    setShowStatistics: (bool: boolean) => void
+
 }
 
 export const DEFAULT_NODE_VALUES : GenericNodeData = {
@@ -32,4 +38,10 @@ export const useCustomization = create<customizationState>((set, get) => ({
 
     setDefaultNodeValues: (newDefaultNodeValues) => {set({defaultNodeValues: newDefaultNodeValues})},
     setDefaultEdgeValues: (newDefaultEdgeValues) => {set({defaultEdgeValues: newDefaultEdgeValues})},
+
+    computeWernerQuality: true,
+    setComputeWernerQuality : (compute) => {set({computeWernerQuality: compute})},
+
+    showStatistics: false,
+    setShowStatistics: (show) => {set({showStatistics:show})}
 }))

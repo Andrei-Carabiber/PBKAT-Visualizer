@@ -12,11 +12,23 @@ const FormattedQuantumOutput = ({data, estimatedMode}: {
             const cdf_max = data.probabilityMax
             const cdf_min = data.probabilityMin
 
-            return (<ProbabilityGraph cdf_max={cdf_max} cdf_min={cdf_min} estimatedMode={estimatedMode}/>)
+            let areIdentical = true;
+            for (let i = 0; i < cdf_min.length; i++) {
+                if (cdf_min[i] !== cdf_max[i]){
+                    areIdentical = false;
+                    break
+                }
+            }
+
+            return (
+                <div className="w-full h-[400px] flex gap-4">
+                    <div className="min-h-0 flex-1">
+                        <ProbabilityGraph cdf_max={cdf_max} cdf_min={areIdentical ? null : cdf_min} estimatedMode={estimatedMode}/>
+                    </div>
+                </div>
+            )
         } else if (data.mode === 'probQuality') {
             const probabilities = data.probability;
-            console.log(data.wernerArray)
-            console.log(probabilities)
             return (
                 <div className="w-full h-[700px] flex gap-4">
                     <div className="flex min-h-0 flex-1 flex-col gap-4">
