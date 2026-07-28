@@ -24,6 +24,7 @@ import {useRunEngine} from "@/store/runEngine.ts";
 import {parseProtocolGraph} from "@/components/main/text_editor/protocolParser.ts";
 import * as React from "react";
 import NetworkCapacityBox from "@/components/main/node_editor/NetworkCapacityBox.tsx";
+import {useCustomization} from "@/store/customization.ts";
 
 
 const initialNodes: Node<NodeData>[] = [
@@ -134,6 +135,7 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
     const [nodeSheetOpen, setNodeSheetOpen] = useState(false);
     const [edgeSheetOpen, setEdgeSheetOpen] = useState(false);
 
+    const {defaultNodeValues, defaultEdgeValues} = useCustomization()
 
 
     //Remove watermark
@@ -172,8 +174,10 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
                 id: `edge_${Date.now()}`,
                 type: 'floating',
                 data: {
-                    distance: 10,
-                    transmit_prob: 1.0,
+                    distance: defaultEdgeValues.distance,
+                    transmit_prob: defaultEdgeValues.transmit_prob,
+                    uCreate_prob: defaultEdgeValues.uCreate_prob,
+                    uCreate_quality: defaultEdgeValues.uCreate_quality
                 }
             };
 
@@ -216,7 +220,10 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
                     position,
                     data: {
                         nodeLabel: `Node ${nodes.length + 1}`,
-                        coherence_time: 1,
+                        coherence_time: defaultNodeValues.coherence_time,
+                        create_prob: defaultNodeValues.create_prob,
+                        create_quality: defaultNodeValues.create_quality,
+                        swap_prob: defaultNodeValues.swap_prob
                     },
                 };
                 setNodes((nds) => nds.concat(newNode));
@@ -232,9 +239,12 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
 
     const updateEdgeData = useCallback((id: string, patch: Partial<EdgeData>) => {
         setEdges((edgs) =>
-            edgs.map((e) => (e.id === id ? { ...e, data: { ...e.data, ...patch } as EdgeData } : e))
+            edgs.map((e) => (e.id === id ? {...e, data: {...e.data, ...patch} as EdgeData} : e))
         );
-        setSelectedEdge((prev) => (prev && prev.id === id ? { ...prev, data: { ...prev.data, ...patch } as EdgeData } : prev));
+        setSelectedEdge((prev) => (prev && prev.id === id ? {
+            ...prev,
+            data: {...prev.data, ...patch} as EdgeData
+        } : prev));
     }, [setEdges]);
 
     //Right-click handler
@@ -308,7 +318,7 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
 
     useEffect(() => {
         if (registerGraph) {
-            registerGraph(() => ({ nodes, edges }));
+            registerGraph(() => ({nodes, edges}));
         }
     }, [nodes, edges, registerGraph]);
 
@@ -346,7 +356,10 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
             },
             data: {
                 nodeLabel: label,
-                coherence_time: 1,
+                coherence_time: defaultNodeValues.coherence_time,
+                create_prob: defaultNodeValues.create_prob,
+                create_quality: defaultNodeValues.create_quality,
+                swap_prob: defaultNodeValues.swap_prob
             },
         }));
 
@@ -373,8 +386,10 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
                 target: bId,
                 type: 'floating',
                 data: {
-                    distance: 10,
-                    transmit_prob: 1.0,
+                    distance: defaultEdgeValues.distance,
+                    transmit_prob: defaultEdgeValues.transmit_prob,
+                    uCreate_prob: defaultEdgeValues.uCreate_prob,
+                    uCreate_quality: defaultEdgeValues.uCreate_quality
                 },
             });
         });
@@ -394,7 +409,7 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
         <div className="h-full w-full flex flex-col gap-3 p-4 pt-2 bg-card rounded-lg">
             <div className="shrink-0 h-20">
                 <UtilityBar panelSize={panelSize} onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo}
-                            takeSnapshot={takeSnapshot} onAutoCreate={onAutoCreate} />
+                            takeSnapshot={takeSnapshot} onAutoCreate={onAutoCreate}/>
             </div>
             <div className="flex-1 min-h-0 w-full flex relative">
                 <div className="flex-1 min-h-0 w-full flex rounded-lg border overflow-hidden">
@@ -437,10 +452,11 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
                                      selectedNode={selectedNode}
                                      updateNodeData={updateNodeData} takeSnapshot={takeSnapshot}/>
                 <EdgePropertiesSheet sheetOpen={edgeSheetOpen} setSheetOpen={setEdgeSheetOpen}
-                                     selectedEdge={selectedEdge} updateEdgeData={updateEdgeData} takeSnapshot={takeSnapshot}/>
+                                     selectedEdge={selectedEdge} updateEdgeData={updateEdgeData}
+                                     takeSnapshot={takeSnapshot}/>
             </div>
             <div>
-                <NetworkCapacityBox />
+                <NetworkCapacityBox/>
             </div>
         </div>
     )

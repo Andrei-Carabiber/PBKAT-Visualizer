@@ -21,7 +21,7 @@ const FlagsSettingsButtons = () => {
                 </Button>
             </DialogTrigger>
 
-            <DialogContent showCloseButton={false} className="sm:max-w-lg px-4">
+            <DialogContent className="sm:max-w-lg px-4" onOpenAutoFocus={(e) => e.preventDefault()} >
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2 text-xl w-full text-left">
                         Manage execution settings

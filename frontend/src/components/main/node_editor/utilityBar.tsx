@@ -4,13 +4,17 @@ import {
     Redo2,
     Maximize2,
     Trash2,
-    MoreHorizontal, BrainIcon,
+    MoreHorizontal, BrainIcon, Settings,
 } from "lucide-react";
 import {Button} from "@/components/ui/button.tsx";
 import {Separator} from "@/components/ui/separator.tsx";
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover.tsx";
 import {type Node, useReactFlow} from "@xyflow/react";
 import type {NodeData} from "@/components/main/node_editor/nodeEditor.tsx";
+import {useCustomization} from "@/store/customization.ts";
+import {useState} from "react";
+import DefaultValuesDialog from "@/components/main/node_editor/defaultValuesDialog.tsx";
+import SettingsDialog from "@/components/main/node_editor/settingsDialog.tsx";
 
 type Action = {
     key: string;
@@ -33,12 +37,15 @@ type Props = {
 
 const UtilityBar = ({panelSize, onUndo, onRedo, canUndo, canRedo, takeSnapshot, onAutoCreate}: Props) => {
     const {fitView, getNodes, setNodes, setEdges, screenToFlowPosition} = useReactFlow<Node<NodeData>>();
+    const [settingsMenuOpen, setSettingsMenuOpen] = useState(false)
 
     const deleteAll = () => {
         takeSnapshot();
         setNodes([]);
         setEdges([]);
     };
+
+    const {defaultNodeValues} = useCustomization()
 
     const addBasicNode = () => {
 
@@ -64,7 +71,10 @@ const UtilityBar = ({panelSize, onUndo, onRedo, canUndo, canRedo, takeSnapshot, 
             position: projectCenter,
             data: {
                 nodeLabel: `Node ${nodes.length + 1}`,
-                coherence_time: 1,
+                coherence_time: defaultNodeValues.coherence_time,
+                create_prob: defaultNodeValues.create_prob,
+                create_quality: defaultNodeValues.create_quality,
+                swap_prob: defaultNodeValues.swap_prob
             },
         };
 
@@ -83,6 +93,7 @@ const UtilityBar = ({panelSize, onUndo, onRedo, canUndo, canRedo, takeSnapshot, 
         {key: "fit-view", label: "Fit view", icon: Maximize2, onClick: fitView},
         {key: "calculate", label: "Auto-create", icon: BrainIcon, onClick: onAutoCreate},
         {key: "delete", label: "Delete everything", icon: Trash2, onClick: deleteAll, variant: "destructive"},
+        {key: "defaultValueMenu", label: "Settings", icon: Settings, onClick: () => setSettingsMenuOpen(true)}
 
     ];
 
@@ -106,9 +117,65 @@ const UtilityBar = ({panelSize, onUndo, onRedo, canUndo, canRedo, takeSnapshot, 
 
     if (isCollapsed) {
         return (
+            <div>
+                <SettingsDialog dialogOpen={settingsMenuOpen} setDialogOpen={setSettingsMenuOpen} />
+
+                <div
+                    className="w-full h-20 flex flex-row items-center
+                justify-between gap-2 px-2 py-0 text-card-foreground bg-background rounded-lg border shadow-sm"
+                >
+                    <Button
+                        size="icon"
+                        onClick={addBasicNode}
+                        className="shrink-0 shadow-sm h-3/4 w-fit px-4 py-1"
+                    >
+                        <Plus className="size-4"/>
+                        <p>Add new node</p>
+                    </Button>
+
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button variant="ghost" size="icon" className="text-muted-foreground">
+                                <MoreHorizontal className="size-4"/>
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent align="end" className="w-56 flex flex-col gap-3 p-3 shadow-lg">
+                            <div>
+                                {availableActions.map((action, index) => (
+                                    <div key={action.key}>
+                                        <Button
+                                            variant="ghost"
+                                            onClick={action.onClick}
+                                            disabled={action.disabled}
+                                            className={
+                                                "justify-start gap-2 w-full disabled:opacity-40 disabled:pointer-events-none " +
+                                                (action.variant === "destructive"
+                                                    ? "text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                    : "")
+                                            }
+                                        >
+                                            <action.icon className="size-4"/>
+                                            {action.label}
+                                        </Button>
+                                        {index !== availableActions.length - 1 && <Separator className="my-1"/>}
+                                    </div>
+                                ))}
+                            </div>
+                        </PopoverContent>
+                    </Popover>
+                </div>
+            </div>
+        );
+    }
+
+    // Standard expanded view
+    return (
+        <div>
+            <SettingsDialog dialogOpen={settingsMenuOpen} setDialogOpen={setSettingsMenuOpen} />
+
             <div
                 className="w-full h-20 flex flex-row items-center
-                justify-between gap-2 px-2 py-0 text-card-foreground bg-background rounded-lg border shadow-sm">
+            gap-1 px-6 py-0 text-card-foreground bg-background rounded-lg border shadow-sm overflow-x-auto">
                 <Button
                     size="icon"
                     onClick={addBasicNode}
@@ -118,61 +185,13 @@ const UtilityBar = ({panelSize, onUndo, onRedo, canUndo, canRedo, takeSnapshot, 
                     <p>Add new node</p>
                 </Button>
 
-                <Popover>
-                    <PopoverTrigger asChild>
-                        <Button variant="ghost" size="icon" className="text-muted-foreground">
-                            <MoreHorizontal className="size-4"/>
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent align="end" className="w-56 flex flex-col gap-3 p-3 shadow-lg">
-                        <div>
-                            {availableActions.map((action, index) => (
-                                <div key={action.key}>
-                                    <Button
-                                        variant="ghost"
-                                        onClick={action.onClick}
-                                        disabled={action.disabled}
-                                        className={
-                                            "justify-start gap-2 w-full disabled:opacity-40 disabled:pointer-events-none " +
-                                            (action.variant === "destructive"
-                                                ? "text-destructive hover:text-destructive hover:bg-destructive/10"
-                                                : "")
-                                        }
-                                    >
-                                        <action.icon className="size-4"/>
-                                        {action.label}
-                                    </Button>
-                                    {index !== availableActions.length - 1 && <Separator className="my-1"/>}
-                                </div>
-                            ))}
-                        </div>
-                    </PopoverContent>
-                </Popover>
-            </div>
-        )
-            ;
-    }
+                <Separator orientation="vertical" className="h-6 mx-4"/>
 
-    // Standard expanded view
-    return (
-        <div
-            className="w-full h-20 flex flex-row items-center
-            gap-1 px-6 py-0 text-card-foreground bg-background rounded-lg border shadow-sm overflow-x-auto">
-            <Button
-                size="icon"
-                onClick={addBasicNode}
-                className="shrink-0 shadow-sm h-3/4 w-fit px-4 py-1"
-            >
-                <Plus className="size-4"/>
-                <p>Add new node</p>
-            </Button>
-
-            <Separator orientation="vertical" className="h-6 mx-4"/>
-
-            <div className="flex items-center justify-between w-full h-3/4">
-                {availableActions.map((action) => (
-                    <IconAndTextButton key={action.key} action={action}/>
-                ))}
+                <div className="flex items-center justify-between w-full h-3/4">
+                    {availableActions.map((action) => (
+                        <IconAndTextButton key={action.key} action={action}/>
+                    ))}
+                </div>
             </div>
         </div>
     );

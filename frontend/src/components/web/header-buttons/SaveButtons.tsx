@@ -284,7 +284,7 @@ const SaveButtons = () => {
                         Load
                     </Button>
                 </DialogTrigger>
-                <DialogContent showCloseButton={false} className="sm:max-w-xl">
+                <DialogContent className="sm:max-w-xl">
                     <DialogHeader className="flex flex-col items-center gap-4">
                         <DialogTitle className="text-xl w-full text-left">Load a save</DialogTitle>
                         <div className="flex flex-col gap-2 w-full px-10">
@@ -328,7 +328,7 @@ const SaveButtons = () => {
                         Examples
                     </Button>
                 </DialogTrigger>
-                <DialogContent showCloseButton={false} className="sm:max-w-xl">
+                <DialogContent className="sm:max-w-xl">
                     <DialogHeader className="flex flex-col items-center gap-4">
                         <DialogTitle className="text-xl text-left w-full pl-3">Load an Example</DialogTitle>
                         <ExampleSelectionCard probabilisticSaves={exampleSaves}
