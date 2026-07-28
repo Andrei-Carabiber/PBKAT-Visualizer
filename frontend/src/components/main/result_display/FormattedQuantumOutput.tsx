@@ -15,6 +15,8 @@ const FormattedQuantumOutput = ({data, estimatedMode}: {
             return (<ProbabilityGraph cdf_max={cdf_max} cdf_min={cdf_min} estimatedMode={estimatedMode}/>)
         } else if (data.mode === 'probQuality') {
             const probabilities = data.probability;
+            console.log(data.wernerArray)
+            console.log(probabilities)
             return (
                 <div className="w-full h-[700px] flex gap-4">
                     <div className="flex min-h-0 flex-1 flex-col gap-4">

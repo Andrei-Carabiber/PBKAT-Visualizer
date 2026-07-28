@@ -1,6 +1,6 @@
 import {useCallback} from 'react';
 import {useReactFlow, type Node} from '@xyflow/react';
-import {type NodeData, type MenuType} from './nodeEditor.tsx';
+import {type NodeData, type MenuType} from '../nodeEditor.tsx';
 import {Card, CardContent} from "@/components/ui/card.tsx";
 import {Button} from "@/components/ui/button.tsx";
 

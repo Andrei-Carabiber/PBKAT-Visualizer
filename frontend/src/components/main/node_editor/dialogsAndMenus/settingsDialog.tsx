@@ -1,18 +1,19 @@
 // settingsDialog.tsx
-import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { ArrowLeft, ChevronRight, Settings, Sliders } from "lucide-react";
-import DefaultValuesContent from "./defaultValuesDialog";
+import {useState} from "react";
+import {Dialog, DialogContent, DialogHeader, DialogTitle} from "@/components/ui/dialog.tsx";
+import {Button} from "@/components/ui/button.tsx";
+import {ArrowLeft, ChartCandlestick, ChevronRight, Settings, Sliders} from "lucide-react";
+import DefaultValuesContent from "./defaultValuesDialog.tsx";
+import GlobalValuesDialog from "@/components/main/node_editor/dialogsAndMenus/setGlobalValues.tsx";
 
 type Props = {
     dialogOpen: boolean;
     setDialogOpen: (open: boolean) => void;
 };
 
-type ViewMode = "main" | "default-values";
+type ViewMode = "main" | "default-values" | 'global-values';
 
-const SettingsDialog = ({ dialogOpen, setDialogOpen }: Props) => {
+const SettingsDialog = ({dialogOpen, setDialogOpen}: Props) => {
     const [currentView, setCurrentView] = useState<ViewMode>("main");
 
     const handleClose = () => {
@@ -32,13 +33,14 @@ const SettingsDialog = ({ dialogOpen, setDialogOpen }: Props) => {
                             className="h-7 w-7"
                             onClick={() => setCurrentView("main")}
                         >
-                            <ArrowLeft className="size-4" />
+                            <ArrowLeft className="size-4"/>
                         </Button>
                     )}
                     <DialogTitle className="text-lg font-semibold flex items-center gap-2">
-                        <Settings className="size-5" />
+                        <Settings className="size-5"/>
                         {currentView === "main" && "Settings"}
                         {currentView === "default-values" && "Default Values"}
+                        {currentView === 'global-values' && "Set Values to All Nodes and Edges"}
                     </DialogTitle>
                 </DialogHeader>
 
@@ -51,10 +53,22 @@ const SettingsDialog = ({ dialogOpen, setDialogOpen }: Props) => {
                             onClick={() => setCurrentView("default-values")}
                         >
                             <div className="flex items-center gap-2">
-                                <Sliders className="size-4 text-muted-foreground" />
-                                <span>Default Values (Nodes & Edges)</span>
+                                <Sliders className="size-4 text-muted-foreground"/>
+                                <span>Default Nodes & Edges Values</span>
                             </div>
-                            <ChevronRight className="size-4 text-muted-foreground" />
+                            <ChevronRight className="size-4 text-muted-foreground"/>
+                        </Button>
+
+                        <Button
+                            variant="outline"
+                            className="w-full justify-between h-12 text-left font-normal"
+                            onClick={() => setCurrentView("global-values")}
+                        >
+                            <div className="flex items-center gap-2">
+                                <ChartCandlestick className="size-4 text-muted-foreground"/>
+                                <span>Set Values For Current Nodes & Edges</span>
+                            </div>
+                            <ChevronRight className="size-4 text-muted-foreground"/>
                         </Button>
 
                         {/* Add future settings buttons here */}
@@ -62,7 +76,11 @@ const SettingsDialog = ({ dialogOpen, setDialogOpen }: Props) => {
                 )}
 
                 {currentView === "default-values" && (
-                    <DefaultValuesContent onBack={() => setCurrentView("main")} />
+                    <DefaultValuesContent onBack={() => setCurrentView("main")}/>
+                )}
+
+                {currentView === 'global-values' && (
+                    <GlobalValuesDialog onBack={() => setCurrentView('main')}/>
                 )}
             </DialogContent>
         </Dialog>

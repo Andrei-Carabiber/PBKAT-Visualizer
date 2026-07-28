@@ -31,7 +31,7 @@ const ProbabilityGraph = ({cdf_max, cdf_min, estimatedMode}: {
     return (
         <div className="w-full h-full min-h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={plot_array}>
+                <AreaChart data={plot_array} margin={{top: 10, right: 30, left: 20, bottom: 0}}>
                     <defs>
                         <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
@@ -50,7 +50,11 @@ const ProbabilityGraph = ({cdf_max, cdf_min, estimatedMode}: {
                         height={52}
                         label={{position: "insideBottomRight", value: "Time units", offset: 5}}
                     />
-                    <YAxis label={{position: "insideTopLeft", value: "Probability", dx: 60}} domain={[0, 1]}/>
+                    <YAxis
+                        domain={[0, 1]}
+                        width={80}
+                        label={{position: "left", value: "Probability", angle: -90, offset: -15, dy: -45}}
+                    />
 
                     {!cdf_min ? (
                         <>
