@@ -14,10 +14,9 @@ import RunButton from "@/components/main/text_editor/run_button.tsx";
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover.tsx";
 import {Settings2} from "lucide-react";
 import FlagsSettingsButtons from "@/components/main/text_editor/FlagsSettingsButtons.tsx";
+import {useCustomization} from "@/store/customization.ts";
 
-type Props = {
-    settings: editorSettings;
-    setSettings: React.Dispatch<React.SetStateAction<editorSettings>>;
+type props = {
     panelSize: number;
 };
 
@@ -28,8 +27,9 @@ const wrapOptions = [
     {label: "Column", value: "wordWrapColumn"},
 ] as const;
 
-const CustomizationBar = ({settings, setSettings, panelSize}: Props) => {
+const CustomizationBar = ({panelSize} : props) => {
 
+    const {editorVisualSettings, setEditorVisualSettings} = useCustomization()
     const numberField = (
         label: string,
         value: number,
@@ -65,27 +65,27 @@ const CustomizationBar = ({settings, setSettings, panelSize}: Props) => {
                     </PopoverTrigger>
                     <PopoverContent align="start" className="w-64 flex flex-col gap-4 p-4 shadow-lg">
                         <div className="flex gap-2">
-                            {numberField("Size", settings.fontSize, undefined, (n) => setSettings(s => ({
-                                ...s,
+                            {numberField("Size", editorVisualSettings.fontSize, undefined, (n) => setEditorVisualSettings(({
+                                ...editorVisualSettings,
                                 fontSize: n
                             })))}
-                            {numberField("Line", settings.lineHeight, undefined, (n) => setSettings(s => ({
-                                ...s,
+                            {numberField("Line", editorVisualSettings.lineHeight, undefined, (n) => setEditorVisualSettings(({
+                                ...editorVisualSettings,
                                 lineHeight: n
                             })))}
                         </div>
 
-                        {numberField("Spacing", settings.letterSpacing, "0.1", (n) => setSettings(s => ({
-                            ...s,
+                        {numberField("Spacing", editorVisualSettings.letterSpacing, "0.1", (n) => setEditorVisualSettings(({
+                            ...editorVisualSettings,
                             letterSpacing: n
                         })))}
 
                         <Field className="w-full">
                             <FieldLabel>Wrap</FieldLabel>
                             <Select
-                                value={settings.wordWrap}
-                                onValueChange={(value) => setSettings(s => ({
-                                    ...s,
+                                value={editorVisualSettings.wordWrap}
+                                onValueChange={(value) => setEditorVisualSettings(({
+                                    ...editorVisualSettings,
                                     wordWrap: value as editorSettings["wordWrap"]
                                 }))}
                             >
@@ -119,26 +119,29 @@ const CustomizationBar = ({settings, setSettings, panelSize}: Props) => {
 
             <Field>
                 <FieldLabel>Size</FieldLabel>
-                <Input type="number" className="w-20 bg-secondary" value={settings.fontSize}
-                       onChange={(e) => setSettings(s => ({...s, fontSize: Number(e.target.value)}))}/>
+                <Input type="number" className="w-20 bg-secondary" value={editorVisualSettings.fontSize}
+                       onChange={(e) => setEditorVisualSettings(({
+                           ...editorVisualSettings, fontSize: Number(e.target.value)}))}/>
             </Field>
 
             <Field>
                 <FieldLabel>Line</FieldLabel>
-                <Input type="number" className="w-20 bg-secondary" value={settings.lineHeight}
-                       onChange={(e) => setSettings(s => ({...s, lineHeight: Number(e.target.value)}))}/>
+                <Input type="number" className="w-20 bg-secondary" value={editorVisualSettings.lineHeight}
+                       onChange={(e) => setEditorVisualSettings(({
+                           ...editorVisualSettings, lineHeight: Number(e.target.value)}))}/>
             </Field>
 
             <Field>
                 <FieldLabel>Spacing</FieldLabel>
-                <Input type="number" className="w-20 bg-secondary" step="0.1" value={settings.letterSpacing}
-                       onChange={(e) => setSettings(s => ({...s, letterSpacing: Number(e.target.value)}))}/>
+                <Input type="number" className="w-20 bg-secondary" step="0.1" value={editorVisualSettings.letterSpacing}
+                       onChange={(e) => setEditorVisualSettings(({
+                           ...editorVisualSettings, letterSpacing: Number(e.target.value)}))}/>
             </Field>
 
             <Field className="min-w-[120px]">
                 <FieldLabel>Wrap</FieldLabel>
-                <Select value={settings.wordWrap} onValueChange={(value) => setSettings(s => ({
-                    ...s,
+                <Select value={editorVisualSettings.wordWrap} onValueChange={(value) => setEditorVisualSettings(({
+                    ...editorVisualSettings,
                     wordWrap: value as editorSettings["wordWrap"]
                 }))}>
                     <SelectTrigger className="w-32 bg-secondary"><SelectValue/></SelectTrigger>

@@ -32,6 +32,7 @@ import {
 import {useRunEngine} from "@/store/runEngine.ts";
 import {LoaderCircle} from "lucide-react";
 import NetworkGoalBox from "@/components/main/text_editor/NetworkGoalBox.tsx";
+import {useCustomization} from "@/store/customization.ts";
 
 export type editorSettings = {
     fontSize: number;
@@ -259,19 +260,7 @@ const MonacoEditor = forwardRef<any, { panelSize: number }>(({panelSize}, _ref) 
     const applyHiddenAreasRef = useRef<(() => void) | null>(null);
     const initialized = useRef(false);
     const {theme} = useTheme();
-    const [settings, setSettings] = useState<editorSettings>({
-        fontSize: 15,
-        fontFamily: 'JetBrains Mono, Fira Code, monospace',
-        lineHeight: 22,
-        letterSpacing: 0,
-        cursorStyle: 'line',
-        cursorBlinking: 'blink',
-        wordWrap: 'off',
-        tabSize: 4,
-        smoothScrolling: true,
-        automaticLayout: true,
-    });
-
+    const {setEditorVisualSettings, editorVisualSettings} = useCustomization()
     const [isEditorReady, setIsEditorReady] = useState(false);
     const registerEditor = useRunEngine(state => state.registerEditor);
     const registerUserCodeGetter = useRunEngine(state => state.registerUserCodeGetter);
@@ -482,32 +471,31 @@ const MonacoEditor = forwardRef<any, { panelSize: number }>(({panelSize}, _ref) 
         if (!isEditorReady || !editor) return;
 
         editor.updateOptions({
-            fontSize: settings.fontSize,
-            fontFamily: settings.fontFamily,
-            lineHeight: settings.lineHeight,
-            letterSpacing: settings.letterSpacing,
+            fontSize: editorVisualSettings.fontSize,
+            fontFamily: "",
+            lineHeight: editorVisualSettings.lineHeight,
+            letterSpacing: editorVisualSettings.letterSpacing,
 
-            wordWrap: settings.wordWrap,
-            tabSize: settings.tabSize,
+            wordWrap: editorVisualSettings.wordWrap,
+            tabSize: 4,
 
-            cursorStyle: settings.cursorStyle,
-            cursorBlinking: settings.cursorBlinking,
+            cursorStyle: 'line',
+            cursorBlinking: 'blink',
 
 
-            smoothScrolling: settings.smoothScrolling,
-            automaticLayout: settings.automaticLayout,
+            smoothScrolling: true,
+            automaticLayout: true,
 
             renderLineHighlight: 'all',
             bracketPairColorization: {enabled: true},
         });
-    }, [settings, isEditorReady]);
+    }, [editorVisualSettings, isEditorReady]);
 
     return (
         <div className="h-full w-full flex flex-col gap-3 p-4 pt-2 bg-card rounded-lg">
             <div className="flex flex-1 shrink-0 h-20">
-                <CustomizationBar settings={settings}
-                                  setSettings={setSettings}
-                                  panelSize={panelSize}
+                <CustomizationBar
+                    panelSize={panelSize}
                 />
             </div>
             <div className="flex-20 min-h-0 w-full flex rounded-lg border overflow-hidden nokey">
