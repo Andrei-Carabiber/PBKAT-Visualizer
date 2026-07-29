@@ -213,6 +213,8 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
                 coverage,
                 probOnly: !computeWernerQuality
             }
+
+            console.log(fullCode)
             const response = await fetch(RUN_PROTOCOL_URL, {
                 method: "POST",
                 headers: {"Content-Type": "application/json"},

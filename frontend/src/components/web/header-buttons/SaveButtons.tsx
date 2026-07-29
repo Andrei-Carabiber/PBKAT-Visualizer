@@ -15,14 +15,20 @@ import type {Edge, Node} from "@xyflow/react";
 import type {EdgeData, NodeData} from "@/components/main/node_editor/nodeEditor.tsx";
 import LocalSaveDisplayCard from "@/components/web/header-buttons/local-save-display-card.tsx";
 import {toast} from "sonner";
-import type {exampleSave} from "@/examples/type.ts";
+import type {exampleQuantumSave, exampleSave} from "@/examples/type.ts";
 import ExampleSelectionCard from "@/components/web/header-buttons/example-selection-card.tsx";
 
-const exampleModules = import.meta.glob<{ default: exampleSave }>('@/examples/*.json', {eager: true});
+const exampleProbModules = import.meta.glob<{ default: exampleSave }>('@/examples/probabilistic/*.json', {eager: true});
+const exampleQuantumModules = import.meta.glob<{ default: exampleQuantumSave }>('@/examples/quantum/*.json', {eager: true});
 
-const exampleSaves: exampleSave[] = Object.values(exampleModules).map(
+
+const exampleProbSaves: exampleSave[] = Object.values(exampleProbModules).map(
     (mod) => mod.default
 );
+const exampleQuantumSaves: exampleQuantumSave[] = Object.values(exampleQuantumModules).map(
+    (mod) => mod.default
+);
+
 
 export type localStorageSave = {
     id: string,
@@ -55,16 +61,20 @@ const SaveButtons = () => {
         setNetworkCapacityConnections,
         setUserCodeCallback,
         setGraphCallback,
+        truncation,
+        coverage,
+        setTruncation,
+        setCoverage
     } = useRunEngine()
     const [isLoadOpen, setIsLoadOpen] = useState(false);
     const [allSaves, setAllSaves] = useState<localStorageSave[]>([])
     const [isSaveOpen, setIsSaveOpen] = useState(false);
-    // const [isSaveToDiskOpen, setIsSaveToDiskOpen] = useState(false);
+    const [isSaveToDiskOpen, setIsSaveToDiskOpen] = useState(false);
     const [isExamplesOpen, setIsExamplesOpen] = useState(false)
 
 
     //Save to disk function
-    {/* const handleSaveToDisk = async () => {
+    const handleSaveToDisk = async () => {
         const savedName = nameInputRef.current?.value;
 
         if (savedName === "" || !savedName) {
@@ -80,29 +90,29 @@ const SaveButtons = () => {
         setError("");
         const userCode = getUserCodeCallback();
         const graph = getGraphCallback();
-        const save: exampleSave = {
+        const save: exampleQuantumSave = {
             id: crypto.randomUUID(),
             name: savedName,
             code: userCode,
             graph,
-            goal: activeConnections,
+            goal: goalConnections,
             goalDisabled: networkGoalDisabled,
             networkCapacity: networkCapacityConnections,
             capacityDisabled: networkCapacityDisabled,
+            truncation: Number(truncation),
+            coverage: Number(coverage)
         }
-
 
 
         await fetch('/api/save-json', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
                 fileName: `${savedName}.json`,
                 data: save
             })
         })
         setIsSaveToDiskOpen(false);
-    } */
     }
 
 
@@ -176,7 +186,7 @@ const SaveButtons = () => {
         setAllSaves(newSaves)
     }
 
-    const handleLoad = (save: localStorageSave | exampleSave) => {
+    const handleLoad = (save: localStorageSave | exampleSave | exampleQuantumSave) => {
         try {
             setGoalConnections(save.goal);
             setNetworkCapacityConnections(save.networkCapacity);
@@ -193,6 +203,11 @@ const SaveButtons = () => {
 
             setIsLoadOpen(false);
             setIsExamplesOpen(false)
+
+            if ('truncation' in save && 'coverage' in save) {
+                setTruncation(save.truncation);
+                setCoverage(save.coverage);
+            }
         } catch (err) {
             setError("Failed to parse or load data correctly.");
         }
@@ -331,8 +346,8 @@ const SaveButtons = () => {
                 <DialogContent className="sm:max-w-xl">
                     <DialogHeader className="flex flex-col items-center gap-4">
                         <DialogTitle className="text-xl text-left w-full pl-3">Load an Example</DialogTitle>
-                        <ExampleSelectionCard probabilisticSaves={exampleSaves}
-                                              quantisticSaves={exampleSaves}
+                        <ExampleSelectionCard probabilisticSaves={exampleProbSaves}
+                                              quantisticSaves={exampleQuantumSaves}
                                               handleLoad={handleLoad}
                         />
                     </DialogHeader>
@@ -350,6 +365,7 @@ const SaveButtons = () => {
 
 
             {/*Save to disk Button Temp*/}
+
             {/*
             <Dialog open={isSaveToDiskOpen} onOpenChange={(open) => {
                 setIsSaveToDiskOpen(open);
@@ -395,7 +411,9 @@ const SaveButtons = () => {
                         </Button>
                     </div>
                 </DialogContent>
-            </Dialog> */}
+            </Dialog>
+            */}
+
         </div>
     );
 };

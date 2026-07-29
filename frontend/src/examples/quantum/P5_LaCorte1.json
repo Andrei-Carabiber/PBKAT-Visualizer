@@ -1,0 +1,156 @@
+{
+  "id": "39e64195-01b7-4baf-9a81-99e51d2ce2e4",
+  "name": "P5_LaCorte1",
+  "code": "outputGoal :: QBKATPolicy\noutputGoal =\n    whileN 27 (\"A\" /~? \"D\")\n    (\n        (\n            ite (\"B\" /~? \"D\")\n            (\n                (\n                    -- generations in parallel\n                    ite (\"B\" /~? \"C\") (ucreate (\"B\", \"C\")) mempty\n                        <||>\n                    ite (\"C\" /~? \"D\") (ucreate (\"C\", \"D\")) mempty\n                )\n                <>\n                swap \"C\" (\"B\", \"D\")\n            )\n            mempty\n            <||>\n            ite (\"A\" /~? \"B\")\n            (\n                ucreate (\"A\", \"B\")\n            )\n            mempty\n        )\n        <> swap \"B\" (\"A\", \"D\")\n    )",
+  "graph": {
+    "nodes": [
+      {
+        "id": "node_1785331084036_0",
+        "type": "custom",
+        "position": {
+          "x": 350,
+          "y": 321.64276401564535
+        },
+        "data": {
+          "nodeLabel": "C",
+          "coherence_time": 1000,
+          "create_prob": 1,
+          "create_quality": 1,
+          "swap_prob": 0.75
+        },
+        "measured": {
+          "width": 150,
+          "height": 80
+        },
+        "selected": false,
+        "dragging": false
+      },
+      {
+        "id": "node_1785331084036_1",
+        "type": "custom",
+        "position": {
+          "x": 580.3129074315515,
+          "y": 77.18383311603648
+        },
+        "data": {
+          "nodeLabel": "B",
+          "coherence_time": 1000,
+          "create_prob": 1,
+          "create_quality": 1,
+          "swap_prob": 0.75
+        },
+        "measured": {
+          "width": 150,
+          "height": 80
+        },
+        "selected": false,
+        "dragging": false
+      },
+      {
+        "id": "node_1785331084036_2",
+        "type": "custom",
+        "position": {
+          "x": 571.0560625814861,
+          "y": 569.0352020860495
+        },
+        "data": {
+          "nodeLabel": "D",
+          "coherence_time": 1000,
+          "create_prob": 1,
+          "create_quality": 1,
+          "swap_prob": 0.75
+        },
+        "measured": {
+          "width": 150,
+          "height": 80
+        },
+        "selected": false,
+        "dragging": false
+      },
+      {
+        "id": "node_1785331084036_3",
+        "type": "custom",
+        "position": {
+          "x": 950,
+          "y": 350
+        },
+        "data": {
+          "nodeLabel": "A",
+          "coherence_time": 1000,
+          "create_prob": 1,
+          "create_quality": 1,
+          "swap_prob": 0.75
+        },
+        "measured": {
+          "width": 150,
+          "height": 80
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "edge_1785331084036_C_B",
+        "source": "node_1785331084036_0",
+        "target": "node_1785331084036_1",
+        "type": "floating",
+        "data": {
+          "distance": 1,
+          "transmit_prob": 1,
+          "uCreate_prob": 0.25,
+          "uCreate_quality": 0.95
+        },
+        "selected": false
+      },
+      {
+        "id": "edge_1785331084036_C_D",
+        "source": "node_1785331084036_0",
+        "target": "node_1785331084036_2",
+        "type": "floating",
+        "data": {
+          "distance": 1,
+          "transmit_prob": 1,
+          "uCreate_prob": 0.25,
+          "uCreate_quality": 0.9
+        },
+        "selected": false
+      },
+      {
+        "id": "edge_1785331084036_B_A",
+        "source": "node_1785331084036_1",
+        "target": "node_1785331084036_3",
+        "type": "floating",
+        "data": {
+          "distance": 1,
+          "transmit_prob": 1,
+          "uCreate_prob": 0.25,
+          "uCreate_quality": 0.95
+        },
+        "selected": false
+      },
+      {
+        "id": "edge_1785331084036_B_D",
+        "source": "node_1785331084036_1",
+        "target": "node_1785331084036_2",
+        "type": "floating",
+        "data": {
+          "distance": 2,
+          "transmit_prob": 1,
+          "uCreate_prob": 0.25,
+          "uCreate_quality": 0.95
+        },
+        "selected": true
+      }
+    ]
+  },
+  "goal": [
+    {
+      "id": "be6c63b7-86ca-41a6-bfc5-f5d4f8646f50",
+      "label": "\"D\" ~ \"A\""
+    }
+  ],
+  "goalDisabled": false,
+  "networkCapacity": [],
+  "capacityDisabled": true,
+  "truncation": 200,
+  "coverage": -1
+}

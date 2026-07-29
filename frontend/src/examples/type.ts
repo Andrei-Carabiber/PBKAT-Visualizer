@@ -15,3 +15,8 @@ export type exampleSave = {
     networkCapacity: ActiveConnection[],
     capacityDisabled: boolean,
 }
+
+export type exampleQuantumSave = exampleSave & {
+    truncation: number;
+    coverage: number;
+}

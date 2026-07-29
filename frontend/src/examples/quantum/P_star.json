@@ -1,0 +1,164 @@
+{
+  "id": "29d40948-c844-4124-bba4-b65b96ebc8a9",
+  "name": "P_star",
+  "code": "outputGoal :: QBKATPolicy\noutputGoal =\n        while (\"A\" /~? \"C\" &&* \"B\" /~? \"C\")\n        (   \n            (   -- generations in parallel\n                ite (\"A\" /~? \"H\") (ucreate (\"A\", \"H\")) mempty\n                    <||>\n                ite (\"B\" /~? \"H\") (ucreate (\"B\", \"H\")) mempty\n                    <||>\n                ite (\"C\" /~? \"H\") (ucreate (\"C\", \"H\")) mempty\n            )\n            <> -- followed by.. \n            (\n                swap \"H\" (\"A\", \"C\") \n                <.>\n                swap \"H\" (\"B\", \"C\")\n            )\n        ) ",
+  "graph": {
+    "nodes": [
+      {
+        "id": "node_1785331864113_0",
+        "type": "custom",
+        "position": {
+          "x": 350,
+          "y": 350
+        },
+        "data": {
+          "nodeLabel": "H",
+          "coherence_time": 200,
+          "create_prob": 1,
+          "create_quality": 1,
+          "swap_prob": 0.5
+        },
+        "measured": {
+          "width": 150,
+          "height": 80
+        },
+        "selected": false
+      },
+      {
+        "id": "node_1785331864113_1",
+        "type": "custom",
+        "position": {
+          "x": 549.3194192377496,
+          "y": 180.53539019963705
+        },
+        "data": {
+          "nodeLabel": "A",
+          "coherence_time": 100,
+          "create_prob": 1,
+          "create_quality": 1,
+          "swap_prob": 1
+        },
+        "measured": {
+          "width": 150,
+          "height": 80
+        },
+        "selected": false,
+        "dragging": false
+      },
+      {
+        "id": "node_1785331864113_2",
+        "type": "custom",
+        "position": {
+          "x": 535.617059891107,
+          "y": 560.9800362976407
+        },
+        "data": {
+          "nodeLabel": "C",
+          "coherence_time": 100,
+          "create_prob": 1,
+          "create_quality": 1,
+          "swap_prob": 1
+        },
+        "measured": {
+          "width": 150,
+          "height": 80
+        },
+        "selected": true,
+        "dragging": false
+      },
+      {
+        "id": "node_1785331864113_3",
+        "type": "custom",
+        "position": {
+          "x": 950,
+          "y": 350
+        },
+        "data": {
+          "nodeLabel": "B",
+          "coherence_time": 100,
+          "create_prob": 1,
+          "create_quality": 1,
+          "swap_prob": 1
+        },
+        "measured": {
+          "width": 150,
+          "height": 80
+        },
+        "selected": false
+      }
+    ],
+    "edges": [
+      {
+        "id": "edge_1785331864114_H_A",
+        "source": "node_1785331864113_0",
+        "target": "node_1785331864113_1",
+        "type": "floating",
+        "data": {
+          "distance": 1,
+          "transmit_prob": 1,
+          "uCreate_prob": 0.25,
+          "uCreate_quality": 0.9
+        },
+        "selected": false
+      },
+      {
+        "id": "edge_1785331864114_H_C",
+        "source": "node_1785331864113_0",
+        "target": "node_1785331864113_2",
+        "type": "floating",
+        "data": {
+          "distance": 1,
+          "transmit_prob": 1,
+          "uCreate_prob": 0.25,
+          "uCreate_quality": 0.95
+        },
+        "selected": false
+      },
+      {
+        "id": "edge_1785331864114_H_B",
+        "source": "node_1785331864113_0",
+        "target": "node_1785331864113_3",
+        "type": "floating",
+        "data": {
+          "distance": 1,
+          "transmit_prob": 1,
+          "uCreate_prob": 0.3333,
+          "uCreate_quality": 0.95
+        },
+        "selected": false
+      }
+    ]
+  },
+  "goal": [
+    {
+      "id": "ab97d696-2ef7-47f5-977f-a3fc3809f540",
+      "label": "\"A\" ~ \"C\""
+    }
+  ],
+  "goalDisabled": false,
+  "networkCapacity": [
+    {
+      "id": "998d88e6-5988-4162-8abe-076ea1b2f32b",
+      "label": "\"A\" ~ \"C\""
+    },
+    {
+      "id": "0c16a2fd-6f2e-4a5e-b533-64b753cbc4ab",
+      "label": "\"C\" ~ \"B\""
+    },
+    {
+      "id": "4230fefc-1c1a-45e7-8057-399538f709c6",
+      "label": "\"H\" ~ \"A\""
+    },
+    {
+      "id": "db8ef3db-df90-4878-a8a9-564aa76621e0",
+      "label": "\"H\" ~ \"B\""
+    },
+    {
+      "id": "97b4b818-bde5-4286-bd14-4f030814bc7b",
+      "label": "\"H\" ~ \"C\""
+    }
+  ],
+  "capacityDisabled": false,
+  "truncation": 100,
+  "coverage": -1
+}

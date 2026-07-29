@@ -1,0 +1,145 @@
+{
+  "id": "eaa537bd-4ab6-48cb-8ab6-73a530abd856",
+  "name": "P_distswap",
+  "code": "\n\noutputGoal :: QBKATPolicy \noutputGoal = while (hasNotSubset [\"A\" ~ \"C\" .~ (1 :: QBKATTag)])\n    (       \n        -- gen\n        -- if I already have a distilled pair, do not generate more\n        (\n            ite (hasNotSubset [\"A\" ~ \"B\" .~ (1 :: QBKATTag)])\n            (\n                -- if I already have a pair, generate only one more,\n                -- otherwise generate two pairs\n                ite (\"A\" /~? \"B\") (ucreate (\"A\", \"B\")) mempty\n            <||>\n                ucreate (\"A\", \"B\")\n            )\n            mempty\n        <||>\n            ite (hasNotSubset [\"B\" ~ \"C\" .~ (1 :: QBKATTag)])\n            (\n                ite (\"B\" /~? \"C\") (ucreate (\"B\", \"C\")) mempty\n            <||>\n                ucreate (\"B\", \"C\")\n            )\n            mempty\n        )\n        -- distill\n        -- if I already have a distilled pair, do not distill\n        <> \n        (\n            ite (hasNotSubset [\"A\" ~ \"B\" .~ (1 :: QBKATTag)]) (distill (\"A\", \"B\") .~ (1 :: QBKATTag)) mempty\n        <||>\n            ite (hasNotSubset [\"B\" ~ \"C\" .~ (1 :: QBKATTag)]) (distill (\"B\", \"C\") .~ (1 :: QBKATTag)) mempty\n        )\n        -- swap\n        <>\n            (1 :: QBKATTag) ~. swap \"B\" (\"A\", \"C\")\n    )\n\n    \n\n    ",
+  "graph": {
+    "nodes": [
+      {
+        "id": "node_1785330302640_0",
+        "type": "custom",
+        "position": {
+          "x": 336,
+          "y": 421
+        },
+        "data": {
+          "nodeLabel": "B",
+          "coherence_time": 10,
+          "create_prob": 1,
+          "create_quality": 1,
+          "swap_prob": 0.5
+        },
+        "measured": {
+          "width": 150,
+          "height": 80
+        },
+        "selected": true,
+        "dragging": false
+      },
+      {
+        "id": "node_1785330302640_1",
+        "type": "custom",
+        "position": {
+          "x": 556.5,
+          "y": 180.5
+        },
+        "data": {
+          "nodeLabel": "A",
+          "coherence_time": 10,
+          "create_prob": 1,
+          "create_quality": 1,
+          "swap_prob": 1
+        },
+        "measured": {
+          "width": 150,
+          "height": 80
+        },
+        "selected": false,
+        "dragging": false
+      },
+      {
+        "id": "node_1785330302640_2",
+        "type": "custom",
+        "position": {
+          "x": 750,
+          "y": 388.5
+        },
+        "data": {
+          "nodeLabel": "C",
+          "coherence_time": 10,
+          "create_prob": 1,
+          "create_quality": 1,
+          "swap_prob": 1
+        },
+        "measured": {
+          "width": 150,
+          "height": 80
+        },
+        "selected": false,
+        "dragging": false
+      }
+    ],
+    "edges": [
+      {
+        "id": "edge_1785330302640_B_A",
+        "source": "node_1785330302640_0",
+        "target": "node_1785330302640_1",
+        "type": "floating",
+        "data": {
+          "distance": 1,
+          "transmit_prob": 1,
+          "uCreate_prob": 0.33333333,
+          "uCreate_quality": 0.8
+        },
+        "selected": false
+      },
+      {
+        "id": "edge_1785330302640_B_C",
+        "source": "node_1785330302640_0",
+        "target": "node_1785330302640_2",
+        "type": "floating",
+        "data": {
+          "distance": 1,
+          "transmit_prob": 1,
+          "uCreate_prob": 0.2,
+          "uCreate_quality": 0.8
+        },
+        "selected": false
+      },
+      {
+        "id": "edge_1785330302640_A_C",
+        "source": "node_1785330302640_1",
+        "target": "node_1785330302640_2",
+        "type": "floating",
+        "data": {
+          "distance": 2,
+          "transmit_prob": 1,
+          "uCreate_prob": 1,
+          "uCreate_quality": 1
+        },
+        "selected": false
+      }
+    ]
+  },
+  "goal": [
+    {
+      "label": "\"A\" ~ \"C\"",
+      "id": "d7b95ce8-fcb5-4305-aa19-7c8b3f5b5ce3"
+    }
+  ],
+  "goalDisabled": false,
+  "networkCapacity": [
+    {
+      "id": "7d1b03ee-89e5-4453-a0bc-7f733589282c",
+      "label": "\"A\" ~ \"C\""
+    },
+    {
+      "id": "663a1e82-611c-4770-b25b-a3fe746d9893",
+      "label": "\"B\" ~ \"A\""
+    },
+    {
+      "id": "41f79657-070c-4547-ab87-f733bdebb783",
+      "label": "\"B\" ~ \"A\""
+    },
+    {
+      "id": "031405cb-9840-4080-bee2-9e7a60bcd824",
+      "label": "\"B\" ~ \"C\""
+    },
+    {
+      "id": "96fb1ed3-64d5-4540-87e7-ae0a1ea0c626",
+      "label": "\"B\" ~ \"C\""
+    }
+  ],
+  "capacityDisabled": false,
+  "truncation": 400,
+  "coverage": -1
+}

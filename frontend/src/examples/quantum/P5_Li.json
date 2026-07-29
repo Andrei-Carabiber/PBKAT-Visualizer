@@ -1,0 +1,124 @@
+{
+  "id": "5059de47-4aeb-4a81-982b-6a1f9a39a136",
+  "name": "P5_Li",
+  "code": "outputGoal :: QBKATPolicy\noutputGoal =\n    whileN 108 (\"A\" /~? \"C\")\n    (\n        (\n            -- generations in parallel\n            ite (\"A\" /~? \"B\") (ucreate (\"A\", \"B\")) mempty\n            <||>\n            ite (\"B\" /~? \"C\") (ucreate (\"B\", \"C\")) mempty\n        )\n        <>\n        -- swap to create A~C\n        swap \"B\" (\"A\", \"C\")\n    )",
+  "graph": {
+    "nodes": [
+      {
+        "id": "node_1785331511267_0",
+        "type": "custom",
+        "position": {
+          "x": 526,
+          "y": 238.5
+        },
+        "data": {
+          "nodeLabel": "B",
+          "coherence_time": 100,
+          "create_prob": 1,
+          "create_quality": 1,
+          "swap_prob": 0.5
+        },
+        "measured": {
+          "width": 150,
+          "height": 80
+        },
+        "selected": false,
+        "dragging": false
+      },
+      {
+        "id": "node_1785331511267_1",
+        "type": "custom",
+        "position": {
+          "x": 808.9880256609041,
+          "y": 371.50102422296715
+        },
+        "data": {
+          "nodeLabel": "A",
+          "coherence_time": 100,
+          "create_prob": 1,
+          "create_quality": 1,
+          "swap_prob": 0.5
+        },
+        "measured": {
+          "width": 150,
+          "height": 80
+        },
+        "selected": false,
+        "dragging": false
+      },
+      {
+        "id": "node_1785331511267_2",
+        "type": "custom",
+        "position": {
+          "x": 252.63723039483773,
+          "y": 368.917520185806
+        },
+        "data": {
+          "nodeLabel": "C",
+          "coherence_time": 100,
+          "create_prob": 1,
+          "create_quality": 1,
+          "swap_prob": 0.5
+        },
+        "measured": {
+          "width": 150,
+          "height": 80
+        },
+        "selected": false,
+        "dragging": false
+      }
+    ],
+    "edges": [
+      {
+        "id": "edge_1785331511267_B_A",
+        "source": "node_1785331511267_0",
+        "target": "node_1785331511267_1",
+        "type": "floating",
+        "data": {
+          "distance": 1,
+          "transmit_prob": 1,
+          "uCreate_prob": 0.25,
+          "uCreate_quality": 0.95
+        },
+        "selected": false
+      },
+      {
+        "id": "edge_1785331511267_B_C",
+        "source": "node_1785331511267_0",
+        "target": "node_1785331511267_2",
+        "type": "floating",
+        "data": {
+          "distance": 1,
+          "transmit_prob": 1,
+          "uCreate_prob": 0.25,
+          "uCreate_quality": 0.95
+        },
+        "selected": true
+      }
+    ]
+  },
+  "goal": [
+    {
+      "id": "ab97d696-2ef7-47f5-977f-a3fc3809f540",
+      "label": "\"A\" ~ \"C\""
+    }
+  ],
+  "goalDisabled": false,
+  "networkCapacity": [
+    {
+      "id": "f29aafce-65a4-49f1-b2cc-7bdbfbd5e635",
+      "label": "\"A\" ~ \"C\""
+    },
+    {
+      "id": "5763b4d4-a554-4be8-9572-5efaa4286a3d",
+      "label": "\"B\" ~ \"A\""
+    },
+    {
+      "id": "978a90b1-de28-4bf7-a956-eb56bad85cc3",
+      "label": "\"B\" ~ \"C\""
+    }
+  ],
+  "capacityDisabled": false,
+  "truncation": 60,
+  "coverage": -1
+}
