@@ -1,4 +1,6 @@
-export type DataType = QBKATProbQualityOutput | QBKATProbOutput | PBKATOutput;
+export type DataType = (QBKATProbQualityOutput | QBKATProbOutput | PBKATOutput) & {
+    _cached?: boolean
+}
 
 export type QBKATProbOutput = {
     mode: "probOnly",
