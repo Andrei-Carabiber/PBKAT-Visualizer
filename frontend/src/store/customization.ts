@@ -1,4 +1,5 @@
 import {create} from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
 import type {EdgeData, NodeData} from "@/components/main/node_editor/nodeEditor.tsx";
 
 
@@ -32,16 +33,24 @@ export const DEFAULT_EDGE_VALUES : EdgeData = {
     uCreate_quality: 1
 }
 
-export const useCustomization = create<customizationState>((set, get) => ({
-    defaultNodeValues: DEFAULT_NODE_VALUES,
-    defaultEdgeValues: DEFAULT_EDGE_VALUES,
+export const useCustomization = create<customizationState>()(
+    persist(
+        (set) => ({
+            defaultNodeValues: DEFAULT_NODE_VALUES,
+            defaultEdgeValues: DEFAULT_EDGE_VALUES,
 
-    setDefaultNodeValues: (newDefaultNodeValues) => {set({defaultNodeValues: newDefaultNodeValues})},
-    setDefaultEdgeValues: (newDefaultEdgeValues) => {set({defaultEdgeValues: newDefaultEdgeValues})},
+            setDefaultNodeValues: (newDefaultNodeValues) => { set({ defaultNodeValues: newDefaultNodeValues }); },
+            setDefaultEdgeValues: (newDefaultEdgeValues) => { set({ defaultEdgeValues: newDefaultEdgeValues }); },
 
-    computeWernerQuality: true,
-    setComputeWernerQuality : (compute) => {set({computeWernerQuality: compute})},
+            computeWernerQuality: true,
+            setComputeWernerQuality: (compute) => { set({ computeWernerQuality: compute }); },
 
-    showStatistics: false,
-    setShowStatistics: (show) => {set({showStatistics:show})}
-}))
+            showStatistics: false,
+            setShowStatistics: (show) => { set({ showStatistics: show }); }
+        }),
+        {
+            name: "customization-storage",
+            storage: createJSONStorage(() => localStorage),
+        }
+    )
+);
