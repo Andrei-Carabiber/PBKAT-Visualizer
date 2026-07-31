@@ -1,6 +1,16 @@
-import {Area, AreaChart, ReferenceArea, ResponsiveContainer, Tooltip, XAxis, YAxis} from "recharts";
+import { useState } from "react";
+import { Area, AreaChart, ReferenceArea, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-const WernerGraph = ({wernerArray, estimatedMode}: { wernerArray: number[], estimatedMode: boolean }) => {
+interface WernerGraphProps {
+    wernerArray: number[];
+    estimatedMode: boolean;
+    zoomLeft?: string | number;
+    zoomRight?: string | number;
+    onZoomChange?: (left: string | number, right: string | number) => void;
+    onResetZoom?: () => void;
+}
+
+const WernerGraph = ({ wernerArray, estimatedMode, zoomLeft, zoomRight, onZoomChange, onResetZoom }: WernerGraphProps) => {
 
     type PlotPoint = {
         index: number;
@@ -20,83 +30,162 @@ const WernerGraph = ({wernerArray, estimatedMode}: { wernerArray: number[], esti
             if (previous && previous.end === index - 1) {
                 previous.end = index;
             } else {
-                ranges.push({start: index, end: index});
+                ranges.push({ start: index, end: index });
             }
             return ranges;
         },
         []
     );
 
+    // Zoom state management with fallback to internal state
+    const [internalLeft, setInternalLeft] = useState<string | number>("dataMin");
+    const [internalRight, setInternalRight] = useState<string | number>("dataMax");
+
+    const left = zoomLeft !== undefined ? zoomLeft : internalLeft;
+    const right = zoomRight !== undefined ? zoomRight : internalRight;
+    const [refAreaLeft, setRefAreaLeft] = useState<string | number>("");
+    const [refAreaRight, setRefAreaRight] = useState<string | number>("");
+
+    const ZOOM_MIN_DIFFERENCE = 3;
+
+    const zoom = () => {
+        let l = refAreaLeft;
+        let r = refAreaRight;
+
+        if (l === r || r === "") {
+            setRefAreaLeft("");
+            setRefAreaRight("");
+            return;
+        }
+
+        if (typeof l === "number" && typeof r === "number" && l > r) {
+            [l, r] = [r, l];
+        }
+
+        if (typeof l === "number" && typeof r === "number" && r - l < ZOOM_MIN_DIFFERENCE) {
+            setRefAreaLeft("");
+            setRefAreaRight("");
+            return;
+        }
+
+        setRefAreaLeft("");
+        setRefAreaRight("");
+
+        // Notify parent component if callback exists, otherwise update locally
+        if (onZoomChange) {
+            onZoomChange(l, r);
+        } else {
+            setInternalLeft(l);
+            setInternalRight(r);
+        }
+    };
+
+    const zoomOut = () => {
+        setRefAreaLeft("");
+        setRefAreaRight("");
+
+        // Notify parent component to reset, otherwise reset locally
+        if (onResetZoom) {
+            onResetZoom();
+        } else {
+            setInternalLeft("dataMin");
+            setInternalRight("dataMax");
+        }
+    };
+
     return (
-        <div className="w-full h-full min-h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={plot_array} margin={{top: 10, right: 30, left: 20, bottom: 0}}>
-                    <defs>
-                        <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
-                            <stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
-                        </linearGradient>
-                        <linearGradient id="colorPv" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8}/>
-                            <stop offset="95%" stopColor="#82ca9d" stopOpacity={0}/>
-                        </linearGradient>
-                    </defs>
+        <div className="w-full h-full min-h-[300px] flex flex-col">
+            <div className="flex justify-end px-4 py-1">
+                {(left !== "dataMin" || right !== "dataMax") && (
+                    <button
+                        onClick={zoomOut}
+                        className="px-3 py-1 text-xs bg-secondary text-secondary-foreground rounded-md border shadow-sm hover:bg-accent"
+                    >
+                        Zoom Out
+                    </button>
+                )}
+            </div>
 
-                    {unavailableRanges.map(({start, end}) => (
-                        <ReferenceArea
-                            key={`${start}-${end}`}
-                            x1={start}
-                            x2={end}
-                            y1={0}
-                            y2={1}
-                            fill="var(--muted)"
-                            fillOpacity={1}
+            <div className="w-full flex-1 min-h-[260px]">
+                <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart
+                        data={plot_array}
+                        margin={{ top: 10, right: 30, left: 20, bottom: 0 }}
+                        onMouseDown={(e) => e && setRefAreaLeft(e.activeLabel ?? "")}
+                        onMouseMove={(e) => refAreaLeft && e && setRefAreaRight(e.activeLabel ?? "")}
+                        onMouseUp={zoom}
+                    >
+                        <defs>
+                            <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
+                                <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
+                            </linearGradient>
+                            <linearGradient id="colorPv" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8} />
+                                <stop offset="95%" stopColor="#82ca9d" stopOpacity={0} />
+                            </linearGradient>
+                        </defs>
+
+                        {unavailableRanges.map(({ start, end }) => (
+                            <ReferenceArea
+                                key={`${start}-${end}`}
+                                x1={start}
+                                x2={end}
+                                y1={0}
+                                y2={1}
+                                fill="var(--muted)"
+                                fillOpacity={1}
+                            />
+                        ))}
+
+                        <XAxis
+                            dataKey="index"
+                            type="number"
+                            domain={[left, right]}
+                            allowDataOverflow={true}
+                            height={52}
+                            label={{ position: "insideBottomRight", value: "Time units", offset: 5 }}
                         />
-                    ))}
+                        <YAxis
+                            domain={[0, 1]}
+                            allowDataOverflow={true}
+                            width={80}
+                            label={{ position: "left", value: "Quality", angle: -90, offset: -15, dy: -30 }}
+                        />
+                        <Tooltip
+                            content={({ active, payload }) => {
+                                const point = payload?.[0]?.payload as PlotPoint | undefined;
+                                if (!active || !point || point.werner === null) return null;
 
-                    <XAxis
-                        dataKey="index"
-                        type="number"
-                        domain={[0, wernerArray.length - 1]}
-                        height={52}
-                        label={{ position: "insideBottomRight", value: "Time units", offset: 5 }}
-                    />
-                    <YAxis
-                        domain={[0, 1]}
-                        width={80}
-                        label={{ position: "left", value: "Quality", angle: -90, offset: -15, dy: -30}}
-                    />
-                    <Tooltip
-                        content={({active, payload}) => {
-                            const point = payload?.[0]?.payload as PlotPoint | undefined;
-                            if (!active || !point || point.werner === null) return null;
+                                return (
+                                    <div className="rounded-md border bg-popover px-3 py-2 text-sm text-popover-foreground shadow-md">
+                                        <p>Time unit: {point.index}</p>
+                                        {estimatedMode ? (
+                                            <p>Quality: {point.werner.toFixed(3)}</p>
+                                        ) : (
+                                            <p>Quality: {point.werner}</p>
+                                        )}
+                                    </div>
+                                );
+                            }}
+                        />
+                        <Area
+                            type="monotone"
+                            dataKey="werner"
+                            stroke="#8884d8"
+                            fillOpacity={1}
+                            fill="url(#colorUv)"
+                            connectNulls={false}
+                            animationBegin={200}
+                            animationDuration={1300}
+                        />
 
-                            return (
-                                <div
-                                    className="rounded-md border bg-popover px-3 py-2 text-sm text-popover-foreground shadow-md">
-                                    <p>Time unit: {point.index}</p>
-                                    {estimatedMode ? (
-                                        <p>Quality: {point.werner.toFixed(3)}</p>
-                                    ) : (
-                                        <p>Quality: {point.werner}</p>
-                                    )}
-                                </div>
-                            );
-                        }}
-                    />
-                    <Area
-                        type="monotone"
-                        dataKey="werner"
-                        stroke="#8884d8"
-                        fillOpacity={1}
-                        fill="url(#colorUv)"
-                        connectNulls={false}
-                        animationBegin={200}
-                        animationDuration={1300}
-                    />
-
-                </AreaChart>
-            </ResponsiveContainer>
+                        {refAreaLeft && refAreaRight ? (
+                            <ReferenceArea x1={refAreaLeft} x2={refAreaRight} strokeOpacity={0.3} fill="#8884d8" fillOpacity={0.3} />
+                        ) : null}
+                    </AreaChart>
+                </ResponsiveContainer>
+            </div>
         </div>
     );
 };

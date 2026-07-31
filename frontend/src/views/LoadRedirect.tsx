@@ -14,7 +14,6 @@ export default function LoadRedirect() {
         setPendingSharedState,
         setGraphCallback,
         setUserCodeCallback,
-        setSelectedCommand
     } = useRunEngine();
 
     useEffect(() => {
@@ -31,7 +30,6 @@ export default function LoadRedirect() {
             setNetworkCapacityConnections(save.networkCapacity || []);
             setNetworkCapacityDisabled(save.capacityDisabled ?? false);
             setNetworkGoalDisabled(save.goalDisabled ?? false);
-            setSelectedCommand(save.mode ?? 'run')
 
             if (setGraphCallback && setUserCodeCallback && save.graph && save.code) {
                 setGraphCallback(save.graph.nodes, save.graph.edges);
@@ -56,7 +54,6 @@ export default function LoadRedirect() {
         setPendingSharedState,
         setGraphCallback,
         setUserCodeCallback,
-        setSelectedCommand
     ]);
 
     if (!isDoneProcessing) {

@@ -61,59 +61,57 @@ const SaveButtons = () => {
         setNetworkCapacityConnections,
         setUserCodeCallback,
         setGraphCallback,
-        truncation,
-        coverage,
         setTruncation,
         setCoverage
     } = useRunEngine()
     const [isLoadOpen, setIsLoadOpen] = useState(false);
     const [allSaves, setAllSaves] = useState<localStorageSave[]>([])
     const [isSaveOpen, setIsSaveOpen] = useState(false);
-    const [isSaveToDiskOpen, setIsSaveToDiskOpen] = useState(false);
+    //const [isSaveToDiskOpen, setIsSaveToDiskOpen] = useState(false);
     const [isExamplesOpen, setIsExamplesOpen] = useState(false)
 
 
     //Save to disk function
-    const handleSaveToDisk = async () => {
-        const savedName = nameInputRef.current?.value;
-
-        if (savedName === "" || !savedName) {
-            setError("Please enter a valid name")
-            return
-        }
-
-        if (!getUserCodeCallback || !getGraphCallback) {
-            setError("Could not save. Please wait a few seconds and try again")
-            return
-        }
-
-        setError("");
-        const userCode = getUserCodeCallback();
-        const graph = getGraphCallback();
-        const save: exampleQuantumSave = {
-            id: crypto.randomUUID(),
-            name: savedName,
-            code: userCode,
-            graph,
-            goal: goalConnections,
-            goalDisabled: networkGoalDisabled,
-            networkCapacity: networkCapacityConnections,
-            capacityDisabled: networkCapacityDisabled,
-            truncation: Number(truncation),
-            coverage: Number(coverage)
-        }
-
-
-        await fetch('/api/save-json', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                fileName: `${savedName}.json`,
-                data: save
-            })
-        })
-        setIsSaveToDiskOpen(false);
-    }
+    // const handleSaveToDisk = async () => {
+    //     const savedName = nameInputRef.current?.value;
+    //
+    //     if (savedName === "" || !savedName) {
+    //         setError("Please enter a valid name")
+    //         return
+    //     }
+    //
+    //     if (!getUserCodeCallback || !getGraphCallback) {
+    //         setError("Could not save. Please wait a few seconds and try again")
+    //         return
+    //     }
+    //
+    //     setError("");
+    //     const userCode = getUserCodeCallback();
+    //     const graph = getGraphCallback();
+    //     const save: exampleQuantumSave = {
+    //         id: crypto.randomUUID(),
+    //         name: savedName,
+    //         code: userCode,
+    //         graph,
+    //         goal: goalConnections,
+    //         goalDisabled: networkGoalDisabled,
+    //         networkCapacity: networkCapacityConnections,
+    //         capacityDisabled: networkCapacityDisabled,
+    //         truncation: Number(truncation),
+    //         coverage: Number(coverage)
+    //     }
+    //
+    //
+    //     await fetch('/api/save-json', {
+    //         method: 'POST',
+    //         headers: {'Content-Type': 'application/json'},
+    //         body: JSON.stringify({
+    //             fileName: `${savedName}.json`,
+    //             data: save
+    //         })
+    //     })
+    //     setIsSaveToDiskOpen(false);
+    // }
 
 
     const handleSave = () => {

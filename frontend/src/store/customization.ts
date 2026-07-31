@@ -1,8 +1,6 @@
 import {create} from "zustand";
 import {persist, createJSONStorage} from "zustand/middleware";
 import type {EdgeData, NodeData} from "@/components/main/node_editor/nodeEditor.tsx";
-import {useState} from "react";
-import type {editorSettings} from "@/components/main/text_editor/textEditor.tsx";
 
 
 type GenericNodeData = Omit<NodeData, "nodeLabel">

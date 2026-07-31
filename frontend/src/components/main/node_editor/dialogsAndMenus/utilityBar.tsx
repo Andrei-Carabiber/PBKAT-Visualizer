@@ -13,7 +13,6 @@ import {type Node, useReactFlow} from "@xyflow/react";
 import type {NodeData} from "@/components/main/node_editor/nodeEditor.tsx";
 import {useCustomization} from "@/store/customization.ts";
 import {useState} from "react";
-import DefaultValuesDialog from "@/components/main/node_editor/dialogsAndMenus/defaultValuesDialog.tsx";
 import SettingsDialog from "@/components/main/node_editor/dialogsAndMenus/settingsDialog.tsx";
 
 type Action = {

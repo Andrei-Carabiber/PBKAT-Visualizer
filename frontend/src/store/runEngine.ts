@@ -61,7 +61,8 @@ interface PendingState {
     graph: { nodes: any[]; edges: any[] };
 }
 
-const RUN_PROTOCOL_URL = "http://localhost:8080/run-protocol";
+const RUN_PROTOCOL_URL = "/api/run-protocol";
+
 
 export const useRunEngine = create<RunEngineState>((set, get) => ({
     loading: false,

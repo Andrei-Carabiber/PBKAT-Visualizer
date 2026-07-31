@@ -260,7 +260,7 @@ const MonacoEditor = forwardRef<any, { panelSize: number }>(({panelSize}, _ref) 
     const applyHiddenAreasRef = useRef<(() => void) | null>(null);
     const initialized = useRef(false);
     const {theme} = useTheme();
-    const {setEditorVisualSettings, editorVisualSettings} = useCustomization()
+    const {editorVisualSettings} = useCustomization()
     const [isEditorReady, setIsEditorReady] = useState(false);
     const registerEditor = useRunEngine(state => state.registerEditor);
     const registerUserCodeGetter = useRunEngine(state => state.registerUserCodeGetter);
@@ -323,12 +323,17 @@ const MonacoEditor = forwardRef<any, { panelSize: number }>(({panelSize}, _ref) 
                 monacoWorkerFactory: configureDefaultWorkerFactory
             };
 
+            const webSocketUrl = new URL("/api/", window.location.origin);
+
+            webSocketUrl.protocol =
+                window.location.protocol === "https:" ? "wss:" : "ws:";
+
             const languageClientConfig: LanguageClientConfig = {
                 languageId: languageId,
                 connection: {
                     options: {
                         $type: 'WebSocketUrl',
-                        url: 'ws://localhost:8080'
+                        url: webSocketUrl.toString()
                     }
                 },
                 clientOptions: {
