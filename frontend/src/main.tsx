@@ -1,10 +1,23 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.tsx'
+import "./polyfills/randomUUID";
+import "./index.css";
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+
+async function bootstrap() {
+    const [
+        {StrictMode},
+        {createRoot},
+        {default: App},
+    ] = await Promise.all([
+        import("react"),
+        import("react-dom/client"),
+        import("./App.tsx"),
+    ]);
+
+    createRoot(document.getElementById("root")!).render(
+        <StrictMode>
+            <App/>
+        </StrictMode>
+    );
+}
+
+void bootstrap();
