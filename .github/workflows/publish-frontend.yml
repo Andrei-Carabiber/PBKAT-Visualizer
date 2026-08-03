@@ -71,6 +71,5 @@ jobs:
             docker compose pull frontend
             docker compose up -d --no-deps frontend
 
-            # Removes only dangling old image layers.
             docker image prune -f
           EOF
