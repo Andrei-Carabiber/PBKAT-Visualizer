@@ -1,6 +1,7 @@
 import ExampleDisplayCard from "@/components/web/header-buttons/example-display-card.tsx";
 import type {exampleSave} from "@/examples/type.ts";
 import {Tabs, TabsList, TabsTrigger, TabsContent} from "@/components/ui/tabs.tsx";
+import {ScrollArea, ScrollBar} from "@/components/ui/scroll-area.tsx";
 
 type props = {
     probabilisticSaves: exampleSave[],
@@ -12,13 +13,8 @@ const ExampleSelectionCard = ({probabilisticSaves, quantisticSaves, handleLoad}:
     return (
         <Tabs defaultValue="probabilistic" className="w-full px-10">
             <TabsList
-                // Added `group` and `relative` to allow the slider to position itself
                 className="group relative grid w-full grid-cols-2 group-data-horizontal/tabs:h-16 rounded-xl bg-muted p-1.5"
             >
-                {/*
-                  THE SLIDING BACKGROUND INDICATOR
-                  Moves 100% to the right when the second button (quantistic) is active
-                */}
                 <div
                     className="absolute bottom-1.5 left-1.5 top-1.5 w-[calc(50%-0.375rem)] rounded-lg bg-primary shadow-sm transition-transform duration-300 ease-in-out
                     group-has-[button:nth-of-type(2)[data-state=active]]:translate-x-full"
@@ -26,8 +22,6 @@ const ExampleSelectionCard = ({probabilisticSaves, quantisticSaves, handleLoad}:
 
                 <TabsTrigger
                     value="probabilistic"
-                    // Added relative & z-10 so the text floats above the slider.
-                    // Swapped the active bg for transparent so we can see the slider behind it.
                     className="relative z-10 rounded-lg text-sm font-medium transition-colors duration-300 text-muted-foreground
                     hover:text-foreground hover:bg-background/50
                     data-[state=active]:text-primary-foreground
@@ -51,28 +45,35 @@ const ExampleSelectionCard = ({probabilisticSaves, quantisticSaves, handleLoad}:
                 </TabsTrigger>
             </TabsList>
 
+            {/* Probabilistic Tab Content */}
             <TabsContent value="probabilistic" className="mt-6">
-                <div className="grid grid-cols-2 gap-3">
-                    {probabilisticSaves.map((example) => (
-                        <ExampleDisplayCard
-                            key={example.id}
-                            save={example}
-                            handleLoad={() => handleLoad(example)}
-                        />
-                    ))}
-                </div>
+                <ScrollArea type='always' className="h-[70vh] w-full pr-4">
+                    <div className="grid grid-cols-2 gap-3">
+                        {probabilisticSaves.map((example) => (
+                            <ExampleDisplayCard
+                                key={example.id}
+                                save={example}
+                                handleLoad={() => handleLoad(example)}
+                            />
+                        ))}
+                    </div>
+                    <ScrollBar />
+                </ScrollArea>
             </TabsContent>
 
+            {/* Quantum Tab Content */}
             <TabsContent value="quantistic" className="mt-6">
-                <div className="grid grid-cols-2 gap-3">
-                    {quantisticSaves.reverse().map((example) => (
-                        <ExampleDisplayCard
-                            key={example.id}
-                            save={example}
-                            handleLoad={() => handleLoad(example)}
-                        />
-                    ))}
-                </div>
+                <ScrollArea type='always' className="h-[70vh] w-full pr-4">
+                    <div className="grid grid-cols-2 gap-3">
+                        {quantisticSaves.slice().reverse().map((example) => (
+                            <ExampleDisplayCard
+                                key={example.id}
+                                save={example}
+                                handleLoad={() => handleLoad(example)}
+                            />
+                        ))}
+                    </div>
+                </ScrollArea>
             </TabsContent>
         </Tabs>
     );
