@@ -32,7 +32,7 @@ export default function CustomNode({ id, data }: props) {
             )}
 
             <div className="customNodeBody items-center flex justify-around">
-                <div className="custom-drag-handle flex items-center justify-around">
+                <div className="custom-drag-handle flex items-center justify-around text-base">
                     {label}
                 </div>
             </div>

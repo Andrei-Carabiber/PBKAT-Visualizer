@@ -2,7 +2,6 @@ import {
     BaseEdge,
     EdgeLabelRenderer,
     type EdgeProps,
-    getBezierPath,
     getStraightPath,
     useInternalNode,
     useReactFlow
@@ -50,7 +49,7 @@ function FloatingEdge({id, source, target, markerEnd, style}: EdgeProps) {
                     className="nodrag nopan bg-background border px-2 py-1 rounded shadow-sm text-xs flex gap-2 items-center"
                 >
                     <div className="flex flex-col">
-                        <span>{`Distance : ${edge?.data?.distance}`}</span>
+                        <span className="text-base">L<sup className="text-[10px]">{`${sourceNode.data.nodeLabel} - ${targetNode.data.nodeLabel}`}</sup> = {`${edge?.data?.distance}`}</span>
                     </div>
                 </div>
             </EdgeLabelRenderer>

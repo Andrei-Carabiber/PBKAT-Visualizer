@@ -14,25 +14,28 @@ body {
 }
 
 .customNode {
-    pointer-events: none;
+    pointer-events: auto; /* Allow node container to capture drag events */
 }
 
 .customNodeBody {
     box-sizing: border-box;
-    width: 80px;
-    height: 80px;
+    width: 110px;
+    height: 110px;
     position: relative;
-    border-radius: 40px;
+    border-radius: 60px;
     display: flex;
     justify-content: center;
     align-items: center;
     font-weight: bold;
-    pointer-events: none;
-
     background-color: var(--xy-node-background-color-default);
     border: var(--xy-node-border-default);
     box-shadow: var(--xy-node-boxshadow-default);
-    color: var(--xy-node-color, var(--xy-node-color-default));
+    color: var(--xy-node-color-default, var(--xy-node-color-default));
+}
+
+.customNodeBody.selected {
+    border-color: black !important;
+
 }
 
 *, *::before, *::after {
@@ -46,7 +49,6 @@ body {
     box-shadow: none;
 }
 
-
 .customHandle {
     background: blue;
     opacity: 0;
@@ -55,6 +57,7 @@ body {
     position: absolute;
     transform: none;
     pointer-events: auto;
+    z-index: 10; /* Ensure connection bands sit on top for easy dragging */
 }
 
 .handleFull {
@@ -64,47 +67,47 @@ body {
     height: 100%;
 }
 
-/* Outer band = 20% from each edge. Tweak this single value to adjust the "grab zone" size. */
+/* Outer band connection zones */
 .handleBand-top {
     top: 0;
     left: 0;
     width: 100%;
-    height: 20%;
+    height: 25%;
 }
 
 .handleBand-bottom {
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 20%;
+    height: 25%;
 }
 
 .handleBand-left {
-    top: 20%;
+    top: 25%;
     left: 0;
-    width: 20%;
-    height: 60%;
+    width: 25%;
+    height: 50%;
 }
 
 .handleBand-right {
-    top: 20%;
+    top: 25%;
     right: 0;
-    width: 20%;
-    height: 60%;
+    width: 25%;
+    height: 50%;
 }
 
 .custom-drag-handle {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
+    width: 70%;
+    height: 70%;
+    border-radius: 60px;
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: grab;
-    pointer-events: auto;
+    transition: background-color 0.2s ease;
 }
 
-.customNode:hover .custom-drag-handle {
+.customNodeBody:hover .custom-drag-handle {
     background-color: var(--xy-theme-muted-bg, #e2e8f0);
 }
 

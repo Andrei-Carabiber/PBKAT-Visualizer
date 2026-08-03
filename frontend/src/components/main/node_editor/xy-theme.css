@@ -12,7 +12,7 @@
 
     --xy-node-boxshadow-default: 0px 3.54px 4.55px 0px #00000005, 0px 3.54px 4.55px 0px #0000000d, 0px 0.51px 1.01px 0px #0000001a;
 
-    --xy-node-border-radius-default: 8px;
+    --xy-node-border-radius-default: 50%;
 
     --xy-handle-background-color-default: #ffffff;
     --xy-handle-border-color-default: #aaaaaa;
@@ -56,7 +56,6 @@
 /* Customizing Default Theming */
 
 .react-flow__node {
-    box-shadow: var(--xy-node-boxshadow-default);
     border-radius: var(--xy-node-border-radius-default);
     background-color: var(--xy-node-background-color-default);
     display: flex;
@@ -66,27 +65,33 @@
     padding: 10px;
     font-size: 12px;
     flex-direction: column;
-    border: var(--xy-node-border-default);
-    color: var(--xy-node-color, var(--xy-node-color-default));
+    border: none !important;
+    color: var(--xy-node-color-default, var(--xy-node-color-default));
+    box-shadow: none !important;
+}
+
+.react-flow__node-custom {
+    padding: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+.react-flow__node.selected .customNodeBody {
+    box-shadow: 0 0 0 2px gray !important;
+}
+
+.react-flow.dark .react-flow__node.selected .customNodeBody {
+    box-shadow: 0 0 0 2px #f3f4f6 !important;
 }
 
 .react-flow__node.selectable:focus {
-    box-shadow: 0px 0px 0px 4px var(--xy-theme-color-focus);
-    border-color: var(--xy-theme-focus-border);
-}
-
-.react-flow__node.selectable:focus:active {
-    box-shadow: var(--xy-node-boxshadow-default);
-}
-
-.react-flow__node.selectable:hover,
-.react-flow__node.draggable:hover {
-    border-color: var(--xy-theme-hover);
+    box-shadow: none;
+    border-color: transparent;
 }
 
 .react-flow__node.selectable.selected {
-    border-color: var(--xy-theme-selected);
-    box-shadow: var(--xy-node-boxshadow-default);
+    border-color: transparent;
+    box-shadow: none;
 }
 
 .react-flow__node-group {
@@ -179,9 +184,8 @@
     border: 1px solid var(--color-primary);
     background-color: var(--color-background);
     color: var(--color-primary);
-    transition:
-            background-color 0.2s ease,
-            border-color 0.2s ease;
+    transition: background-color 0.2s ease,
+    border-color 0.2s ease;
     box-shadow: var(--xy-node-boxshadow-default);
     cursor: pointer;
 }
@@ -228,9 +232,8 @@
     border: 1px solid var(--color-primary);
     border-radius: 7px;
     background-color: var(--color-background);
-    transition:
-            background-color 0.2s ease,
-            border-color 0.2s ease;
+    transition: background-color 0.2s ease,
+    border-color 0.2s ease;
     font-size: 1rem;
     color: var(--xy-theme-panel-text);
 }
@@ -250,9 +253,8 @@
     border-radius: 7px;
     border: 2px solid var(--color-primary);
     background-color: var(--color-background);
-    transition:
-            background-color 0.2s ease,
-            border-color 0.2s ease;
+    transition: background-color 0.2s ease,
+    border-color 0.2s ease;
     cursor: pointer;
     display: inline-block;
     vertical-align: middle;
@@ -275,9 +277,8 @@
     border: 1px solid var(--color-primary);
     border-radius: 50px;
     background-color: var(--color-background);
-    transition:
-            background-color 0.2s ease,
-            border-color 0.2s ease;
+    transition: background-color 0.2s ease,
+    border-color 0.2s ease;
     font-size: 1rem;
     color: var(--xy-theme-panel-text);
     margin-right: 0.5rem;
