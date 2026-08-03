@@ -135,7 +135,7 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
 
     handleRun: async () => {
         const {
-            getCodeCallback, getGraphCallback, getUserCodeCallback, networkGoalDisabled,
+            getCodeCallback, getGraphCallback, getUserCodeCallback, networkGoalDisabled, goalConnections,
             truncation, coverage,
         } = get();
         if (!getCodeCallback) {
@@ -197,6 +197,14 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
             return
         }
 
+        if ((networkGoalDisabled || goalConnections.length === 0) && mode === 'quantum') {
+            set({
+                error: "You must have a network goal if using quantum mode. Goal cannot be disabled/empty",
+                loading: false
+            });
+            return
+        }
+
         let command: "run" | "probability" | "quantum" = 'run'
         if (mode === 'quantum') {
             command = 'quantum'
@@ -215,7 +223,6 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
                 probOnly: !computeWernerQuality
             }
 
-            console.log(fullCode)
             const response = await fetch(RUN_PROTOCOL_URL, {
                 method: "POST",
                 headers: {"Content-Type": "application/json"},
