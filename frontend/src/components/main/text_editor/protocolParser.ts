@@ -3,16 +3,24 @@ import type {Edge, Node} from "@xyflow/react";
 export type ParsedGraph = {
     nodeLabels: string[];
     edgePairs: [string, string][];
+    generatedEdges?: [string, string][];
+    swapTriples?: { pivot: string; a: string; b: string }[];
 };
+
+
 
 const STRING = `"([^"]+)"`;
 const TUPLE2 = `\\(\\s*${STRING}\\s*,\\s*${STRING}\\s*\\)`;
 
 type PatternConfig = {
     patternStr: string;
-    extract: (m: RegExpMatchArray) => { nodes: string[]; edges: [string, string][] };
+    extract: (m: RegExpMatchArray) => {
+        nodes: string[];
+        edges: [string, string][];
+        generated_edges?: [string, string][];
+        swap_triple?: { pivot: string; a: string; b: string };
+    };
 };
-
 const PATTERNS: PatternConfig[] = [
     {
         patternStr: `\\bcreate\\s*${STRING}`,
@@ -29,7 +37,12 @@ const PATTERNS: PatternConfig[] = [
         patternStr: `\\bswap\\s*${STRING}\\s*${TUPLE2}`,
         extract: (m) => {
             const [z, x, y] = [m[1], m[2], m[3]];
-            return {nodes: [z, x, y], edges: [[z, x], [z, y]]};
+            return {
+                nodes: [z, x, y],
+                edges: [[z, x], [z, y]],
+                generated_edges: [[x, y], [y, x]],
+                swap_triple: {pivot: z, a: x, b: y},
+            };
         },
     },
     {
@@ -60,12 +73,21 @@ export function parseProtocolGraph(code: string): ParsedGraph {
     const cleaned = stripLineComments(code);
     const nodeSet = new Set<string>();
     const edgeMap = new Map<string, [string, string]>();
+    const generatedEdges = [];
+    const swapTriples: { pivot: string; a: string; b: string }[] = [];
+
 
     for (const {patternStr, extract} of PATTERNS) {
         const regex = new RegExp(patternStr, 'g');
 
         for (const m of cleaned.matchAll(regex)) {
-            const {nodes, edges} = extract(m);
+            const {nodes, edges, generated_edges, swap_triple} = extract(m);
+            if (generated_edges) {
+                generatedEdges.push(...generated_edges.filter(([a, b]) => a !== b));
+            }
+            if (swap_triple && swap_triple.a !== swap_triple.b) {
+                swapTriples.push(swap_triple);
+            }
             nodes.forEach((n) => nodeSet.add(n));
             edges.forEach(([a, b]) => {
                 if (a === b) return;
@@ -78,6 +100,8 @@ export function parseProtocolGraph(code: string): ParsedGraph {
     return {
         nodeLabels: Array.from(nodeSet),
         edgePairs: Array.from(edgeMap.values()),
+        generatedEdges: generatedEdges,
+        swapTriples: swapTriples,
     };
 }
 
@@ -90,21 +114,12 @@ export function isCodeValid(
     existingNodes: Node[],
     existingEdges: Edge[]
 ): ValidationResult {
-    const {nodeLabels, edgePairs} = parseProtocolGraph(code);
+    const {nodeLabels, edgePairs, generatedEdges} = parseProtocolGraph(code);
 
 
     //Check nodes
     const uiNodeLabels: string[] = existingNodes.map((node) => node.data.nodeLabel as string);
     const uiNodeSet = new Set(uiNodeLabels);
-
-    for (const node of uiNodeLabels) {
-        if (!nodeLabels.includes(node)) {
-            return {
-                valid: false,
-                error: `Node "${node}" exists on the canvas but is missing from your code.`
-            };
-        }
-    }
 
     for (const node of nodeLabels) {
         if (!uiNodeSet.has(node)) {
@@ -116,15 +131,18 @@ export function isCodeValid(
     }
 
     //Validate Edges
-    const codeEdgeKeys = new Set(
-        edgePairs.map(([a, b]) => [a, b].sort().join('::'))
-    );
-
     const nodeIdToLabelMap = new Map<string, string>(
         existingNodes.map((node) => [node.id, node.data.nodeLabel as string])
     );
 
     const uiEdgeKeys = new Set<string>();
+
+    if (generatedEdges) {
+        for (const [source, target] of generatedEdges) {
+            const uiKey = [source, target].sort().join("::");
+            uiEdgeKeys.add(uiKey)
+        }
+    }
 
     for (const edge of existingEdges) {
         const sourceLabel = nodeIdToLabelMap.get(edge.source);
@@ -135,14 +153,7 @@ export function isCodeValid(
         const uiKey = [sourceLabel, targetLabel].sort().join('::');
         uiEdgeKeys.add(uiKey);
 
-        if (!codeEdgeKeys.has(uiKey)) {
-            return {
-                valid: false,
-                error: `The connection between "${sourceLabel}" and "${targetLabel}" is drawn on the canvas but missing from your code.`
-            };
-        }
     }
-
     for (const [a, b] of edgePairs) {
         const codeKey = [a, b].sort().join('::');
         if (!uiEdgeKeys.has(codeKey)) {

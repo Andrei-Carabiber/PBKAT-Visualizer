@@ -1,10 +1,47 @@
 import type {Edge, Node} from '@xyflow/react';
 import type {NodeData, EdgeData} from '@/components/main/node_editor/nodeEditor.tsx';
+import { parseProtocolGraph } from "@/components/main/text_editor/protocolParser.ts"; // NEW
 
 export const EDITABLE_START_MARKER = '-- >>> EDITABLE REGION START >>>';
 export const EDITABLE_END_MARKER = '-- <<< EDITABLE REGION END <<<';
 
-export type ProtocolCommand = 'run' | "mdp" | 'qmdp';
+
+function keyOf(a: string, b: string) {
+    return [a, b].sort().join("::");
+}
+
+function buildDistances(
+    userCode: string,
+    nodes: Node<NodeData>[],
+    edges: Edge<EdgeData>[],
+): Map<string, number> {
+    const distanceMap = new Map<string, number>();
+
+    for (const e of edges) {
+        const src = nodes.find(n => n.id === e.source)?.data?.nodeLabel;
+        const tgt = nodes.find(n => n.id === e.target)?.data?.nodeLabel;
+        if (!src || !tgt) continue;
+        distanceMap.set(keyOf(src, tgt), e.data?.distance ?? 0);
+    }
+
+    const {swapTriples} = parseProtocolGraph(userCode);
+    if (swapTriples?.length) {
+        // Loop a couple of passes so multi-hop swap chains resolve
+        // regardless of the order they appear in the code.
+        for (let pass = 0; pass < swapTriples.length; pass++) {
+            for (const {pivot, a, b} of swapTriples) {
+                const key = keyOf(a, b);
+                if (distanceMap.has(key)) continue;
+                const dPivotA = distanceMap.get(keyOf(pivot, a));
+                const dPivotB = distanceMap.get(keyOf(pivot, b));
+                if (dPivotA === undefined || dPivotB === undefined) continue;
+                distanceMap.set(key, dPivotA + dPivotB);
+            }
+        }
+    }
+
+    return distanceMap;
+}
 
 export function isQuantumCode(userCode: string): boolean {
     return userCode.includes("QBKATPolicy");
@@ -92,14 +129,13 @@ export function buildFullSource(
     const coherenceTimes = nodes
         .map(n => `("${n.data.nodeLabel}", ${n.data.coherence_time ?? 1})`).join(", ");
 
-    const distances = edges
-        .flatMap(e => {
-            const src = nodes.find(n => n.id === e.source)?.data?.nodeLabel;
-            const tgt = nodes.find(n => n.id === e.target)?.data?.nodeLabel;
-            const dist = e.data?.distance ?? 0;
+    const distanceMap = buildDistances(userCode, nodes, edges);
+    const distances = Array.from(distanceMap.entries())
+        .flatMap(([key, dist]) => {
+            const [a, b] = key.split("::");
             return [
-                `(("${src}", "${tgt}"), ${dist})`,
-                `(("${tgt}", "${src}"), ${dist})`,
+                `(("${a}", "${b}"), ${dist})`,
+                `(("${b}", "${a}"), ${dist})`,
             ];
         }).join(", ");
 

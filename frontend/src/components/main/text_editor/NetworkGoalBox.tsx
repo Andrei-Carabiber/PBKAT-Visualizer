@@ -96,7 +96,7 @@ const NetworkGoalBox = () => {
                                 variant="outline"
                                 disabled={disabled}
                             >
-                                Add connection
+                                Add Goal
                             </Button>
                         </PopoverTrigger>
 

@@ -96,7 +96,7 @@ const NetworkCapacityBox = () => {
                                 variant="outline"
                                 disabled={disabled}
                             >
-                                Add connection
+                                Add capacity connection
                             </Button>
                         </PopoverTrigger>
 
