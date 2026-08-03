@@ -50,7 +50,7 @@ const EdgePropertiesSheet = ({sheetOpen, setSheetOpen, selectedEdge, updateEdgeD
                         </div>
 
                         <div className="flex flex-col gap-2">
-                            <Label htmlFor="node-UCreate-prob">UCreate Probability</Label>
+                            <Label htmlFor="node-UCreate-prob">Generate Probability</Label>
                             <Input
                                 id="node-UCreate-prob"
                                 type="number"
@@ -62,7 +62,7 @@ const EdgePropertiesSheet = ({sheetOpen, setSheetOpen, selectedEdge, updateEdgeD
                         </div>
 
                         <div className="flex flex-col gap-2">
-                            <Label htmlFor="node-UCreate-quality">UCreate Quality</Label>
+                            <Label htmlFor="node-UCreate-quality">Generate Quality</Label>
                             <Input
                                 id="node-UCreate-quality"
                                 type="number"

@@ -77,11 +77,12 @@ const ResultDisplayWindow = () => {
                                     {(data.mode === 'probability' || data.mode === "probQuality") && (
                                         <div className="flex gap-8">
                                             <p className="bg-card text-card-foreground p-2 rounded-sm">
-                                                First Compute time: {(data.durations.firstDuration / 1000).toFixed(3)}s
+                                                {data.mode === "probability" ? "Time to compute static probabilities" : "Time to compute mixed state probabilities"}
+                                                : {(data.durations.firstDuration / 1000).toFixed(3)}s
                                             </p>
                                             <p className="bg-card text-card-foreground p-2 rounded-sm">
-                                                Second Compute
-                                                time: {((data.durations.secondDuration ?? 0) / 1000).toFixed(3)}s
+                                                {data.mode === 'probability' ? "Time to compute probability of Network Goal" : "Time to compute pure state probabilities"}
+                                                : {((data.durations.secondDuration ?? 0) / 1000).toFixed(3)}s
                                             </p>
                                             <p className="bg-card text-card-foreground p-2 rounded-sm">
                                                 Total Compute
@@ -93,10 +94,11 @@ const ResultDisplayWindow = () => {
                                     {data._cached && (
                                         <Tooltip>
                                             <TooltipTrigger>
-                                                <BadgeInfo />
+                                                <BadgeInfo/>
                                             </TooltipTrigger>
                                             <TooltipContent>
-                                                The computation was cached in the server. The time you see was the time it took to calculate the cached result.
+                                                The computation was cached in the server. The time you see was the time
+                                                it took to calculate the cached result.
                                             </TooltipContent>
                                         </Tooltip>
                                     )}
