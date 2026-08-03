@@ -35,8 +35,8 @@ const initialNodes: Node<NodeData>[] = [
         data: {
             nodeLabel: "A",
             coherence_time: 1,
-
-        }
+        },
+        dragHandle: '.custom-drag-handle'
 
     },
     {
@@ -46,8 +46,8 @@ const initialNodes: Node<NodeData>[] = [
         data: {
             nodeLabel: "B",
             coherence_time: 1,
-
-        }
+        },
+        dragHandle: '.custom-drag-handle'
     },
     {
         id: '3',
@@ -56,9 +56,9 @@ const initialNodes: Node<NodeData>[] = [
         data: {
             nodeLabel: "C",
             coherence_time: 1,
-            create_prob: 0.8
-
-        }
+            create_prob: 0.8,
+        },
+        dragHandle: '.custom-drag-handle'
     },
 ];
 
