@@ -47,7 +47,7 @@ const ExampleSelectionCard = ({probabilisticSaves, quantisticSaves, handleLoad}:
                     data-[state=active]:shadow-none
                     data-[state=active]:hover:bg-transparent"
                 >
-                    Quantistic
+                    Quantum
                 </TabsTrigger>
             </TabsList>
 

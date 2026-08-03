@@ -5,7 +5,7 @@ const Header = () => {
     return (
         <header className="h-16 border-b flex items-center justify-between px-6">
             <div className="flex gap-5 items-center">
-                <h1 className="font-bold">PBKAT Visualizer</h1>
+                <h1 className="font-bold">QBKAT Visualizer</h1>
 
                 <SaveButtons />
 
