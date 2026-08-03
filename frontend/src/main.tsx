@@ -1,6 +1,4 @@
-import "./polyfills/randomUUID";
 import "./index.css";
-
 
 async function bootstrap() {
     const [
