@@ -121,4 +121,15 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  .recharts-wrapper *:focus,
+  .recharts-surface:focus {
+    outline: none !important;
+  }
+
+  .recharts-layer:focus,
+  .recharts-curve:focus,
+  .recharts-rectangle:focus {
+    outline: none !important;
+  }
 }

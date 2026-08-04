@@ -1,5 +1,7 @@
-import { useState } from "react";
-import { Area, AreaChart, ReferenceArea, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import {useState} from "react";
+import {Area, AreaChart, ReferenceArea, ResponsiveContainer, Tooltip, XAxis, YAxis} from "recharts";
+import {Input} from "@/components/ui/input.tsx";
+import {Slider} from "@/components/ui/slider.tsx";
 
 type PlotPoint = {
     index: number;
@@ -40,6 +42,8 @@ const ProbabilityGraph = ({
     const [refAreaRight, setRefAreaRight] = useState<string | number>("");
 
     const ZOOM_MIN_DIFFERENCE = 3;
+
+    const [YDomain, setYDomain] = useState([0, 1]);
 
     const plot_array: PlotPoint[] = !cdf_min
         ? cdf_max.map((value, index) => ({
@@ -95,132 +99,152 @@ const ProbabilityGraph = ({
     };
 
     return (
-        <div className="w-full h-full min-h-[300px] flex flex-col">
-            {/* Optional Header with Zoom Out Button */}
-            <div className="flex justify-end px-4 py-1">
-                {(left !== "dataMin" || right !== "dataMax") && (
-                    <button
-                        onClick={zoomOut}
-                        className="px-3 py-1 text-xs bg-secondary text-secondary-foreground rounded-md border shadow-sm hover:bg-accent"
-                    >
-                        Zoom Out
-                    </button>
-                )}
+        <div className="w-full h-full min-h-[300px] flex">
+            <div className="flex justify-between h-[90%] w-12 items-center mr-2">
+                <div className="h-full flex flex-col justify-between text-sm text-muted-foreground">
+                    <p>{YDomain[1]}</p>
+                    <p>{YDomain[0]}</p>
+                </div>
+                <Slider value={YDomain}
+                        onValueChange={(value) => setYDomain(value)}
+                        min={0}
+                        max={1}
+                        step={0.01}
+                        orientation="vertical"
+                        className="h-full"
+                />
             </div>
 
-            <div className="w-full flex-1 min-h-[260px]">
-                <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart
-                        data={plot_array}
-                        margin={{ top: 10, right: 30, left: 20, bottom: 0 }}
-                        onMouseDown={(e) => e && setRefAreaLeft(e.activeLabel ?? "")}
-                        onMouseMove={(e) => refAreaLeft && e && setRefAreaRight(e.activeLabel ?? "")}
-                        onMouseUp={zoom}
-                    >
-                        <defs>
-                            <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
-                                <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
-                            </linearGradient>
-                            <linearGradient id="colorPv" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8} />
-                                <stop offset="95%" stopColor="#82ca9d" stopOpacity={0} />
-                            </linearGradient>
-                        </defs>
+            <div className="w-full h-full min-h-[300px] flex flex-col">
+                {/* Optional Header with Zoom Out Button */}
+                <div className="flex justify-end px-4 py-1">
+                    {(left !== "dataMin" || right !== "dataMax") && (
+                        <button
+                            onClick={zoomOut}
+                            className="px-3 py-1 text-xs bg-secondary text-secondary-foreground rounded-md border shadow-sm hover:bg-accent"
+                        >
+                            Zoom Out
+                        </button>
+                    )}
+                </div>
 
-                        <XAxis
-                            dataKey="index"
-                            type="number"
-                            domain={[left, right]}
-                            allowDataOverflow={true}
-                            height={52}
-                            label={{ position: "insideBottomRight", value: "Time units", offset: 5 }}
-                        />
-                        <YAxis
-                            domain={[0, 1]}
-                            allowDataOverflow={true}
-                            width={80}
-                            label={{ position: "left", value: "Probability", angle: -90, offset: -15, dy: -45 }}
-                        />
+                <div className="w-full flex-1 min-h-[260px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart
+                            data={plot_array}
+                            margin={{top: 10, right: 30, left: 20, bottom: 0}}
+                            onMouseDown={(e) => e && setRefAreaLeft(e.activeLabel ?? "")}
+                            onMouseMove={(e) => refAreaLeft && e && setRefAreaRight(e.activeLabel ?? "")}
+                            onMouseUp={zoom}
+                        >
+                            <defs>
+                                <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
+                                    <stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
+                                </linearGradient>
+                                <linearGradient id="colorPv" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8}/>
+                                    <stop offset="95%" stopColor="#82ca9d" stopOpacity={0}/>
+                                </linearGradient>
+                            </defs>
 
-                        {!cdf_min ? (
-                            <>
-                                <Area
-                                    type="monotone"
-                                    dataKey="probability"
-                                    stroke="#8884d8"
-                                    fillOpacity={1}
-                                    fill="url(#colorUv)"
-                                    animationBegin={200}
-                                    animationDuration={1300}
-                                />
-                                <Tooltip
-                                    content={({ active, payload }) => {
-                                        const point = payload?.[0]?.payload as PlotPoint | undefined;
-                                        if (!active || !point || point.probability === null) return null;
+                            <XAxis
+                                dataKey="index"
+                                type="number"
+                                domain={[left, right]}
+                                allowDataOverflow={true}
+                                height={52}
+                                label={{position: "insideBottomRight", value: "Time units", offset: 5}}
+                            />
+                            <YAxis
+                                domain={YDomain}
+                                allowDataOverflow={true}
+                                width={80}
+                                label={{position: "left", value: "Probability", angle: -90, offset: -15, dy: -45}}
+                            />
 
-                                        return (
-                                            <div className="rounded-md border bg-popover px-3 py-2 text-sm text-popover-foreground shadow-md">
-                                                <p>Time unit: {point.index}</p>
-                                                {estimatedMode ? (
-                                                    <p>Probability: {point.probability ? Number(((point.probability) * 100).toFixed(3)) : 0} %</p>
-                                                ) : (
-                                                    <p>Probability: {point.probability}</p>
-                                                )}
-                                            </div>
-                                        );
-                                    }}
-                                />
-                            </>
-                        ) : (
-                            <>
-                                <Area
-                                    type="monotone"
-                                    dataKey="min_probability"
-                                    stroke="#8884d8"
-                                    fillOpacity={1}
-                                    fill="url(#colorUv)"
-                                    animationBegin={200}
-                                    animationDuration={1300}
-                                />
-                                <Area
-                                    type="monotone"
-                                    dataKey="max_probability"
-                                    stroke="#82ca9d"
-                                    fillOpacity={1}
-                                    fill="url(#colorPv)"
-                                />
-                                <Tooltip
-                                    content={({ active, payload }) => {
-                                        const point = payload?.[0]?.payload as PlotPoint | undefined;
-                                        if (!active || !point || point.probability === null) return null;
+                            {!cdf_min ? (
+                                <>
+                                    <Area
+                                        type="monotone"
+                                        dataKey="probability"
+                                        stroke="#8884d8"
+                                        fillOpacity={1}
+                                        fill="url(#colorUv)"
+                                        animationBegin={200}
+                                        animationDuration={1300}
+                                    />
+                                    <Tooltip
+                                        content={({active, payload}) => {
+                                            const point = payload?.[0]?.payload as PlotPoint | undefined;
+                                            if (!active || !point || point.probability === null) return null;
 
-                                        return (
-                                            <div className="rounded-md border bg-popover px-3 py-2 text-sm text-popover-foreground shadow-md">
-                                                <p>Time unit: {point.index}</p>
-                                                {estimatedMode ? (
-                                                    <>
-                                                        <p>MaxProbability: {point.max_probability ? Number(((point.max_probability) * 100).toFixed(3)) : 0} %</p>
-                                                        <p>MinProbability: {point.min_probability ? Number(((point.min_probability) * 100).toFixed(3)) : 0} %</p>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <p>MaxProbability: {point.max_probability}</p>
-                                                        <p>MinProbability: {point.min_probability}</p>
-                                                    </>
-                                                )}
-                                            </div>
-                                        );
-                                    }}
-                                />
-                            </>
-                        )}
+                                            return (
+                                                <div
+                                                    className="rounded-md border bg-popover px-3 py-2 text-sm text-popover-foreground shadow-md">
+                                                    <p>Time unit: {point.index}</p>
+                                                    {estimatedMode ? (
+                                                        <p>Probability: {point.probability ? Number(((point.probability) * 100).toFixed(3)) : 0} %</p>
+                                                    ) : (
+                                                        <p>Probability: {point.probability}</p>
+                                                    )}
+                                                </div>
+                                            );
+                                        }}
+                                    />
+                                </>
+                            ) : (
+                                <>
+                                    <Area
+                                        type="monotone"
+                                        dataKey="min_probability"
+                                        stroke="#8884d8"
+                                        fillOpacity={1}
+                                        fill="url(#colorUv)"
+                                        animationBegin={200}
+                                        animationDuration={1300}
+                                    />
+                                    <Area
+                                        type="monotone"
+                                        dataKey="max_probability"
+                                        stroke="#82ca9d"
+                                        fillOpacity={1}
+                                        fill="url(#colorPv)"
+                                    />
+                                    <Tooltip
+                                        content={({active, payload}) => {
+                                            const point = payload?.[0]?.payload as PlotPoint | undefined;
+                                            if (!active || !point || point.probability === null) return null;
 
-                        {refAreaLeft && refAreaRight ? (
-                            <ReferenceArea x1={refAreaLeft} x2={refAreaRight} strokeOpacity={0.3} fill="#8884d8" fillOpacity={0.3} />
-                        ) : null}
-                    </AreaChart>
-                </ResponsiveContainer>
+                                            return (
+                                                <div
+                                                    className="rounded-md border bg-popover px-3 py-2 text-sm text-popover-foreground shadow-md">
+                                                    <p>Time unit: {point.index}</p>
+                                                    {estimatedMode ? (
+                                                        <>
+                                                            <p>MaxProbability: {point.max_probability ? Number(((point.max_probability) * 100).toFixed(3)) : 0} %</p>
+                                                            <p>MinProbability: {point.min_probability ? Number(((point.min_probability) * 100).toFixed(3)) : 0} %</p>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <p>MaxProbability: {point.max_probability}</p>
+                                                            <p>MinProbability: {point.min_probability}</p>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            );
+                                        }}
+                                    />
+                                </>
+                            )}
+
+                            {refAreaLeft && refAreaRight ? (
+                                <ReferenceArea x1={refAreaLeft} x2={refAreaRight} strokeOpacity={0.3} fill="#8884d8"
+                                               fillOpacity={0.3}/>
+                            ) : null}
+                        </AreaChart>
+                    </ResponsiveContainer>
+                </div>
             </div>
         </div>
     );
