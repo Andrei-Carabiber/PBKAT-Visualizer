@@ -17,9 +17,13 @@ import LocalSaveDisplayCard from "@/components/web/header-buttons/local-save-dis
 import {toast} from "sonner";
 import type {exampleQuantumSave, exampleSave} from "@/examples/type.ts";
 import ExampleSelectionCard from "@/components/web/header-buttons/example-selection-card.tsx";
+import {ScrollArea} from "@/components/ui/scroll-area.tsx";
+import ExampleDisplayCard from "@/components/web/header-buttons/example-display-card.tsx";
 
 const exampleProbModules = import.meta.glob<{ default: exampleSave }>('@/examples/probabilistic/*.json', {eager: true});
-const exampleQuantumModules = import.meta.glob<{ default: exampleQuantumSave }>('@/examples/quantum/*.json', {eager: true});
+const exampleQuantumModules = import.meta.glob<{
+    default: exampleQuantumSave
+}>('@/examples/quantum/*.json', {eager: true});
 
 
 const exampleProbSaves: exampleSave[] = Object.values(exampleProbModules).map(
@@ -297,21 +301,28 @@ const SaveButtons = () => {
                         Load
                     </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-xl">
+                <DialogContent className="sm:max-w-md">
                     <DialogHeader className="flex flex-col items-center gap-4">
                         <DialogTitle className="text-xl w-full text-left">Load a save</DialogTitle>
-                        <div className="flex flex-col gap-2 w-full px-10">
-                            {allSaves.map((save) => (
-                                <LocalSaveDisplayCard
-                                    save={save}
-                                    deleteSave={() => {
-                                        handleDeleteSave(allSaves, save)
-                                    }}
-                                    handleLoad={() => handleLoad(save)}
-                                    key={save.id}
-                                />
-                            ))}
+                        <div className="relative w-full">
+                            <ScrollArea type='always' className="h-[70vh] w-full pr-4">
+                                <div className="flex flex-col gap-3">
+                                    {allSaves.map((save) => (
+                                        <LocalSaveDisplayCard
+                                            save={save}
+                                            deleteSave={() => {
+                                                handleDeleteSave(allSaves, save)
+                                            }}
+                                            handleLoad={() => handleLoad(save)}
+                                            key={save.id}
+                                        />
+                                    ))}
+                                </div>
+                            </ScrollArea>
+                            <div
+                                className="absolute bottom-[-1px] left-0 right-0 h-4 bg-linear-to-t from-background to-transparent z-10 pointer-events-none"/>
                         </div>
+
                     </DialogHeader>
 
                     <div className="flex justify-end gap-2 mt-4">
