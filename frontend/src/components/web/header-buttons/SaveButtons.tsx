@@ -220,9 +220,8 @@ const SaveButtons = () => {
             <div className="flex md:hidden">
                 <Dialog open={isMobileSheetOpen} onOpenChange={setIsMobileSheetOpen}>
                     <DialogTrigger asChild>
-                        <Button variant="outline" size="icon" className="border-2 border-secondary-foreground">
+                        <Button variant="outline" size="icon" className="border-secondary-foreground">
                             <Menu className="h-5 w-5"/>
-                            <span className="sr-only">Toggle menu</span>
                         </Button>
                     </DialogTrigger>
                     <DialogContent className="rounded-t-xl pb-10 max-w-100">

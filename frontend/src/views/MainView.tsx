@@ -37,9 +37,7 @@ const MainView = () => {
             <div className="flex flex-1 flex-col h-full w-full min-h-0 gap-4">
                 <ResultDisplayWindow />
 
-                {/* If results are present, we give the editors a safe minimum height (e.g., 60vh) so they don't squish. */}
                 <div className={`flex-1 relative ${hasResults ? 'min-h-[60vh]' : 'min-h-0'}`}>
-                    {/* The absolute wrapper guarantees internal elements can't stretch the page height */}
                     <div className="absolute inset-0">
                         <div className={`absolute inset-0 w-full h-full ${viewMode === 'protocol' ? 'block' : 'hidden'}`}>
                             <TextEditor panelSize={typeof window !== 'undefined' ? window.innerWidth : 400} />
