@@ -1,6 +1,5 @@
 import {useState} from "react";
 import {Area, AreaChart, ReferenceArea, ResponsiveContainer, Tooltip, XAxis, YAxis} from "recharts";
-import {Input} from "@/components/ui/input.tsx";
 import {Slider} from "@/components/ui/slider.tsx";
 
 type PlotPoint = {

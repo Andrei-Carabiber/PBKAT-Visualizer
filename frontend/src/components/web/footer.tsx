@@ -1,6 +1,6 @@
 const Footer = () => {
     return (
-        <footer className="h-12 border-t flex items-center justify-between px-6">
+        <footer className="text-sm md:text-base h-12 border-t flex items-center justify-between px-6">
             <h5>@USI Università della Svizzera italiana</h5>
 
             <h5 className="text-sm">2026</h5>

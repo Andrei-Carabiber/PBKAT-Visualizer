@@ -18,13 +18,12 @@ import {toast} from "sonner";
 import type {exampleQuantumSave, exampleSave} from "@/examples/type.ts";
 import ExampleSelectionCard from "@/components/web/header-buttons/example-selection-card.tsx";
 import {ScrollArea} from "@/components/ui/scroll-area.tsx";
-import ExampleDisplayCard from "@/components/web/header-buttons/example-display-card.tsx";
+import {Menu} from "lucide-react";
 
 const exampleProbModules = import.meta.glob<{ default: exampleSave }>('@/examples/probabilistic/*.json', {eager: true});
 const exampleQuantumModules = import.meta.glob<{
     default: exampleQuantumSave
 }>('@/examples/quantum/*.json', {eager: true});
-
 
 const exampleProbSaves: exampleSave[] = Object.values(exampleProbModules).map(
     (mod) => mod.default
@@ -32,7 +31,6 @@ const exampleProbSaves: exampleSave[] = Object.values(exampleProbModules).map(
 const exampleQuantumSaves: exampleQuantumSave[] = Object.values(exampleQuantumModules).map(
     (mod) => mod.default
 );
-
 
 export type localStorageSave = {
     id: string,
@@ -71,56 +69,11 @@ const SaveButtons = () => {
     const [isLoadOpen, setIsLoadOpen] = useState(false);
     const [allSaves, setAllSaves] = useState<localStorageSave[]>([])
     const [isSaveOpen, setIsSaveOpen] = useState(false);
-    //const [isSaveToDiskOpen, setIsSaveToDiskOpen] = useState(false);
-    const [isExamplesOpen, setIsExamplesOpen] = useState(false)
-
-
-    //Save to disk function
-    // const handleSaveToDisk = async () => {
-    //     const savedName = nameInputRef.current?.value;
-    //
-    //     if (savedName === "" || !savedName) {
-    //         setError("Please enter a valid name")
-    //         return
-    //     }
-    //
-    //     if (!getUserCodeCallback || !getGraphCallback) {
-    //         setError("Could not save. Please wait a few seconds and try again")
-    //         return
-    //     }
-    //
-    //     setError("");
-    //     const userCode = getUserCodeCallback();
-    //     const graph = getGraphCallback();
-    //     const save: exampleQuantumSave = {
-    //         id: crypto.randomUUID(),
-    //         name: savedName,
-    //         code: userCode,
-    //         graph,
-    //         goal: goalConnections,
-    //         goalDisabled: networkGoalDisabled,
-    //         networkCapacity: networkCapacityConnections,
-    //         capacityDisabled: networkCapacityDisabled,
-    //         truncation: Number(truncation),
-    //         coverage: Number(coverage)
-    //     }
-    //
-    //
-    //     await fetch('/api/save-json', {
-    //         method: 'POST',
-    //         headers: {'Content-Type': 'application/json'},
-    //         body: JSON.stringify({
-    //             fileName: `${savedName}.json`,
-    //             data: save
-    //         })
-    //     })
-    //     setIsSaveToDiskOpen(false);
-    // }
-
+    const [isExamplesOpen, setIsExamplesOpen] = useState(false);
+    const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
 
     const handleSave = () => {
         const savedName = nameInputRef.current?.value;
-
         const alreadyPresentNames = allSaves.map((save) => save.name)
 
         if (savedName === "" || !savedName) {
@@ -164,7 +117,6 @@ const SaveButtons = () => {
 
         setAllSaves(saves);
         setIsSaveOpen(false);
-
     };
 
     const LoadAllSaves = () => {
@@ -173,7 +125,6 @@ const SaveButtons = () => {
         if (memory) {
             allSaves = JSON.parse(memory)
         }
-
         return allSaves
     }
 
@@ -232,75 +183,104 @@ const SaveButtons = () => {
 
         const jsonStr = JSON.stringify(shareState);
         const base64Token = btoa(encodeURIComponent(jsonStr));
-
         const shareableUrl = `${window.location.origin}/load/${base64Token}`;
 
         navigator.clipboard.writeText(shareableUrl);
-
         toast("Link has been copied to clipboard")
     };
 
+    const runMobileAction = (action: () => void) => {
+        setIsMobileSheetOpen(false);
+        setTimeout(action, 100);
+    };
+
     return (
-        <div className="flex gap-4 text-center">
-            {/*SAVE*/}
+        <>
+            {/* DESKTOP VIEW */}
+            <div className="hidden md:flex gap-4 text-center">
+                <Button variant="outline" onClick={() => setIsSaveOpen(true)}
+                        className="p-5 border-2 border-secondary-foreground dark:hover:bg-muted">
+                    Save
+                </Button>
+                <Button variant="outline" onClick={() => setIsLoadOpen(true)}
+                        className="p-5 border-2 border-secondary-foreground dark:hover:bg-muted">
+                    Load
+                </Button>
+                <Button onClick={handleShare} variant="outline"
+                        className="p-5 border-2 border-secondary-foreground dark:hover:bg-muted">
+                    Share
+                </Button>
+                <Button variant="outline" onClick={() => setIsExamplesOpen(true)}
+                        className="p-5 border-2 border-secondary-foreground dark:hover:bg-muted">
+                    Examples
+                </Button>
+            </div>
+
+            {/* MOBILE VIEW (Sheet Menu Trigger) */}
+            <div className="flex md:hidden">
+                <Dialog open={isMobileSheetOpen} onOpenChange={setIsMobileSheetOpen}>
+                    <DialogTrigger asChild>
+                        <Button variant="outline" size="icon" className="border-2 border-secondary-foreground">
+                            <Menu className="h-5 w-5"/>
+                            <span className="sr-only">Toggle menu</span>
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="rounded-t-xl pb-10 max-w-100">
+                            <DialogHeader className="text-left mb-2">
+                                <DialogTitle className="text-lg">Menu</DialogTitle>
+                            </DialogHeader>
+                            <div className="flex flex-col gap-3">
+                                <Button variant="outline" className="w-full justify-start py-5 text-base border-2"
+                                        onClick={() => runMobileAction(() => setIsSaveOpen(true))}>
+                                    Save State
+                                </Button>
+                                <Button variant="outline" className="w-full justify-start py-5 text-base border-2"
+                                        onClick={() => runMobileAction(() => setIsLoadOpen(true))}>
+                                    Load State
+                                </Button>
+                                <Button variant="outline" className="w-full justify-start py-5 text-base border-2"
+                                        onClick={() => runMobileAction(() => setIsExamplesOpen(true))}>
+                                    Examples
+                                </Button>
+                                <Button variant="outline" className="w-full justify-start py-5 text-base border-2"
+                                        onClick={() => runMobileAction(handleShare)}>
+                                    Share Link
+                                </Button>
+                            </div>
+                    </DialogContent>
+                </Dialog>
+            </div>
+
             <Dialog open={isSaveOpen} onOpenChange={(open) => {
                 setIsSaveOpen(open);
                 if (!open) setError("");
             }}>
-                <DialogTrigger asChild>
-                    <Button variant="outline" className="p-5 border-2 border-secondary-foreground dark:hover:bg-muted">
-                        Save
-                    </Button>
-                </DialogTrigger>
                 <DialogContent showCloseButton={false}>
                     <DialogHeader>
                         <DialogTitle className="text-secondary-foreground text-xl">Name your saved state</DialogTitle>
                         <DialogDescription className="pt-4 space-y-4">
-                            <Input
-                                ref={nameInputRef}
-                                placeholder="Enter state name..."
-                                className="text-secondary-foreground"
-                            />
-
-                            {error && (
-                                <p className="text-sm font-medium text-destructive bg-destructive/10 p-2 rounded-md">
-                                    {error}
-                                </p>
-                            )}
+                            <Input ref={nameInputRef} placeholder="Enter state name..."
+                                   className="text-secondary-foreground"/>
+                            {error &&
+                                <p className="text-sm font-medium text-destructive bg-destructive/10 p-2 rounded-md">{error}</p>}
                         </DialogDescription>
                     </DialogHeader>
-
                     <div className="flex justify-end gap-2 mt-4">
                         <DialogClose asChild>
                             <Button variant="outline"
-                                    className="px-5 border-2 border-secondary-foreground dark:hover:bg-muted">
-                                Cancel
-                            </Button>
+                                    className="px-5 border-2 border-secondary-foreground dark:hover:bg-muted">Cancel</Button>
                         </DialogClose>
-
-                        <Button
-                            variant="outline"
-                            className="px-5 border-2 border-secondary-foreground dark:hover:bg-muted"
-                            onClick={handleSave}
-                        >
-                            Save
-                        </Button>
+                        <Button variant="outline"
+                                className="px-5 border-2 border-secondary-foreground dark:hover:bg-muted"
+                                onClick={handleSave}>Save</Button>
                     </div>
                 </DialogContent>
             </Dialog>
-
-
-            {/*LOAD*/}
 
             <Dialog open={isLoadOpen} onOpenChange={(open) => {
                 setIsLoadOpen(open);
                 if (!open) setError("");
             }}>
-                <DialogTrigger asChild>
-                    <Button variant="outline" className="p-5 border-2 border-secondary-foreground dark:hover:bg-muted">
-                        Load
-                    </Button>
-                </DialogTrigger>
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader className="flex flex-col items-center gap-4">
                         <DialogTitle className="text-xl w-full text-left">Load a save</DialogTitle>
@@ -308,122 +288,44 @@ const SaveButtons = () => {
                             <ScrollArea type='always' className="h-[70vh] w-full pr-4">
                                 <div className="flex flex-col gap-3">
                                     {allSaves.map((save) => (
-                                        <LocalSaveDisplayCard
-                                            save={save}
-                                            deleteSave={() => {
-                                                handleDeleteSave(allSaves, save)
-                                            }}
-                                            handleLoad={() => handleLoad(save)}
-                                            key={save.id}
-                                        />
+                                        <LocalSaveDisplayCard save={save}
+                                                              deleteSave={() => handleDeleteSave(allSaves, save)}
+                                                              handleLoad={() => handleLoad(save)} key={save.id}/>
                                     ))}
                                 </div>
                             </ScrollArea>
                             <div
                                 className="absolute bottom-[-1px] left-0 right-0 h-4 bg-linear-to-t from-background to-transparent z-10 pointer-events-none"/>
                         </div>
-
                     </DialogHeader>
-
                     <div className="flex justify-end gap-2 mt-4">
                         <DialogClose asChild>
                             <Button variant="outline"
-                                    className="text-sm px-10 py-4 border-2 border-secondary-foreground dark:hover:bg-muted">
-                                Cancel
-                            </Button>
+                                    className="text-sm px-10 py-4 border-2 border-secondary-foreground dark:hover:bg-muted">Cancel</Button>
                         </DialogClose>
                     </div>
                 </DialogContent>
             </Dialog>
 
-            {/*SHARE*/}
-            <Button onClick={handleShare} variant="outline"
-                    className="p-5 border-2 border-secondary-foreground dark:hover:bg-muted">
-                Share
-            </Button>
-
-            {/*EXAMPLES*/}
             <Dialog open={isExamplesOpen} onOpenChange={(open) => {
                 setIsExamplesOpen(open);
                 if (!open) setError("");
             }}>
-                <DialogTrigger asChild>
-                    <Button variant="outline" className="p-5 border-2 border-secondary-foreground dark:hover:bg-muted">
-                        Examples
-                    </Button>
-                </DialogTrigger>
                 <DialogContent className="sm:max-w-xl">
                     <DialogHeader className="flex flex-col items-center gap-4">
                         <DialogTitle className="text-xl text-left w-full pl-3">Load an Example</DialogTitle>
                         <ExampleSelectionCard probabilisticSaves={exampleProbSaves}
-                                              quantisticSaves={exampleQuantumSaves}
-                                              handleLoad={handleLoad}
-                        />
+                                              quantisticSaves={exampleQuantumSaves} handleLoad={handleLoad}/>
                     </DialogHeader>
-
                     <div className="flex justify-end gap-2 mt-4">
                         <DialogClose asChild>
                             <Button variant="outline"
-                                    className="text-sm px-10 py-4 border-2 border-secondary-foreground dark:hover:bg-muted">
-                                Cancel
-                            </Button>
+                                    className="text-sm px-10 py-4 border-2 border-secondary-foreground dark:hover:bg-muted">Cancel</Button>
                         </DialogClose>
                     </div>
                 </DialogContent>
             </Dialog>
-
-
-            {/*Save to disk Button Temp*/}
-
-            {/*
-            <Dialog open={isSaveToDiskOpen} onOpenChange={(open) => {
-                setIsSaveToDiskOpen(open);
-                if (!open) setError("");
-            }}>
-                <DialogTrigger asChild>
-                    <Button variant="outline" className="p-5 border-2 border-secondary-foreground dark:hover:bg-muted">
-                        Save to disk
-                    </Button>
-                </DialogTrigger>
-                <DialogContent showCloseButton={false}>
-                    <DialogHeader>
-                        <DialogTitle className="text-secondary-foreground text-xl">Name your saved state</DialogTitle>
-                        <DialogDescription className="pt-4 space-y-4">
-                            <Input
-                                ref={nameInputRef}
-                                placeholder="Enter state name..."
-                                className="text-secondary-foreground"
-                            />
-
-                            {error && (
-                                <p className="text-sm font-medium text-destructive bg-destructive/10 p-2 rounded-md">
-                                    {error}
-                                </p>
-                            )}
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <div className="flex justify-end gap-2 mt-4">
-                        <DialogClose asChild>
-                            <Button variant="outline"
-                                    className="px-5 border-2 border-secondary-foreground dark:hover:bg-muted">
-                                Cancel
-                            </Button>
-                        </DialogClose>
-
-                        <Button
-                            variant="outline"
-                            className="px-5 border-2 border-secondary-foreground dark:hover:bg-muted"
-                            onClick={handleSaveToDisk}
-                        >
-                            Save
-                        </Button>
-                    </div>
-                </DialogContent>
-            </Dialog>
-            */}
-
-        </div>
+        </>
     );
 };
 

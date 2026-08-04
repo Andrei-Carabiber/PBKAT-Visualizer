@@ -53,6 +53,10 @@ interface RunEngineState {
     registerUserCodeSetter: (callback: (code: string) => void) => void;
     handleRun: () => Promise<void>;
     clearOutput: () => void;
+
+
+    viewMode: "protocol" | "node"
+    setViewMode: (viewMode: "protocol" | "node") => void;
 }
 
 //State before editors loaded
@@ -65,6 +69,8 @@ const RUN_PROTOCOL_URL = "/api/run-protocol";
 
 
 export const useRunEngine = create<RunEngineState>((set, get) => ({
+    viewMode: 'protocol',
+    setViewMode: (viewMode => {set({viewMode})}),
     loading: false,
     data: null,
     error: null,

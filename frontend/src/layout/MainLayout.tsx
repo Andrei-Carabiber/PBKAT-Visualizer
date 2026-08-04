@@ -1,4 +1,4 @@
-import type {ReactNode} from "react";
+import {type ReactNode} from "react";
 import Header from "@/components/web/header.tsx";
 import Footer from "@/components/web/footer.tsx";
 import {Toaster} from "sonner";
