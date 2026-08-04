@@ -214,8 +214,6 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
 
         const computeWernerQuality = useCustomization.getState().computeWernerQuality;
 
-        console.log(fullCode)
-
         try {
             const payload = {
                 code: fullCode,

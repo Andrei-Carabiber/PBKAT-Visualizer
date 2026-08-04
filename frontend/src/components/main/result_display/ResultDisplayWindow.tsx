@@ -1,18 +1,19 @@
 import {useRunEngine} from "@/store/runEngine.ts";
 import {Label} from "@/components/ui/label.tsx";
 import {Button} from "@/components/ui/button.tsx";
-import {BadgeInfo, X} from 'lucide-react';
+import {X} from 'lucide-react';
 import FormattedOutput from "@/components/main/result_display/FormattedOutput.tsx";
 import FormattedQuantumOutput from "@/components/main/result_display/FormattedQuantumOutput.tsx";
 import {Switch} from "@/components/ui/switch.tsx";
-import {useState} from "react";
+import { useState} from "react";
 import {useCustomization} from "@/store/customization.ts";
-import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip.tsx";
+import StatisticsBar from "@/components/main/result_display/StatisticsBar.tsx";
 
 const ResultDisplayWindow = () => {
     const {data, error, loading, clearOutput} = useRunEngine();
     const {showStatistics} = useCustomization();
     const [estimatedMode, setEstimatedMode] = useState<boolean>(false);
+
 
     return (
         <>
@@ -64,45 +65,7 @@ const ResultDisplayWindow = () => {
                             )}
 
                             {showStatistics && (
-                                <div className="flex gap-4 mt-4 pt-2 border-t text-sm space-y-1">
-                                    {data.mode === "probOnly" && (
-                                        <div>Total Compute Duration: {(data.duration / 1000).toFixed(3)}s</div>
-                                    )}
-
-                                    {data.mode === "run" && (
-                                        <div>Total Compute
-                                            Duration: {(data.durations.firstDuration / 1000).toFixed(3)}s</div>
-                                    )}
-
-                                    {(data.mode === 'probability' || data.mode === "probQuality") && (
-                                        <div className="flex gap-8">
-                                            <p className="bg-card text-card-foreground p-2 rounded-sm">
-                                                {data.mode === "probability" ? "Time to compute static probabilities" : "Time to compute mixed state probabilities"}
-                                                : {(data.durations.firstDuration / 1000).toFixed(3)}s
-                                            </p>
-                                            <p className="bg-card text-card-foreground p-2 rounded-sm">
-                                                {data.mode === 'probability' ? "Time to compute probability of Network Goal" : "Time to compute pure state probabilities"}
-                                                : {((data.durations.secondDuration ?? 0) / 1000).toFixed(3)}s
-                                            </p>
-                                            <p className="bg-card text-card-foreground p-2 rounded-sm">
-                                                Total Compute
-                                                time: {((data.durations.firstDuration + (data.durations.secondDuration ?? 0)) / 1000).toFixed(3)}s
-                                            </p>
-                                        </div>
-                                    )}
-
-                                    {data._cached && (
-                                        <Tooltip>
-                                            <TooltipTrigger>
-                                                <BadgeInfo/>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                                The computation was cached in the server. The time you see was the time
-                                                it took to calculate the cached result.
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    )}
-                                </div>
+                                <StatisticsBar />
                             )}
                         </>
                     )}
