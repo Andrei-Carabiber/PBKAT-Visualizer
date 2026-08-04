@@ -56,6 +56,7 @@ const GlobalValuesDialog = ({onBack}: Props) => {
             },
         }));
         setNodes(updatedNodes);
+        onBack()
     };
 
     // Helper to update a single key in all React Flow edges
@@ -68,6 +69,7 @@ const GlobalValuesDialog = ({onBack}: Props) => {
             },
         }));
         setEdges(updatedEdges);
+        onBack()
     };
 
     return (
@@ -244,7 +246,7 @@ const GlobalValuesDialog = ({onBack}: Props) => {
                         Cancel
                     </Button>
                     <Button className="rounded-sm p-4" onClick={handleApply}>
-                        Apply
+                        Apply all
                     </Button>
                 </div>
             </div>

@@ -132,4 +132,9 @@
   .recharts-rectangle:focus {
     outline: none !important;
   }
+
+  .react-flow__attribution {
+    display: none !important;
+  }
+
 }

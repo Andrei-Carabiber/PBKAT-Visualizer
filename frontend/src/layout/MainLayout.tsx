@@ -11,10 +11,12 @@ interface LayoutProps {
 export function MainLayout({children}: LayoutProps) {
     const theme = useTheme().theme;
     return (
+        // Changed max-h-screen to min-h-screen
         <div className="min-h-screen flex flex-col bg-background">
             <Header/>
 
-            <main className="flex-1 p-6 flex flex-col">
+            {/* Removed overflow-hidden so the page can scroll natively when results are present */}
+            <main className="flex-1 p-6 min-h-0 flex flex-col">
                 {children}
             </main>
 

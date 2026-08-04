@@ -6,7 +6,7 @@ import {
     ReactFlow,
     addEdge,
     useNodesState,
-    useEdgesState, useReactFlow, ReactFlowProvider, type Edge, type Node, type Connection, type ConnectionMode,
+    useEdgesState, useReactFlow, type Edge, type Node, type Connection, type ConnectionMode,
     type IsValidConnection, type DefaultEdgeOptions, type EdgeTypes
 } from '@xyflow/react';
 
@@ -25,6 +25,8 @@ import {parseProtocolGraph} from "@/components/main/text_editor/protocolParser.t
 import * as React from "react";
 import NetworkCapacityBox from "@/components/main/node_editor/NetworkCapacityBox.tsx";
 import {useCustomization} from "@/store/customization.ts";
+import {Button} from "@/components/ui/button.tsx";
+import {ChevronDown, ChevronUp} from "lucide-react";
 
 
 const initialNodes: Node<NodeData>[] = [
@@ -124,6 +126,7 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
     const [edges, setEdges, onEdgesChange] = useEdgesState<Edge<EdgeData>>(initialEdges);
     const ref = useRef<HTMLDivElement>(null);
     const [menu, setMenu] = useState<MenuType | null>(null);
+    const [showNetworkCapacity, setShowNetworkCapacity] = useState(true);
 
     const {takeSnapshot, undo, redo, canUndo, canRedo} =
         useUndoRedo(nodes, edges, setNodes, setEdges);
@@ -140,8 +143,8 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
 
     //Remove watermark
     useEffect(() => {
-        const toDelete = document.querySelector('[data-message="Please only hide this attribution when you are subscribed to React Flow Pro: https://reactflow.dev/attribution"]');
-        toDelete?.remove()
+        const toDelete = document.querySelector('.react-flow__attribution');
+        toDelete?.remove();
     }, []);
 
     const {getEdges, screenToFlowPosition, fitView} = useReactFlow();
@@ -406,7 +409,7 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
 
 
     return (
-        <div className="h-full w-full flex flex-col gap-3 p-4 pt-2 bg-card rounded-lg">
+        <div className="h-full w-full flex flex-col gap-3 p-4 pb-0 pt-2 bg-card rounded-lg">
             <div className="shrink-0 h-20">
                 <UtilityBar panelSize={panelSize} onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo}
                             takeSnapshot={takeSnapshot} onAutoCreate={onAutoCreate}/>
@@ -415,6 +418,7 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
                 <div className="flex-1 min-h-0 w-full flex rounded-lg border overflow-hidden">
                     <ReactFlow<Node<NodeData>, Edge<EdgeData>>
                         ref={ref}
+                        minZoom={0.001}
                         className="text-secondary-foreground"
                         nodes={nodes}
                         edges={edges}
@@ -455,8 +459,25 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
                                      selectedEdge={selectedEdge} updateEdgeData={updateEdgeData}
                                      takeSnapshot={takeSnapshot}/>
             </div>
-            <div>
-                <NetworkCapacityBox/>
+
+            <div className="relative shrink-0 flex flex-col items-center pt-2">
+                <Button
+                    onClick={() => setShowNetworkCapacity((prev) => !prev)}
+                    className="absolute -top-1 z-10 flex h-4 w-12 items-center justify-center rounded-b-none rounded-t-lg border border-b-0 bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus:outline-none"
+                    title={showNetworkCapacity ? "Hide Network Goal" : "Show Network Goal"}
+                >
+                    {showNetworkCapacity ? (
+                        <ChevronDown className="h-3 w-4" />
+                    ) : (
+                        <ChevronUp className="h-3 w-4" />
+                    )}
+                </Button>
+
+                {showNetworkCapacity && (
+                    <div className="w-full pt-1 pb-4">
+                        <NetworkCapacityBox/>
+                    </div>
+                )}
             </div>
         </div>
     )
@@ -464,7 +485,5 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
 };
 
 export default ({panelSize}: { panelSize: number }) => (
-    <ReactFlowProvider>
         <NodeEditor panelSize={panelSize}/>
-    </ReactFlowProvider>
 );

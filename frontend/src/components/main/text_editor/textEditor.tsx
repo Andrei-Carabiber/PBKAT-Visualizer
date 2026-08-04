@@ -30,9 +30,10 @@ import {
     EDITABLE_START_MARKER,
 } from './haskellBoilerplate';
 import {useRunEngine} from "@/store/runEngine.ts";
-import {LoaderCircle} from "lucide-react";
+import {ChevronDown, ChevronUp, LoaderCircle} from "lucide-react";
 import NetworkGoalBox from "@/components/main/text_editor/NetworkGoalBox.tsx";
 import {useCustomization} from "@/store/customization.ts";
+import {Button} from "@/components/ui/button.tsx";
 
 export type editorSettings = {
     fontSize: number;
@@ -99,15 +100,9 @@ function restrictToEditableRegion(
         }
     }
 
-    // Decoration ids for the "locked" prelude/suffix regions. These are mutable
-    // because they must be recreated whenever the underlying decorations are lost
-    // (e.g. a full `model.setValue()` call clears all decorations on the model).
     let preludeDecorationId: string | undefined;
     let suffixDecorationId: string | undefined;
 
-    // (Re)computes the marker positions and (re)creates the prelude/suffix
-    // decorations from scratch. Returns false if the markers can't be found
-    // (e.g. mid-update, or markers were stripped out).
     function setupDecorations(): boolean {
         const startMatch = model!.findMatches(EDITABLE_START_MARKER, false, false, true, null, false)[0];
         const endMatch = model!.findMatches(EDITABLE_END_MARKER, false, false, true, null, false)[0];
@@ -142,12 +137,8 @@ function restrictToEditableRegion(
         let preludeRange = preludeDecorationId ? model!.getDecorationRange(preludeDecorationId) : null;
         let suffixRange = suffixDecorationId ? model!.getDecorationRange(suffixDecorationId) : null;
 
-        // A full model.setValue() (used e.g. when programmatically setting code)
-        // clears decorations entirely, so the tracked ranges above can come back
-        // null. Self-heal by re-deriving fresh decorations from the markers.
         if (!preludeRange || !suffixRange) {
             if (!setupDecorations()) {
-                // Markers vanished; fall back to something safe rather than throwing.
                 const fallback = new Range(1, 1, 1, 1);
                 return {
                     preludeRange: fallback,
@@ -265,7 +256,7 @@ const MonacoEditor = forwardRef<any, { panelSize: number }>(({panelSize}, _ref) 
     const registerEditor = useRunEngine(state => state.registerEditor);
     const registerUserCodeGetter = useRunEngine(state => state.registerUserCodeGetter);
     const registerUserCodeSetter = useRunEngine(state => state.registerUserCodeSetter);
-
+    const [showGoalBox, setShowGoalBox] = useState(true)
 
     useEffect(() => {
         if (initialized.current) return;
@@ -349,7 +340,7 @@ const MonacoEditor = forwardRef<any, { panelSize: number }>(({panelSize}, _ref) 
                             try {
                                 return await next(item, token);
                             } catch {
-                                return item; // fall back to the unresolved item, no error surfaced
+                                return item;
                             }
                         },
                         provideFoldingRanges: async (document, context, token, next) => {
@@ -395,10 +386,8 @@ const MonacoEditor = forwardRef<any, { panelSize: number }>(({panelSize}, _ref) 
             const model = editorRefInstance.current?.getModel();
             const userCode = model ? extractUserCode(model) : '';
 
-            // Fetch the graph data right out of our Zustand hook callback setup
             const graphData = useRunEngine.getState().getGraphCallback?.() ?? {nodes: [], edges: []};
 
-            // Retrieve current network goal state directly from Zustand
             const isGoalDisabled = useRunEngine.getState().networkGoalDisabled;
             const connections = useRunEngine.getState().goalConnections;
 
@@ -407,8 +396,6 @@ const MonacoEditor = forwardRef<any, { panelSize: number }>(({panelSize}, _ref) 
 
             const networkGoal = isGoalDisabled ? [] : connections.map(c => c.label);
 
-
-            // Pass the nodes, edges, and networkGoal context to build the correct boilerplate configuration blocks
             return buildFullSource(userCode, graphData.nodes, graphData.edges, capacities, networkGoal);
         });
 
@@ -487,7 +474,6 @@ const MonacoEditor = forwardRef<any, { panelSize: number }>(({panelSize}, _ref) 
             cursorStyle: 'line',
             cursorBlinking: 'blink',
 
-
             smoothScrolling: true,
             automaticLayout: true,
 
@@ -497,13 +483,14 @@ const MonacoEditor = forwardRef<any, { panelSize: number }>(({panelSize}, _ref) 
     }, [editorVisualSettings, isEditorReady]);
 
     return (
-        <div className="h-full w-full flex flex-col gap-3 p-4 pt-2 bg-card rounded-lg">
-            <div className="flex flex-1 shrink-0 h-20">
+        <div className="h-full w-full flex flex-col gap-3 p-4 pb-0 pt-2 bg-card rounded-lg overflow-hidden">
+            <div className="flex shrink-0 h-20">
                 <CustomizationBar
                     panelSize={panelSize}
                 />
             </div>
-            <div className="flex-20 min-h-0 w-full flex rounded-lg border overflow-hidden nokey">
+            {/* Main editor container flex-1 forces it to absorb/yield vertical space dynamically */}
+            <div className="flex-1 min-h-0 w-full flex rounded-lg border overflow-hidden nokey">
                 <div id="monaco-editor-root" ref={editorRef} className="flex-1 min-h-0 w-full flex nokey"/>
                 {!isEditorReady && (
                     <div className="w-full h-full flex flex-col items-center justify-center">
@@ -513,10 +500,27 @@ const MonacoEditor = forwardRef<any, { panelSize: number }>(({panelSize}, _ref) 
                 )}
             </div>
 
-            <div className="shrink-0 flex-1">
-                <NetworkGoalBox/>
+            <div className="relative shrink-0 flex flex-col items-center pt-2">
+                <Button
+                    onClick={() => setShowGoalBox((prev) => !prev)}
+                    className="absolute -top-1 z-10 flex h-4 w-12 items-center justify-center rounded-b-none rounded-t-lg border border-b-0 bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus:outline-none"
+                    title={showGoalBox ? "Hide Network Goal" : "Show Network Goal"}
+                >
+                    {showGoalBox ? (
+                        <ChevronDown className="h-3 w-4"/>
+                    ) : (
+                        <ChevronUp className="h-3 w-4"/>
+                    )}
+                </Button>
+
+                {showGoalBox && (
+                    <div className="w-full shrink-0 pb-4">
+                        <NetworkGoalBox/>
+                    </div>
+                )}
             </div>
-        </div>);
+        </div>
+    );
 });
 
 export default MonacoEditor;
