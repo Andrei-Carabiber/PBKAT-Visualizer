@@ -150,7 +150,7 @@ const FlagsSettingsButtons = () => {
                     </Tooltip>
 
                     {/*Show Statistics switch*/}
-                    <Label className="text-lg">Show Time Statistics</Label>
+                    <Label className="text-lg">Show Statistics</Label>
                     <div className="flex items-center justify-around">
                         <Switch checked={showStatistics} onCheckedChange={() => setShowStatistics(!showStatistics)} />
                     </div>
