@@ -483,7 +483,7 @@ const MonacoEditor = forwardRef<any, { panelSize: number }>(({panelSize}, _ref) 
     }, [editorVisualSettings, isEditorReady]);
 
     return (
-        <div className="h-full w-full flex flex-col gap-3 p-4 pb-0 pt-2 bg-card rounded-lg overflow-hidden">
+        <div className="h-full w-full flex flex-col gap-3 p-4 pb-0 pt-3 bg-card rounded-lg overflow-hidden">
             <div className="flex shrink-0 h-20">
                 <CustomizationBar
                     panelSize={panelSize}
@@ -503,7 +503,7 @@ const MonacoEditor = forwardRef<any, { panelSize: number }>(({panelSize}, _ref) 
             <div className="relative shrink-0 flex flex-col items-center pt-2">
                 <Button
                     onClick={() => setShowGoalBox((prev) => !prev)}
-                    className="absolute -top-1 z-10 flex h-4 w-12 items-center justify-center rounded-b-none rounded-t-lg border border-b-0 bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus:outline-none"
+                    className="absolute -top-1 z-10 flex h-4 w-12 items-center justify-center rounded-b-none rounded-t-lg border border-b-0 bg-accent/50 text-muted-foreground transition-colors hover:bg-accent/80 hover:text-accent-foreground focus:outline-none"
                     title={showGoalBox ? "Hide Network Goal" : "Show Network Goal"}
                 >
                     {showGoalBox ? (

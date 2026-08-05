@@ -29,7 +29,7 @@
 
 .react-flow.dark {
     --xy-background-color: #101012;
-    --xy-node-background-color-default: #1a1b1e;
+    --xy-node-background-color-default: #333e5c;
     --xy-node-border-default: 1px solid #303238;
     --xy-handle-background-color-default: #141519;
     --xy-handle-border-color-default: #5a5d66;

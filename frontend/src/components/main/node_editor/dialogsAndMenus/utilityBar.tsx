@@ -121,7 +121,7 @@ const UtilityBar = ({panelSize, onUndo, onRedo, canUndo, canRedo, takeSnapshot, 
 
                 <div
                     className="w-full h-20 flex flex-row items-center
-                justify-between gap-2 px-2 py-0 text-card-foreground bg-background rounded-lg border shadow-sm"
+                justify-between gap-2 px-2 py-0 text-card-foreground bg-card2 rounded-lg border"
                 >
                     <Button
                         size="icon"
@@ -174,7 +174,7 @@ const UtilityBar = ({panelSize, onUndo, onRedo, canUndo, canRedo, takeSnapshot, 
 
             <div
                 className="w-full h-20 flex flex-row items-center
-            gap-1 px-6 py-0 text-card-foreground bg-background rounded-lg border shadow-sm overflow-x-auto">
+            gap-1 px-6 py-0 text-card-foreground bg-card2 rounded-lg border overflow-x-auto">
                 <Button
                     size="icon"
                     onClick={addBasicNode}

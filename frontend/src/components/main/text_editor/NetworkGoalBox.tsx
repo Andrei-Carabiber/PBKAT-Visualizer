@@ -63,7 +63,7 @@ const NetworkGoalBox = () => {
     };
 
     return (
-        <div className="w-full h-full rounded-lg border bg-background px-3 py-4 shadow-sm">
+        <div className="w-full h-full rounded-lg border bg-accent text-accent-foreground px-3 py-4 shadow-sm">
             <div className="flex items-center justify-between mb-4">
                 <div className="flex justify-between gap-3">
                     <p className="font-medium w-fit">Network Goal</p>

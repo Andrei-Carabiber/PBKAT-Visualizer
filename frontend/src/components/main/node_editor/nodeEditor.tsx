@@ -417,7 +417,7 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
 
 
     return (
-        <div className="h-full w-full flex flex-col gap-3 p-4 pb-0 pt-2 bg-card rounded-lg">
+        <div className="h-full w-full flex flex-col gap-3 p-4 pb-0 pt-3 bg-card rounded-lg">
             <div className="shrink-0 h-20">
                 <UtilityBar panelSize={panelSize} onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo}
                             takeSnapshot={takeSnapshot} onAutoCreate={onAutoCreate}/>
@@ -470,9 +470,12 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
 
             <div className="relative shrink-0 flex flex-col items-center pt-2">
                 <Button
-                    onClick={() => setShowNetworkCapacity((prev) => !prev)}
-                    className="absolute -top-1 z-10 flex h-4 w-12 items-center justify-center rounded-b-none rounded-t-lg border border-b-0 bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus:outline-none"
-                    title={showNetworkCapacity ? "Hide Network Goal" : "Show Network Goal"}
+                    onClick={() => {
+                        setShowNetworkCapacity((prev) => !prev)
+                        setTimeout(() => fitView(), 50)
+                    }}
+                    className="absolute -top-1 z-10 flex h-4 w-12 items-center justify-center rounded-b-none rounded-t-lg border border-b-0 bg-accent/50 text-muted-foreground transition-colors hover:bg-accent/80 hover:text-accent-foreground focus:outline-none"
+                    title={showNetworkCapacity ? "Hide Network Capacity" : "Show Network Capacity"}
                 >
                     {showNetworkCapacity ? (
                         <ChevronDown className="h-3 w-4" />
