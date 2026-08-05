@@ -11,7 +11,7 @@ import {Switch} from "@/components/ui/switch.tsx";
 
 const FlagsSettingsButtons = () => {
     const {
-        truncation, coverage, setTruncation, setCoverage
+        truncation, coverage, setTruncation, setCoverage, truncationActive, setTruncationActive
     } = useRunEngine();
     const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
 
@@ -25,7 +25,7 @@ const FlagsSettingsButtons = () => {
                 </Button>
             </DialogTrigger>
 
-            <DialogContent className="sm:max-w-lg px-4" onOpenAutoFocus={(e) => e.preventDefault()} >
+            <DialogContent className="sm:max-w-lg px-4" onOpenAutoFocus={(e) => e.preventDefault()}>
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2 text-xl w-full text-left">
                         Manage execution settings
@@ -41,101 +41,98 @@ const FlagsSettingsButtons = () => {
                     </DialogTitle>
                 </DialogHeader>
 
-                {/* Settings Grid - Aligns Label (1fr), Control (auto), and Tooltip (auto) */}
                 <div className="grid grid-cols-[1fr_auto_auto] gap-y-6 gap-x-6 py-4 items-center">
 
-                    {/* TRUNCATION */}
-                    <Label className="text-lg">Truncation</Label>
-                    <Input
-                        type="number"
-                        className="w-24 text-right"
-                        value={truncation}
-                        step={1}
-                        min={-1}
-                        onChange={(e) => {
-                            const val = e.target.value;
-
-                            if (val === "" || val === "-" || val.endsWith(".")) {
-                                setTruncation(val);
-                                return;
-                            }
-
-                            const nr = Number(val);
-
-                            if (nr > -1 && nr < -0.5) {
-                                setTruncation(0);
-                            } else if (nr < 0) {
-                                setTruncation(-1);
-                            } else {
-                                setTruncation(nr);
-                            }
-                        }}
-                        onBlur={() => {
-                            if (truncation === "" || truncation === "-") {
-                                setTruncation(-1);
-                            } else if (typeof truncation === "string") {
-                                setTruncation(Number(truncation));
-                            }
-                        }}
-                    />
-                    <Tooltip>
-                        <TooltipTrigger type="button">
-                            <CircleQuestionMark
-                                className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors"/>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>Truncation: Stop after a number of iterations. -1 to disable</p>
-                        </TooltipContent>
-                    </Tooltip>
-
-                    {/* COVERAGE */}
-                    <Label className="text-lg">Coverage</Label>
-                    <div>
-                        <Input
-                            type="number"
-                            step={0.01}
-                            min={-1}
-                            max={1}
-                            className="w-24 text-right"
-                            value={coverage}
-                            onChange={(e) => {
-                                const val = e.target.value;
-
-                                if (val === "" || val === "-" || val.endsWith(".")) {
-                                    setCoverage(val);
-                                    return;
-                                }
-
-                                const nr = Number(val);
-
-                                if (nr > -1 && nr < -0.5) {
-                                    setCoverage(0);
-                                } else if (nr < 0) {
-                                    setCoverage(-1);
-                                } else if (nr > 1) {
-                                    setCoverage(1);
-                                } else {
-                                    setCoverage(val);
-                                }
-                            }}
-                            onBlur={() => {
-                                if (coverage === "" || coverage === "-") {
-                                    setCoverage(-1);
-                                } else if (typeof coverage === "string") {
-                                    setCoverage(Number(coverage));
-                                }
-                            }}
-                        />
+                    {/* Segmented Control Switch */}
+                    <div
+                        className="flex w-fit bg-muted p-1 rounded-lg cursor-pointer select-none"
+                        onClick={() => setTruncationActive(!truncationActive)}
+                    >
+                        <div
+                            className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${
+                                truncationActive
+                                    ? "bg-background text-foreground shadow-sm"
+                                    : "text-muted-foreground hover:text-foreground"
+                            }`}
+                        >
+                            Truncation
+                        </div>
+                        <div
+                            className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${
+                                !truncationActive
+                                    ? "bg-background text-foreground shadow-sm"
+                                    : "text-muted-foreground hover:text-foreground"
+                            }`}
+                        >
+                            Coverage
+                        </div>
                     </div>
-                    <Tooltip>
-                        <TooltipTrigger type="button">
-                            <CircleQuestionMark
-                                className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors"/>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>Coverage: Stop after you have a certain probability covered. -1 to disable</p>
-                        </TooltipContent>
-                    </Tooltip>
+
+                    {truncationActive ? (
+                        <>
+                            <Input
+                                type="number"
+                                className="w-24 text-right"
+                                value={truncation}
+                                step={1}
+                                min={1}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+
+                                    const nr = Number(val);
+
+                                    if (nr < 1) {
+                                        setTruncation(1);
+                                    } else {
+                                        setTruncation(nr);
+                                    }
+                                }}
+                            />
+
+                            <Tooltip>
+                                <TooltipTrigger type="button">
+                                    <CircleQuestionMark
+                                        className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors"/>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Truncation: Stop after a number of iterations. Minimum 1 iteration</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </>
+                    ) : (
+                        <>
+                            <Input
+                                type="number"
+                                step={0.01}
+                                min={0}
+                                max={1}
+                                className="w-24 text-right"
+                                value={coverage}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+
+                                    const nr = Number(val);
+
+                                    if (nr < 0) {
+                                        setCoverage(0);
+                                    } else if (nr > 1) {
+                                        setCoverage(1);
+                                    } else {
+                                        setCoverage(nr);
+                                    }
+                                }}
+                            />
+                            <Tooltip>
+                                <TooltipTrigger type="button">
+                                    <CircleQuestionMark
+                                        className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors"/>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Coverage: Stop after you have a certain probability covered. Values between 0 and 1</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </>
+                    )}
 
                     {/*Compute Quality Switch*/}
                     <Label className="text-lg">Compute Quality</Label>
@@ -151,7 +148,6 @@ const FlagsSettingsButtons = () => {
                             <p>If disabled it will not calculate quality of entangled pair. It will however speed up the calculation.</p>
                         </TooltipContent>
                     </Tooltip>
-
 
                     {/*Show Statistics switch*/}
                     <Label className="text-lg">Show Time Statistics</Label>

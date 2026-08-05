@@ -40,10 +40,12 @@ interface RunEngineState {
     setPendingSharedState: (state: PendingState | null) => void;
 
     // Run mode / command selection
-    truncation: number | string;
-    coverage: number | string;
-    setTruncation: (value: number | string) => void;
-    setCoverage: (value: number | string) => void;
+    truncation: number;
+    coverage: number;
+    setTruncation: (value: number) => void;
+    setCoverage: (value: number) => void;
+    truncationActive: boolean;
+    setTruncationActive: (value:boolean) => void;
 
     // Editor and Graph
     registerEditor: (callback: () => string) => void;
@@ -87,10 +89,12 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
     },
 
     // Run mode / command selection
-    truncation: -1,
-    coverage: -1,
+    truncation: 100,
+    coverage: 0.99,
     setTruncation: (truncation) => set({truncation}),
     setCoverage: (coverage) => set({coverage}),
+    truncationActive: true,
+    setTruncationActive: (bool) => set({truncationActive: bool}),
 
     //NetworkGoal state
     networkGoalDisabled: false,
@@ -142,7 +146,7 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
     handleRun: async () => {
         const {
             getCodeCallback, getGraphCallback, getUserCodeCallback, networkGoalDisabled, goalConnections,
-            truncation, coverage,
+            truncation, coverage, truncationActive
         } = get();
         if (!getCodeCallback) {
             set({
@@ -224,8 +228,8 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
             const payload = {
                 code: fullCode,
                 command,
-                truncation,
-                coverage,
+                truncation: truncationActive ? truncation : -1,
+                coverage : truncationActive ? -1 : coverage,
                 probOnly: !computeWernerQuality
             }
 
