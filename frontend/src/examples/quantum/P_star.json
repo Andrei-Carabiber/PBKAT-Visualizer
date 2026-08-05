@@ -160,5 +160,5 @@
   ],
   "capacityDisabled": false,
   "truncation": 100,
-  "coverage": -1
+  "coverage": 0.95
 }

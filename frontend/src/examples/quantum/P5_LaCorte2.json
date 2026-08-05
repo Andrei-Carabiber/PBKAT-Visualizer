@@ -152,5 +152,5 @@
   "networkCapacity": [],
   "capacityDisabled": true,
   "truncation": 200,
-  "coverage": -1
+  "coverage": 0.95
 }

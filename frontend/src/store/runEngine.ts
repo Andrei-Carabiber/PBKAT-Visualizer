@@ -189,24 +189,6 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
         const quantum = isQuantumCode(userRawCode);
         const mode: "quantum" | "probabilistic" = quantum ? "quantum" : "probabilistic";
 
-        // mdp/qmdp only: --coverage and --truncation are mutually exclusive
-        // (mirrors resolveExtremalQuery in BellKAT.QuantumPrelude).
-        if (truncation !== -1 && coverage !== -1 && mode === 'quantum') {
-            set({
-                error: "Use either --coverage or --truncation, not both.",
-                loading: false,
-            });
-            return;
-        }
-
-        if (truncation === -1 && coverage === -1 && mode === 'quantum') {
-            set({
-                error: "You have to enable either truncation or coverage",
-                loading: false
-            });
-            return
-        }
-
         if ((networkGoalDisabled || goalConnections.length === 0) && mode === 'quantum') {
             set({
                 error: "You must have a network goal if using quantum mode. Goal cannot be disabled/empty",
