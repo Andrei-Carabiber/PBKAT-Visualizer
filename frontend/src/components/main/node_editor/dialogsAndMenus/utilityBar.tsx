@@ -37,6 +37,7 @@ type Props = {
 const UtilityBar = ({panelSize, onUndo, onRedo, canUndo, canRedo, takeSnapshot, onAutoCreate}: Props) => {
     const {fitView, getNodes, setNodes, setEdges, screenToFlowPosition} = useReactFlow<Node<NodeData>>();
     const [settingsMenuOpen, setSettingsMenuOpen] = useState(false)
+    const [popoverOpen, setPopoverOpen] = useState(false)
 
     const deleteAll = () => {
         takeSnapshot();
@@ -89,9 +90,28 @@ const UtilityBar = ({panelSize, onUndo, onRedo, canUndo, canRedo, takeSnapshot, 
     const availableActions: Action[] = [
         {key: "undo", label: "Undo", icon: Undo2, onClick: onUndo, disabled: !canUndo},
         {key: "redo", label: "Redo", icon: Redo2, onClick: onRedo, disabled: !canRedo},
-        {key: "fit-view", label: "Fit view", icon: Maximize2, onClick: fitView},
-        {key: "calculate", label: "Auto-create", icon: BrainIcon, onClick: onAutoCreate},
-        {key: "delete", label: "Delete everything", icon: Trash2, onClick: deleteAll, variant: "destructive"},
+        {
+            key: "fit-view", label: "Fit view", icon: Maximize2, onClick: () => {
+                if (fitView) {
+                    fitView()
+                }
+                setPopoverOpen(false)
+            }
+        },
+        {
+            key: "calculate", label: "Auto-create", icon: BrainIcon, onClick: () => {
+                if (onAutoCreate) {
+                    onAutoCreate()
+                }
+                setPopoverOpen(false)
+            }
+        },
+        {
+            key: "delete", label: "Delete everything", icon: Trash2, onClick: () => {
+                deleteAll()
+                setPopoverOpen(false)
+            }, variant: "destructive"
+        },
         {key: "defaultValueMenu", label: "Settings", icon: Settings, onClick: () => setSettingsMenuOpen(true)}
 
     ];
@@ -117,7 +137,7 @@ const UtilityBar = ({panelSize, onUndo, onRedo, canUndo, canRedo, takeSnapshot, 
     if (isCollapsed) {
         return (
             <div>
-                <SettingsDialog dialogOpen={settingsMenuOpen} setDialogOpen={setSettingsMenuOpen} />
+                <SettingsDialog dialogOpen={settingsMenuOpen} setDialogOpen={setSettingsMenuOpen}/>
 
                 <div
                     className="w-full h-20 flex flex-row items-center
@@ -132,7 +152,7 @@ const UtilityBar = ({panelSize, onUndo, onRedo, canUndo, canRedo, takeSnapshot, 
                         <p>Add new node</p>
                     </Button>
 
-                    <Popover>
+                    <Popover open={popoverOpen} onOpenChange={(open) => setPopoverOpen(open)}>
                         <PopoverTrigger asChild>
                             <Button variant="ghost" size="icon" className="text-muted-foreground">
                                 <MoreHorizontal className="size-4"/>
@@ -170,7 +190,7 @@ const UtilityBar = ({panelSize, onUndo, onRedo, canUndo, canRedo, takeSnapshot, 
     // Standard expanded view
     return (
         <div>
-            <SettingsDialog dialogOpen={settingsMenuOpen} setDialogOpen={setSettingsMenuOpen} />
+            <SettingsDialog dialogOpen={settingsMenuOpen} setDialogOpen={setSettingsMenuOpen}/>
 
             <div
                 className="w-full h-20 flex flex-row items-center
