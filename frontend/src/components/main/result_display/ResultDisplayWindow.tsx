@@ -10,14 +10,14 @@ import {useCustomization} from "@/store/customization.ts";
 import StatisticsBar from "@/components/main/result_display/StatisticsBar.tsx";
 
 const ResultDisplayWindow = () => {
-    const {data, error, loading, clearOutput} = useRunEngine();
+    const {formattedData, error, loading, clearOutput} = useRunEngine();
     const {showStatistics} = useCustomization();
     const [estimatedMode, setEstimatedMode] = useState<boolean>(false);
 
 
     return (
         <>
-            {(data || error || loading) && (
+            {(error || loading || formattedData) && (
                 <div
                     className="w-full bg-muted border rounded-xl p-4 max-h-fit overflow-y-auto font-mono text-base shadow-sm">
                     <div
@@ -54,18 +54,18 @@ const ResultDisplayWindow = () => {
                         </p>
                     )}
 
-                    {data && (
+                    {formattedData && (
                         <>
-                            {(data.mode === "probability" || data.mode === 'run') && (
-                                <FormattedOutput data={data} estimatedMode={estimatedMode}/>
+                            {(formattedData.mode === "probability" || formattedData.mode === 'run') && (
+                                <FormattedOutput estimatedMode={estimatedMode}/>
                             )}
 
-                            {(data.mode === "probQuality" || data.mode === 'probOnly') && (
-                                <FormattedQuantumOutput data={data} estimatedMode={estimatedMode}/>
+                            {(formattedData.mode === "probQuality" || formattedData.mode === 'probOnly') && (
+                                <FormattedQuantumOutput estimatedMode={estimatedMode}/>
                             )}
 
                             {showStatistics && (
-                                <StatisticsBar />
+                                <StatisticsBar estimatedMode={estimatedMode} />
                             )}
                         </>
                     )}

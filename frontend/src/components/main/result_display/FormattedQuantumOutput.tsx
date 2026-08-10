@@ -1,17 +1,20 @@
 import { useState } from "react";
 import ProbabilityGraph from "@/components/main/result_display/ProbabilityGraph.tsx";
 import WernerGraph from "@/components/main/result_display/WernerGraph.tsx";
-import type {QBKATProbOutput, QBKATProbQualityOutput} from "@/components/main/result_display/DataType.ts";
 import {Switch} from "@/components/ui/switch.tsx";
 import {Label} from "@/components/ui/label.tsx";
+import {useRunEngine} from "@/store/runEngine.ts";
 
-const FormattedQuantumOutput = ({data, estimatedMode}: {
-    data: QBKATProbQualityOutput | QBKATProbOutput;
+const FormattedQuantumOutput = ({estimatedMode}: {
     estimatedMode: boolean
 }) => {
     const [syncZoom, setSyncZoom] = useState(true);
     const [zoomLeft, setZoomLeft] = useState<string | number>("dataMin");
     const [zoomRight, setZoomRight] = useState<string | number>("dataMax");
+
+    const {formattedData} = useRunEngine();
+
+    if (!formattedData) return;
 
     const handleZoomChange = (left: string | number, right: string | number) => {
         setZoomLeft(left);
@@ -31,9 +34,9 @@ const FormattedQuantumOutput = ({data, estimatedMode}: {
     } : {};
 
     const graphs = () => {
-        if (data.mode === "probOnly") {
-            const cdf_max = data.probabilityMax;
-            const cdf_min = data.probabilityMin;
+        if (formattedData.mode === "probOnly") {
+            const cdf_max = formattedData.probabilityMax;
+            const cdf_min = formattedData.probabilityMin;
 
             let areIdentical = true;
             for (let i = 0; i < cdf_min.length; i++) {
@@ -44,7 +47,7 @@ const FormattedQuantumOutput = ({data, estimatedMode}: {
             }
 
             return (
-                <div className="w-full h-[400px] flex gap-4">
+                <div className="w-full h-100 flex gap-4">
                     <div className="min-h-0 flex-1">
                         <ProbabilityGraph
                             cdf_max={cdf_max}
@@ -55,10 +58,10 @@ const FormattedQuantumOutput = ({data, estimatedMode}: {
                     </div>
                 </div>
             );
-        } else if (data.mode === 'probQuality') {
-            const probabilities = data.probability;
+        } else if (formattedData.mode === 'probQuality') {
+            const probabilities = formattedData.probability;
             return (
-                <div className="w-full h-[700px] flex gap-4">
+                <div className="w-full h-175 flex gap-4">
                     <div className="flex min-h-0 flex-1 flex-col gap-4">
                         <div className="min-h-0 flex-1">
                             <ProbabilityGraph
@@ -71,7 +74,7 @@ const FormattedQuantumOutput = ({data, estimatedMode}: {
 
                         <div className="min-h-0 flex-1">
                             <WernerGraph
-                                wernerArray={data.wernerArray}
+                                wernerArray={formattedData.wernerArray}
                                 estimatedMode={estimatedMode}
                                 {...sharedZoomProps}
                             />

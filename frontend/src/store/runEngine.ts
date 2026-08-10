@@ -7,6 +7,7 @@ import {
 } from "@/components/main/text_editor/haskellBoilerplate.ts";
 import type {DataType} from "@/components/main/result_display/DataType.ts";
 import {useCustomization} from "@/store/customization.ts";
+import {formatData, type FormattedDataType} from "@/store/formatData.ts";
 
 export interface ActiveConnection {
     id: string;
@@ -16,6 +17,8 @@ export interface ActiveConnection {
 interface RunEngineState {
     loading: boolean;
     data: DataType | null;
+    cached: boolean;
+    formattedData: FormattedDataType | null;
     error: string | null;
     getCodeCallback: (() => string) | null;
     getUserCodeCallback: (() => string) | null;
@@ -75,6 +78,8 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
     setViewMode: (viewMode => {set({viewMode})}),
     loading: false,
     data: null,
+    formattedData: null,
+    cached: false,
     error: null,
     getCodeCallback: null,
     getUserCodeCallback: null,
@@ -232,13 +237,20 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
 
             const result = await response.json() as DataType;
 
+            if (result._cached) set({cached: true})
+            else set({cached:false})
+
+            const formattedData = formatData(result)
+
             set({
                 data: result,
+                formattedData : formattedData,
                 loading: false,
             });
+
         } catch (e: any) {
             set({error: e.message || "An error occurred.", loading: false});
         }
     },
-    clearOutput: () => set({data: null, error: null}),
+    clearOutput: () => set({data: null, formattedData: null, error: null}),
 }));
