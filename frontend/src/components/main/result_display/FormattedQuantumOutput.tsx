@@ -48,7 +48,7 @@ const FormattedQuantumOutput = ({estimatedMode}: {
 
             return (
                 <div className="w-full h-100 flex gap-4">
-                    <div className="min-h-0 flex-1">
+                    <div id="quantum-probability-output" className="min-h-0 flex-1">
                         <ProbabilityGraph
                             cdf_max={cdf_max}
                             cdf_min={areIdentical ? null : cdf_min}
@@ -62,7 +62,7 @@ const FormattedQuantumOutput = ({estimatedMode}: {
             const probabilities = formattedData.probability;
             return (
                 <div className="w-full h-175 flex gap-4">
-                    <div className="flex min-h-0 flex-1 flex-col gap-4">
+                    <div id="quantum-output" className="flex min-h-0 flex-1 flex-col gap-4">
                         <div className="min-h-0 flex-1">
                             <ProbabilityGraph
                                 cdf_max={probabilities}

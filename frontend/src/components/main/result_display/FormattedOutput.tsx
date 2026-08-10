@@ -63,7 +63,7 @@ const FormattedOutput = ({estimatedMode}: OutputProps) => {
         const isExact = lowerEnd.numerator === higherEnd.numerator && lowerEnd.denominator === higherEnd.denominator;
 
         return (
-            <div className="flex flex-col gap-2 bg-background p-4 rounded-lg border shadow-inner">
+            <div id="probability-output" className="flex flex-col gap-2 bg-background p-4 rounded-lg border shadow-inner">
                 <p>
                     The probability of achieving your Network goal (
                     {goalConnections.map((conn, idx) => (
@@ -114,7 +114,7 @@ const FormattedOutput = ({estimatedMode}: OutputProps) => {
             }
 
             return (
-                <div className="flex flex-col gap-2 bg-background p-4 rounded-lg border shadow-inner">
+                <div id="run-output" className="flex flex-col gap-2 bg-background p-4 rounded-lg border shadow-inner">
                     {rows.map((row) => (
                         <RowShell key={row.key}>
                             <span className="text-muted-foreground">Connection:</span>
