@@ -18,4 +18,4 @@ async function bootstrap() {
     );
 }
 
-void bootstrap();
+await bootstrap();

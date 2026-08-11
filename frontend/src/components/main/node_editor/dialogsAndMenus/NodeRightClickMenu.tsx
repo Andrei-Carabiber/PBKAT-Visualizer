@@ -18,7 +18,7 @@ export default function ContextMenu({
                                         openProperties,
                                         takeSnapshot,
                                         ...props
-                                    }: ContextMenuProps) {
+                                    }: Readonly<ContextMenuProps>) {
     const {getNode, setNodes, addNodes, setEdges} = useReactFlow<Node<NodeData>>();
 
     const duplicateNode = useCallback(() => {

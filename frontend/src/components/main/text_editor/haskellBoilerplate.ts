@@ -1,13 +1,13 @@
 import type {Edge, Node} from '@xyflow/react';
 import type {NodeData, EdgeData} from '@/components/main/node_editor/nodeEditor.tsx';
-import { parseProtocolGraph } from "@/components/main/text_editor/protocolParser.ts"; // NEW
+import {parseProtocolGraph} from "@/components/main/text_editor/protocolParser.ts"; // NEW
 
 export const EDITABLE_START_MARKER = '-- >>> EDITABLE REGION START >>>';
 export const EDITABLE_END_MARKER = '-- <<< EDITABLE REGION END <<<';
 
 
 function keyOf(a: string, b: string) {
-    return [a, b].sort().join("::");
+    return [a, b].sort((a, b) => a.localeCompare(b)).join("::");
 }
 
 function buildDistances(

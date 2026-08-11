@@ -91,7 +91,7 @@ export function parseProtocolGraph(code: string): ParsedGraph {
             nodes.forEach((n) => nodeSet.add(n));
             edges.forEach(([a, b]) => {
                 if (a === b) return;
-                const key = [a, b].sort().join('::');
+                const key = [a, b].sort((a, b) => a.localeCompare(b)).join('::');
                 if (!edgeMap.has(key)) edgeMap.set(key, [a, b]);
             });
         }
@@ -139,7 +139,7 @@ export function isCodeValid(
 
     if (generatedEdges) {
         for (const [source, target] of generatedEdges) {
-            const uiKey = [source, target].sort().join("::");
+            const uiKey = [source, target].sort((a, b) => a.localeCompare(b)).join("::");
             uiEdgeKeys.add(uiKey)
         }
     }
@@ -150,12 +150,12 @@ export function isCodeValid(
 
         if (!sourceLabel || !targetLabel) continue;
 
-        const uiKey = [sourceLabel, targetLabel].sort().join('::');
+        const uiKey = [sourceLabel, targetLabel].sort((a, b) => a.localeCompare(b)).join('::');
         uiEdgeKeys.add(uiKey);
 
     }
     for (const [a, b] of edgePairs) {
-        const codeKey = [a, b].sort().join('::');
+        const codeKey = [a, b].sort((a, b) => a.localeCompare(b)).join('::');
         if (!uiEdgeKeys.has(codeKey)) {
             return {
                 valid: false,

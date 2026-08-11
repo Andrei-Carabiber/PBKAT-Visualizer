@@ -44,7 +44,7 @@ const FlagsSettingsButtons = () => {
                 <div className="grid grid-cols-[1fr_auto_auto] gap-y-6 gap-x-6 py-4 items-center">
 
                     {/* Segmented Control Switch */}
-                    <div
+                    <button
                         className="flex w-fit bg-muted p-1 rounded-lg cursor-pointer select-none"
                         onClick={() => setTruncationActive(!truncationActive)}
                     >
@@ -66,7 +66,7 @@ const FlagsSettingsButtons = () => {
                         >
                             Coverage
                         </div>
-                    </div>
+                    </button>
 
                     {truncationActive ? (
                         <>

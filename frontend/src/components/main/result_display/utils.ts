@@ -23,7 +23,7 @@ export function secretKeyRate(pmf: number[], wFunc: number[]): number {
 
 export function getMeanWerner(pmf: number[], wFunc: number[]): number {
     // Replace NaN values with 0
-    const cleanedWFunc = wFunc.map(val => (isNaN(val) ? 0 : val));
+    const cleanedWFunc = wFunc.map(val => (Number.isNaN(val) ? 0 : val));
 
     const coverage = pmf.reduce((acc, val) => acc + val, 0);
     if (coverage <= 0) {

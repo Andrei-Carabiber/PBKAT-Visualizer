@@ -10,7 +10,7 @@ type props = {
     sheetOpen: boolean;
     setSheetOpen: Dispatch<SetStateAction<boolean>>;
     selectedNode: Node<NodeData> | null;
-    updateNodeData: (id: string, patch: Record<string, any>) => void;
+    updateNodeData: (id: string, patch: Partial<NodeData>) => void;
     takeSnapshot: () => void;
 }
 

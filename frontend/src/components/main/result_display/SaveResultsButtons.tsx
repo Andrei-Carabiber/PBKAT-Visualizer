@@ -86,7 +86,7 @@ const SaveResultsButton = () => {
 
             document.body.appendChild(link);
             link.click();
-            document.body.removeChild(link);
+            link.remove();
         } catch (error) {
             console.error("Error saving PNG:", error);
         } finally {
@@ -105,7 +105,7 @@ const SaveResultsButton = () => {
         document.body.appendChild(link);
         link.click();
 
-        document.body.removeChild(link);
+        link.remove();
         URL.revokeObjectURL(href);
     };
 

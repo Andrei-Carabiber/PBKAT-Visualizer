@@ -7,7 +7,7 @@ type props = {
     }
 }
 
-export default function CustomNode({ id, data }: props) {
+export default function CustomNode({ id, data }: Readonly<props>) {
     const connection = useConnection();
     const isTarget = connection.inProgress && connection.fromNode.id !== id;
     const label = data.nodeLabel;

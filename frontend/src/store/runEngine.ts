@@ -67,7 +67,7 @@ interface RunEngineState {
 //State before editors loaded
 interface PendingState {
     code: string;
-    graph: { nodes: any[]; edges: any[] };
+    graph: { nodes: Node<NodeData>[]; edges: Edge<EdgeData>[] };
 }
 
 const RUN_PROTOCOL_URL = "/api/run-protocol";
@@ -237,8 +237,7 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
 
             const result = await response.json() as DataType;
 
-            if (result._cached) set({cached: true})
-            else set({cached:false})
+            set({cached: result._cached ?? false})
 
             const formattedData = formatData(result)
 

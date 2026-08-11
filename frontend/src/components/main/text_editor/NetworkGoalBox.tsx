@@ -48,7 +48,7 @@ const NetworkGoalBox = () => {
                 );
             }
         }
-        return connections.sort();
+        return connections.sort((a,b) => a.localeCompare(b));
     }, [nodes]);
 
     const handleAddConnection = (label: string) => {

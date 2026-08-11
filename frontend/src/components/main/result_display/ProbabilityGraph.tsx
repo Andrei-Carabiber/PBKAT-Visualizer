@@ -34,8 +34,8 @@ const ProbabilityGraph = ({
     const [internalLeft, setInternalLeft] = useState<string | number>("dataMin");
     const [internalRight, setInternalRight] = useState<string | number>("dataMax");
 
-    const left = zoomLeft !== undefined ? zoomLeft : internalLeft;
-    const right = zoomRight !== undefined ? zoomRight : internalRight;
+    const left = zoomLeft ?? internalLeft;
+    const right = zoomRight ?? internalRight;
 
     const [refAreaLeft, setRefAreaLeft] = useState<string | number>("");
     const [refAreaRight, setRefAreaRight] = useState<string | number>("");

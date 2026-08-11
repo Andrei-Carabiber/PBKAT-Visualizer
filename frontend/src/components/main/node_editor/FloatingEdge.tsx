@@ -12,6 +12,7 @@ import {getEdgeParams} from './utils.js';
 function FloatingEdge({id, source, target, markerEnd, style}: EdgeProps) {
     const sourceNode = useInternalNode(source);
     const targetNode = useInternalNode(target);
+    const {getEdge} = useReactFlow();
 
     if (!sourceNode || !targetNode) {
         return null;
@@ -25,8 +26,6 @@ function FloatingEdge({id, source, target, markerEnd, style}: EdgeProps) {
         targetX: tx,
         targetY: ty,
     });
-
-    const {getEdge} = useReactFlow();
 
     const edge = getEdge(id)
 

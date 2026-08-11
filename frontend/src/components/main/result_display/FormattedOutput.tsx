@@ -24,7 +24,7 @@ type RangeRow = {
 
 
 const estimatedPercent = (t: Term): string => {
-    if (!t || isNaN(t.numerator) || !t.denominator) return "0.000";
+    if (!t || Number.isNaN(t.numerator) || !t.denominator) return "0.000";
     return ((t.numerator / t.denominator) * 100).toFixed(3);
 };
 
