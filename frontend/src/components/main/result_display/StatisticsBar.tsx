@@ -3,7 +3,6 @@ import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip.t
 import {BadgeInfo} from "lucide-react";
 import {useMemo} from "react";
 import {getMeanWaitingTime, getMeanWerner, secretKeyRate} from "@/components/main/result_display/utils.ts";
-import SaveResultsButton from "@/components/main/result_display/SaveResultsButtons.tsx";
 
 const StatisticsBar = ({estimatedMode} : {estimatedMode:boolean}) => {
     const {data} = useRunEngine();
@@ -99,8 +98,6 @@ const StatisticsBar = ({estimatedMode} : {estimatedMode:boolean}) => {
                     </TooltipContent>
                 </Tooltip>
             )}
-
-            <SaveResultsButton />
         </div>
     );
 };
