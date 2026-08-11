@@ -162,6 +162,7 @@ const SaveButtons = () => {
                 setCoverage(save.coverage);
             }
         } catch (err) {
+            console.log("There was an error loading the save: ", err);
             setError("Failed to parse or load data correctly.");
         }
     }
@@ -199,19 +200,19 @@ const SaveButtons = () => {
             {/* DESKTOP VIEW */}
             <div className="hidden md:flex gap-4 text-center">
                 <Button variant="outline" onClick={() => setIsSaveOpen(true)}
-                        className="p-5 border-2 border-secondary-foreground dark:hover:bg-muted">
+                        className="p-5 border-2 dark:hover:bg-muted">
                     Save
                 </Button>
                 <Button variant="outline" onClick={() => setIsLoadOpen(true)}
-                        className="p-5 border-2 border-secondary-foreground dark:hover:bg-muted">
+                        className="p-5 border-2 dark:hover:bg-muted">
                     Load
                 </Button>
                 <Button onClick={handleShare} variant="outline"
-                        className="p-5 border-2 border-secondary-foreground dark:hover:bg-muted">
+                        className="p-5 border-2 dark:hover:bg-muted">
                     Share
                 </Button>
                 <Button variant="outline" onClick={() => setIsExamplesOpen(true)}
-                        className="p-5 border-2 border-secondary-foreground dark:hover:bg-muted">
+                        className="p-5 border-2 dark:hover:bg-muted">
                     Examples
                 </Button>
             </div>
@@ -220,32 +221,32 @@ const SaveButtons = () => {
             <div className="flex md:hidden">
                 <Dialog open={isMobileSheetOpen} onOpenChange={setIsMobileSheetOpen}>
                     <DialogTrigger asChild>
-                        <Button variant="outline" size="icon" className="border-secondary-foreground">
+                        <Button variant="outline" size="icon">
                             <Menu className="h-5 w-5"/>
                         </Button>
                     </DialogTrigger>
                     <DialogContent className="rounded-t-xl pb-10 max-w-100">
-                            <DialogHeader className="text-left mb-2">
-                                <DialogTitle className="text-lg">Menu</DialogTitle>
-                            </DialogHeader>
-                            <div className="flex flex-col gap-3">
-                                <Button variant="outline" className="w-full justify-start py-5 text-base border-2"
-                                        onClick={() => runMobileAction(() => setIsSaveOpen(true))}>
-                                    Save State
-                                </Button>
-                                <Button variant="outline" className="w-full justify-start py-5 text-base border-2"
-                                        onClick={() => runMobileAction(() => setIsLoadOpen(true))}>
-                                    Load State
-                                </Button>
-                                <Button variant="outline" className="w-full justify-start py-5 text-base border-2"
-                                        onClick={() => runMobileAction(() => setIsExamplesOpen(true))}>
-                                    Examples
-                                </Button>
-                                <Button variant="outline" className="w-full justify-start py-5 text-base border-2"
-                                        onClick={() => runMobileAction(handleShare)}>
-                                    Share Link
-                                </Button>
-                            </div>
+                        <DialogHeader className="text-left mb-2">
+                            <DialogTitle className="text-lg">Menu</DialogTitle>
+                        </DialogHeader>
+                        <div className="flex flex-col gap-3">
+                            <Button variant="outline" className="w-full border-2 justify-start py-5 text-base border-secondary-foreground"
+                                    onClick={() => runMobileAction(() => setIsSaveOpen(true))}>
+                                Save State
+                            </Button>
+                            <Button variant="outline" className="w-full border-2 justify-start py-5 text-base border-secondary-foreground"
+                                    onClick={() => runMobileAction(() => setIsLoadOpen(true))}>
+                                Load State
+                            </Button>
+                            <Button variant="outline" className="w-full border-2 justify-start py-5 text-base border-secondary-foreground"
+                                    onClick={() => runMobileAction(() => setIsExamplesOpen(true))}>
+                                Examples
+                            </Button>
+                            <Button variant="outline" className="w-full border-2 justify-start py-5 text-base border-secondary-foreground"
+                                    onClick={() => runMobileAction(handleShare)}>
+                                Share Link
+                            </Button>
+                        </div>
                     </DialogContent>
                 </Dialog>
             </div>
@@ -267,10 +268,10 @@ const SaveButtons = () => {
                     <div className="flex justify-end gap-2 mt-4">
                         <DialogClose asChild>
                             <Button variant="outline"
-                                    className="px-5 border-2 border-secondary-foreground dark:hover:bg-muted">Cancel</Button>
+                                    className="px-5 border-secondary-foreground dark:hover:bg-muted">Cancel</Button>
                         </DialogClose>
                         <Button variant="outline"
-                                className="px-5 border-2 border-secondary-foreground dark:hover:bg-muted"
+                                className="px-5 border-secondary-foreground dark:hover:bg-muted"
                                 onClick={handleSave}>Save</Button>
                     </div>
                 </DialogContent>
