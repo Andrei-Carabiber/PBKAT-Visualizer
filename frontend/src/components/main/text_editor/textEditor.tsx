@@ -490,7 +490,7 @@ const MonacoEditor = forwardRef<any, { panelSize: number }>(({panelSize}, _ref) 
                 />
             </div>
             {/* Main editor container flex-1 forces it to absorb/yield vertical space dynamically */}
-            <div className="flex-1 min-h-0 w-full flex rounded-lg border overflow-hidden nokey">
+            <div id="monaco-editor-container" className="flex-1 min-h-0 w-full flex rounded-lg border overflow-hidden nokey">
                 <div id="monaco-editor-root" ref={editorRef} className="flex-1 min-h-0 w-full flex nokey"/>
                 {!isEditorReady && (
                     <div className="w-full h-full flex flex-col items-center justify-center">
@@ -514,7 +514,7 @@ const MonacoEditor = forwardRef<any, { panelSize: number }>(({panelSize}, _ref) 
                 </Button>
 
                 {showGoalBox && (
-                    <div className="w-full shrink-0 pb-4">
+                    <div id="network-goal-box" className="w-full shrink-0 pb-4">
                         <NetworkGoalBox/>
                     </div>
                 )}

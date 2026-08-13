@@ -4,10 +4,13 @@ import {useRunEngine} from "@/store/runEngine.ts";
 import {Switch} from "@/components/ui/switch.tsx";
 import {Label} from "@/components/ui/label.tsx";
 import {useReactFlow} from "@xyflow/react";
+import {Button} from "@/components/ui/button.tsx";
+import {useTour} from "@reactour/tour";
 
 const Header = () => {
     const {viewMode, setViewMode} = useRunEngine()
     const {fitView} = useReactFlow()
+    const {setIsOpen} = useTour()
 
     return (
         <header className="h-16 border-b flex items-center justify-between px-4 md:px-6">
@@ -26,6 +29,10 @@ const Header = () => {
                     }}}
                 />
             </div>
+
+            <Button onClick={() => setIsOpen(true)}>
+                Open guided tutorial
+            </Button>
 
 
             <div className="flex items-center gap-2">

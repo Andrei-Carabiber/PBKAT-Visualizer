@@ -112,8 +112,6 @@ const UtilityBar = ({panelSize, onUndo, onRedo, canUndo, canRedo, takeSnapshot, 
                 setPopoverOpen(false)
             }, variant: "destructive"
         },
-        {key: "defaultValueMenu", label: "Settings", icon: Settings, onClick: () => setSettingsMenuOpen(true)}
-
     ];
 
 
@@ -152,36 +150,45 @@ const UtilityBar = ({panelSize, onUndo, onRedo, canUndo, canRedo, takeSnapshot, 
                         <p>Add new node</p>
                     </Button>
 
-                    <Popover open={popoverOpen} onOpenChange={(open) => setPopoverOpen(open)}>
-                        <PopoverTrigger asChild>
-                            <Button variant="ghost" size="icon" className="text-muted-foreground">
-                                <MoreHorizontal className="size-4"/>
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent align="end" className="w-56 flex flex-col gap-3 p-3 shadow-lg">
-                            <div>
-                                {availableActions.map((action, index) => (
-                                    <div key={action.key}>
-                                        <Button
-                                            variant="ghost"
-                                            onClick={action.onClick}
-                                            disabled={action.disabled}
-                                            className={
-                                                "justify-start gap-2 w-full disabled:opacity-40 disabled:pointer-events-none " +
-                                                (action.variant === "destructive"
-                                                    ? "text-destructive hover:text-destructive hover:bg-destructive/10"
-                                                    : "")
-                                            }
-                                        >
-                                            <action.icon className="size-4"/>
-                                            {action.label}
-                                        </Button>
-                                        {index !== availableActions.length - 1 && <Separator className="my-1"/>}
-                                    </div>
-                                ))}
-                            </div>
-                        </PopoverContent>
-                    </Popover>
+                    <div className="flex gap-5 items-center">
+                        <Popover open={popoverOpen} onOpenChange={(open) => setPopoverOpen(open)}>
+                            <PopoverTrigger asChild>
+                                <Button variant="outline" size="icon" className="text-muted-foreground">
+                                    <MoreHorizontal className="size-4"/>
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent align="end" className="w-56 flex flex-col gap-3 p-3 shadow-lg">
+                                <div>
+                                    {availableActions.map((action, index) => (
+                                        <div key={action.key}>
+                                            <Button
+                                                variant="ghost"
+                                                onClick={action.onClick}
+                                                disabled={action.disabled}
+                                                className={
+                                                    "justify-start gap-2 w-full disabled:opacity-40 disabled:pointer-events-none " +
+                                                    (action.variant === "destructive"
+                                                        ? "text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                        : "")
+                                                }
+                                            >
+                                                <action.icon className="size-4"/>
+                                                {action.label}
+                                            </Button>
+                                            {index !== availableActions.length - 1 && <Separator className="my-1"/>}
+                                        </div>
+                                    ))}
+                                </div>
+                            </PopoverContent>
+                        </Popover>
+                        <Button
+                            variant="ghost"
+                            id="settings-button"
+                            onClick={() => setSettingsMenuOpen(true)}
+                            className="p-5 hover:bg-muted ">
+                            <Settings className="size-4"/>
+                        </Button>
+                    </div>
                 </div>
             </div>
         );
@@ -210,7 +217,17 @@ const UtilityBar = ({panelSize, onUndo, onRedo, canUndo, canRedo, takeSnapshot, 
                     {availableActions.map((action) => (
                         <IconAndTextButton key={action.key} action={action}/>
                     ))}
+                    <div id="settings-button">
+                        <IconAndTextButton action={{
+                            key: "defaultValueMenu",
+                            label: "Settings",
+                            icon: Settings,
+                            onClick: () => setSettingsMenuOpen(true)
+                        } as Action}/>
+                    </div>
                 </div>
+
+
             </div>
         </div>
     );

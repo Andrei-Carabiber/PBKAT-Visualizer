@@ -22,6 +22,7 @@ const ResultDisplayWindow = () => {
         <>
             {(error || loading || formattedData) && (
                 <div
+                    id="result-display-window"
                     className="w-full bg-muted border rounded-xl p-4 max-h-fit overflow-y-auto font-mono text-base shadow-sm">
                     <div
                         className="flex items-center justify-between pb-2 mb-2 border-b text-xs uppercase text-muted-foreground">

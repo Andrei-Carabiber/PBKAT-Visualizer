@@ -20,7 +20,7 @@ const FlagsSettingsButtons = () => {
     return (
         <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
             <DialogTrigger asChild>
-                <Button variant="ghost" className="p-5 dark:hover:bg-muted">
+                <Button variant="ghost" id="flag-settings-button" className="p-5 dark:hover:bg-muted">
                     <Settings/>
                 </Button>
             </DialogTrigger>

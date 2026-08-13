@@ -424,7 +424,7 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
                             takeSnapshot={takeSnapshot} onAutoCreate={onAutoCreate}/>
             </div>
             <div className="flex-1 min-h-0 w-full flex relative">
-                <div className="flex-1 min-h-0 w-full flex rounded-lg border overflow-hidden">
+                <div id="node-editor-container" className="flex-1 min-h-0 w-full flex rounded-lg border overflow-hidden">
                     <ReactFlow<Node<NodeData>, Edge<EdgeData>>
                         ref={ref}
                         minZoom={0.001}
@@ -486,7 +486,7 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
                 </Button>
 
                 {showNetworkCapacity && (
-                    <div className="w-full pt-1 pb-4">
+                    <div id="network-capacity-box" className="w-full pt-1 pb-4">
                         <NetworkCapacityBox/>
                     </div>
                 )}
