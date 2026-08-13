@@ -1,4 +1,5 @@
 import "./index.css";
+import {TourProvider} from "@reactour/tour";
 
 async function bootstrap() {
     const [
@@ -12,10 +13,20 @@ async function bootstrap() {
     ]);
 
     createRoot(document.getElementById("root")!).render(
-        <StrictMode>
-            <App/>
-        </StrictMode>
+        <TourProvider steps={steps}>
+
+            <StrictMode>
+                <App/>
+            </StrictMode>
+        </TourProvider>
     );
 }
+
+
+const steps = [
+    {
+        selector: '.first-step',
+        content: 'This is my first Step',
+    },]
 
 await bootstrap();

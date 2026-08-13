@@ -13,6 +13,7 @@
     "@codingame/esbuild-import-meta-url-plugin": "^1.0.3",
     "@codingame/monaco-vscode-files-service-override": "^25.1.2",
     "@fontsource-variable/dm-sans": "^5.2.8",
+    "@reactour/tour": "^3.8.0",
     "@remixicon/react": "^4.9.0",
     "@tailwindcss/vite": "^4.3.2",
     "@xyflow/react": "^12.11.2",
