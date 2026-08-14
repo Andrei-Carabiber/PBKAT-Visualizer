@@ -12,7 +12,7 @@ export const useTutorialSteps = () => {
         getUserCodeCallback,
         setUserCodeCallback,
         setNetworkGoalDisabled,
-        setNetworkCapacityDisabled
+        setNetworkCapacityDisabled,
     } = useRunEngine();
 
     const interfaceSteps: StepType[] = useMemo(() => [
@@ -69,7 +69,8 @@ export const useTutorialSteps = () => {
                 if (setUserCodeCallback) setUserCodeCallback("")
                 setNetworkGoalDisabled(true)
                 setNetworkCapacityDisabled(true)
-            }
+            },
+            stepInteraction: false,
         },
         {
             selector: '#node-editor-whole-container',
@@ -116,8 +117,20 @@ export const useTutorialSteps = () => {
         {
             selector: '[role="dialog"]',
             content: "Perfect! Here is the properties sheet where you can configure the node's settings. Set the node Label to A and Create Probability to 0.5 (50%).",
+            padding: 1,
             action: (node) => {
                 setLockTour(true);
+
+                // Prevent clicks on the background mask from closing the sheet or disrupting the tour
+                const preventMaskClose = (e: MouseEvent) => {
+                    const target = e.target as HTMLElement;
+                    // If they click outside the dialog (i.e. on the mask/backdrop)
+                    if (!target.closest('[role="dialog"]') && !target.closest('[data-tour-elem="popover"]')) {
+                        e.stopPropagation();
+                        e.preventDefault();
+                    }
+                };
+                document.addEventListener('mousedown', preventMaskClose, { capture: true });
 
                 if (node) {
                     const checkDataInterval = setInterval(() => {
@@ -130,11 +143,11 @@ export const useTutorialSteps = () => {
                             const isProbCorrect = Number(nodeData.create_prob) === 0.5;
 
                             if (isLabelCorrect && isProbCorrect) {
-                                // 1. Stop checking
                                 clearInterval(checkDataInterval);
-
-                                // 2. Unlock the tour (This turns off our Escape key blocker in App.tsx)
                                 setLockTour(false);
+
+                                // Clean up our click blocker
+                                document.removeEventListener('mousedown', preventMaskClose, { capture: true });
 
                                 setTimeout(() => {
                                     document.dispatchEvent(
@@ -145,7 +158,6 @@ export const useTutorialSteps = () => {
                                         })
                                     );
 
-                                    // Move to the next step
                                     setCurrentStep((prev) => prev + 1);
                                 }, 50);
                             }
@@ -161,6 +173,9 @@ export const useTutorialSteps = () => {
                 "Start by writing 'outputGoal :: ProbBellKATPolicy'",
             action: (node) => {
                 setLockTour(true);
+
+                const setUserCode = useRunEngine.getState().setUserCodeCallback;
+                if (setUserCode) setUserCode("");
 
                 if (node) {
                     const checkCodeInterval = setInterval(() => {
@@ -199,15 +214,53 @@ export const useTutorialSteps = () => {
         },
         {
             selector: '#run-protocol-button',
-            content: "Now that we have set up out network and the protocol we can run it. Press run.",
+            content: "Now that we have set up our network and the protocol we can run it. Press run.",
             action: (node) => {
                 setLockTour(true);
+
+                // When they click run, unlock the tour and immediately advance to the waiting step
                 if (node) {
                     node.addEventListener('click', () => {
                         setLockTour(false);
-                        setCurrentStep(prev => prev + 1)
-                    }, {once: true});
+                        setCurrentStep(prev => prev + 1); // Moves to the new waiting step
+                    }, { once: true });
                 }
+            }
+        },
+        {
+            selector: '#result-display-window',
+            position: 'center',
+            content: "Running protocol... Please wait while we calculate the results.",
+            stepInteraction: false,
+            styles: {
+                highlightedArea: (base) => ({
+                    ...base,
+                    x: 0,
+                    y: 0,
+                    width: 0,
+                    height: 0,
+                    rx: 0,
+                    ry: 0,
+                }),
+            },
+            action: () => {
+                setLockTour(true);
+
+                // Poll the Zustand store to watch for results
+                const waitForResults = setInterval(() => {
+                    const { loading, formattedData, error } = useRunEngine.getState();
+
+                    // Once loading finishes and results are available
+                    if (!loading && (formattedData || error)) {
+                        clearInterval(waitForResults);
+
+                        // Wait for the browser to paint the expanded content, then advance to final step
+                        requestAnimationFrame(() => {
+                            setLockTour(false);
+                            setCurrentStep(prev => prev + 1); // Moves to the final review step
+                        });
+                    }
+                }, 100);
             }
         },
         {
@@ -216,6 +269,9 @@ export const useTutorialSteps = () => {
         },
 
     ], [setLockTour, setNodes, setEdges, getNodes, setCurrentStep, getUserCodeCallback, setUserCodeCallback]);
+
+
+
     const basicProtocolSteps: StepType[] = [
         {
             selector: '#node-editor-whole-container',

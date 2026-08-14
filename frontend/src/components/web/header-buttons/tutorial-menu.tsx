@@ -9,7 +9,7 @@ import {toast} from "sonner";
 const TutorialMenu = () => {
     const [dialogOpen, setDialogOpen] = useState(false);
     const {setIsOpen, setSteps, setCurrentStep} = useTour();
-    const {setUserCodeCallback, getUserCodeCallback} = useRunEngine();
+    const {setUserCodeCallback, getUserCodeCallback, clearOutput} = useRunEngine();
 
     if (!setSteps) return null;
 
@@ -62,6 +62,7 @@ const TutorialMenu = () => {
                             key={tutorial.name}
                             className="rounded-sm"
                             onClick={() => {
+                                clearOutput()
                                 setDialogOpen(false);
                                 tutorial.action();
                                 setCurrentStep(0);
