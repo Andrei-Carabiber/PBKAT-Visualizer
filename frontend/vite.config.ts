@@ -7,14 +7,11 @@ import importMetaUrlPlugin from '@codingame/esbuild-import-meta-url-plugin';
 
 import * as fs from "node:fs";
 
-import basicSsl from '@vitejs/plugin-basic-ssl'
-
 export default defineConfig({
     plugins: [
         react(),
         babel({presets: [reactCompilerPreset()]}),
         tailwindcss(),
-        basicSsl(),
         //For adding examples
         {
             name: 'save-json-plugin',

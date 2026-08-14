@@ -418,7 +418,7 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
 
 
     return (
-        <div className="h-full w-full flex flex-col gap-3 p-4 pb-0 pt-3 bg-card rounded-lg">
+        <div id="node-editor-whole-container" className="h-full w-full flex flex-col gap-3 p-4 pb-0 pt-3 bg-card rounded-lg">
             <div className="shrink-0 h-20">
                 <UtilityBar panelSize={panelSize} onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo}
                             takeSnapshot={takeSnapshot} onAutoCreate={onAutoCreate}/>
