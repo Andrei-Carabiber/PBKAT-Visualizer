@@ -21,6 +21,9 @@ interface customizationState {
     editorVisualSettings: EditorVisualSettings,
     setEditorVisualSettings: (newSettings: EditorVisualSettings) => void
 
+    lockTour: boolean,
+    setLockTour: (bool: boolean) => void,
+
 }
 
 export const DEFAULT_NODE_VALUES: GenericNodeData = {
@@ -76,11 +79,19 @@ export const useCustomization = create<customizationState>()(
             editorVisualSettings: DEFAULT_EDITOR_VALUES,
             setEditorVisualSettings: (newSettings: EditorVisualSettings) => {
                 set({editorVisualSettings: newSettings})
-            }
+            },
+
+            lockTour: false,
+            setLockTour: (bool) => set({lockTour: bool})
         }),
         {
             name: "customization-storage",
             storage: createJSONStorage(() => localStorage),
+
+            partialize: (state) => {
+                const { lockTour, ...stateToPersist } = state;
+                return stateToPersist;
+            },
         }
     )
 );
