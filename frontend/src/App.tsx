@@ -8,6 +8,7 @@ import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 import { ReactFlowProvider } from "@xyflow/react";
 import {TourProvider } from "@reactour/tour";
 import { useCustomization } from "@/store/customization.ts";
+import { bumpTutorialEpoch } from "@/store/useTutorialSteps.ts";
 
 function App() {
     const { lockTour, setLockTour } = useCustomization();
@@ -41,6 +42,7 @@ function App() {
     }, [lockTour]);
 
     const handleTourClose = ({ setIsOpen, setCurrentStep }: { setIsOpen: (v: boolean) => void, setCurrentStep: (v: number) => void }) => {
+        bumpTutorialEpoch();
         setIsOpen(false);
         setCurrentStep(0);
         setLockTour(false);

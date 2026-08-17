@@ -7,10 +7,22 @@ import type {EdgeData} from "@/components/main/node_editor/nodeEditor.tsx";
 import {containsIgnoringSpaces} from "@/lib/utils.ts";
 import {toast} from "sonner";
 
+/**
+ * Bumped every time a tutorial (re)starts or the tour is closed. Every setInterval /
+ * click / dblclick watcher created by a step's `action` captures the epoch that was
+ * current when it was set up, and checks it before doing anything. If the epoch has
+ * since moved on (tutorial switched, restarted, or tour closed before this step's
+ * condition was met), the watcher just clears itself instead of firing a stale
+ * setCurrentStep() - which is what was causing the tour to randomly skip ahead.
+ */
+let tutorialEpoch = 0;
+export const bumpTutorialEpoch = () => ++tutorialEpoch;
+const getTutorialEpoch = () => tutorialEpoch;
+
 export const useTutorialSteps = () => {
     const {setLockTour} = useCustomization();
-    const {getNodes, setNodes, getEdges, setEdges, addNodes, fitView} = useReactFlow()
-    const {setCurrentStep, setIsOpen} = useTour()
+    const {getNodes, setNodes, getEdges, setEdges, addNodes, fitView} = useReactFlow();
+    const {setCurrentStep, setIsOpen} = useTour();
     const {
         getUserCodeCallback,
         setUserCodeCallback,
@@ -18,53 +30,14 @@ export const useTutorialSteps = () => {
         setNetworkCapacityDisabled,
     } = useRunEngine();
 
-    const interfaceSteps: StepType[] = useMemo(() => [
-        {
-            selector: '#monaco-editor-container',
-            content: 'This is the protocol editor. Here you write the steps of your Quantum Protocol',
-        },
-        {
-            selector: '#node-editor-container',
-            content: 'This is the node editor. Here you define your quantum network and its specifications',
-        },
-        {
-            selector: '#network-goal-box',
-            content: 'This is the network goal box. Here you write the goal that you want to calculate the probability of.',
-        },
-        {
-            selector: '#network-capacity-box',
-            content: 'This is the network capacity box. Here you write the amount of connections there can be between 2 nodes. If not present for 2 nodes, then it counts as unlimited.',
-        },
-        {
-            selector: '#flag-settings-button',
-            content: 'This is execution settings button.',
-            padding: 2
-        },
-        {
-            selector: '#settings-button',
-            content: 'This is node editor settings button. It can help you set quickly default values and change values for all nodes and edges',
-        },
-        {
-            selector: '#run-protocol-button',
-            content: 'After you set up your protocol, your network, goal, capacity and other execution settings click here to execute. Try it.',
-            action: (node) => {
-                setLockTour(true);
-                if (node) {
-                    node.addEventListener('click', () => {
-                        setLockTour(false);
-                    }, {once: true});
-                }
-            }
-        },
-        {
-            selector: '#result-display-window',
-            content: 'This is the result display window. Here you can visualize your results.',
-        },
-    ], [setLockTour]);
-
     const waitForResult = () => {
         setLockTour(true);
+        const epoch = getTutorialEpoch();
         const waitForResults = setInterval(() => {
+            if (getTutorialEpoch() !== epoch) {
+                clearInterval(waitForResults);
+                return;
+            }
             const {loading, formattedData, error} = useRunEngine.getState();
             if (!loading && (formattedData || error)) {
                 clearInterval(waitForResults);
@@ -76,22 +49,81 @@ export const useTutorialSteps = () => {
         }, 100);
     }
 
+    const interfaceSteps: StepType[] = useMemo(() => [
+        {
+            selector: '#monaco-editor-container',
+            content: 'This is the Protocol Editor. Here, you will write the instructions for your Quantum Protocol.',
+        },
+        {
+            selector: '#node-editor-container',
+            content: 'This is the Node Editor. Use this canvas to design your quantum network and define its hardware specifications.',
+        },
+        {
+            selector: '#network-goal-box',
+            content: 'This is the Network Goal box. Define the final state or target you want to calculate the success probability for.',
+        },
+        {
+            selector: '#network-capacity-box',
+            content: 'This is the Network Capacity box. Set the maximum number of connections allowed between two nodes. If left empty, connections are unlimited.',
+        },
+        {
+            selector: '#flag-settings-button',
+            content: 'Click here to open the Execution Settings.',
+            padding: 2
+        },
+        {
+            selector: '#settings-button',
+            content: 'This is the Node Editor Settings button. Use it to quickly apply default values or bulk-update properties across all nodes and edges.',
+        },
+        {
+            selector: '#run-protocol-button',
+            content: 'Once your network, protocol, and settings are ready, click Run to execute the simulation. Give it a try!',
+            action: (node) => {
+                setLockTour(true);
+                if (node) {
+                    const epoch = getTutorialEpoch();
+                    node.addEventListener('click', () => {
+                        if (getTutorialEpoch() !== epoch) return;
+                        setLockTour(false);
+                        setCurrentStep(prev => prev + 1);
+                    }, {once: true});
+                }
+            }
+        },
+        {
+            selector: '#separator_main',
+            padding: -10,
+            position: ({windowWidth, windowHeight, width, height}) => [
+                windowWidth / 2 - width / 2,
+                windowHeight / 2 - height / 2,
+            ],
+            content: "Running protocol... Please wait.",
+            stepInteraction: false,
+            action: waitForResult
+        },
+        {
+            selector: '#result-display-window',
+            content: 'This is the Result Display window. Your simulation outputs and visualizations will appear here.',
+        },
+    ], [setLockTour]);
+
     const createTutorialSteps: StepType[] = useMemo(() => [
         {
             selector: '#node-editor-whole-container',
-            content: "Let's start by seeing the creation process. We want to create an entangled pair of qubits in a node A.",
+            content: "Let's explore the creation process. Our goal is to create an entangled pair of qubits inside Node A.",
             action: () => {
-                setNodes([])
-                setEdges([])
-                if (setUserCodeCallback) setUserCodeCallback("")
-                setNetworkGoalDisabled(true)
-                setNetworkCapacityDisabled(true)
+                bumpTutorialEpoch();
+                setNodes([]);
+                setEdges([]);
+                if (setUserCodeCallback) setUserCodeCallback("");
+                setNetworkGoalDisabled(true);
+                setNetworkCapacityDisabled(true);
             },
             stepInteraction: false,
         },
         {
             selector: '#node-editor-whole-container',
-            content: "First we create a node",
+            content: "First, click on 'Add New Node' or double click on canvas to create a new node.",
             action: (node: Element | null) => {
                 setLockTour(true);
 
@@ -101,7 +133,6 @@ export const useTutorialSteps = () => {
                             if (getNodes().length >= 1) {
                                 setLockTour(false);
                                 setCurrentStep((prev) => prev + 1);
-
                                 node.removeEventListener('click', handleNodeClick);
                             }
                         }, 100);
@@ -113,7 +144,7 @@ export const useTutorialSteps = () => {
         },
         {
             selector: '.react-flow__node',
-            content: "Great! Now double-click directly on the node to edit its properties.",
+            content: "Great! Now double-click the node you just created to edit its properties.",
             action: (node) => {
                 setLockTour(true);
 
@@ -122,7 +153,6 @@ export const useTutorialSteps = () => {
                         setTimeout(() => {
                             setLockTour(false);
                             setCurrentStep((prev) => prev + 1);
-
                             node.removeEventListener('dblclick', handleDoubleClick);
                         }, 100);
                     };
@@ -133,15 +163,13 @@ export const useTutorialSteps = () => {
         },
         {
             selector: '[role="dialog"]',
-            content: "Perfect! Here is the properties sheet where you can configure the node's settings. Set the node Label to A and Create Probability to 0.5 (50%).",
+            content: "In this properties sheet, you can configure the node. Set the Node Label to 'A' and the Create Probability to 0.5 (which is 50%).",
             padding: 1,
             action: (node) => {
                 setLockTour(true);
 
-                // Prevent clicks on the background mask from closing the sheet or disrupting the tour
                 const preventMaskClose = (e: MouseEvent) => {
                     const target = e.target as HTMLElement;
-                    // If they click outside the dialog (i.e. on the mask/backdrop)
                     if (!target.closest('[role="dialog"]') && !target.closest('[data-tour-elem="popover"]')) {
                         e.stopPropagation();
                         e.preventDefault();
@@ -150,31 +178,38 @@ export const useTutorialSteps = () => {
                 document.addEventListener('mousedown', preventMaskClose, {capture: true});
 
                 if (node) {
+                    const epoch = getTutorialEpoch();
                     const checkDataInterval = setInterval(() => {
+                        if (getTutorialEpoch() !== epoch) {
+                            clearInterval(checkDataInterval);
+                            document.removeEventListener('mousedown', preventMaskClose, {capture: true});
+                            return;
+                        }
                         const currentNodes = getNodes();
 
                         if (currentNodes.length > 0) {
                             const nodeData = currentNodes[0].data;
-
                             const isLabelCorrect = nodeData.nodeLabel === 'A';
                             const isProbCorrect = Number(nodeData.create_prob) === 0.5;
 
                             if (isLabelCorrect && isProbCorrect) {
                                 clearInterval(checkDataInterval);
-                                setLockTour(false);
-
-                                // Clean up our click blocker
                                 document.removeEventListener('mousedown', preventMaskClose, {capture: true});
 
-                                setTimeout(() => {
-                                    document.dispatchEvent(
-                                        new KeyboardEvent('keydown', {
-                                            key: 'Escape',
-                                            bubbles: true,
-                                            cancelable: true
-                                        })
-                                    );
+                                // Dispatch the Escape key WHILE lockTour is still true (disableKeyboardNavigation
+                                // stays true), so @reactour/tour's own keyboard handler ignores this synthetic
+                                // event and only the radix Dialog reacts to it. Only unlock + advance afterwards,
+                                // so the tour step is never advanced twice for one completed action.
+                                document.dispatchEvent(
+                                    new KeyboardEvent('keydown', {
+                                        key: 'Escape',
+                                        bubbles: true,
+                                        cancelable: true
+                                    })
+                                );
 
+                                setTimeout(() => {
+                                    setLockTour(false);
                                     setCurrentStep((prev) => prev + 1);
                                 }, 50);
                             }
@@ -185,21 +220,21 @@ export const useTutorialSteps = () => {
         },
         {
             selector: '#monaco-editor-root',
-            content: "Great! Now let's go to the code editor. " +
-                "First we define the type of 'outputGoal' as ProbBellKATPolicy. Then we need to write what it actually does." +
-                "Start by writing 'outputGoal :: ProbBellKATPolicy'",
+            content: "Now let's move to the code editor. First, we need to define our goal's type. Start by typing: outputGoal :: ProbBellKATPolicy",
             action: (node) => {
                 setLockTour(true);
-
                 const setUserCode = useRunEngine.getState().setUserCodeCallback;
                 if (setUserCode) setUserCode("");
 
                 if (node) {
+                    const epoch = getTutorialEpoch();
                     const checkCodeInterval = setInterval(() => {
+                        if (getTutorialEpoch() !== epoch) {
+                            clearInterval(checkCodeInterval);
+                            return;
+                        }
                         const currentCode = getUserCodeCallback ? getUserCodeCallback() : "";
-
                         if (containsIgnoringSpaces(currentCode, 'outputGoal :: ProbBellKATPolicy')) {
-
                             clearInterval(checkCodeInterval);
                             setLockTour(false);
                             setCurrentStep((prev) => prev + 1);
@@ -210,17 +245,19 @@ export const useTutorialSteps = () => {
         },
         {
             selector: '#monaco-editor-root',
-            content: `Great! Now that outputGoal's type is defined we can say what we want it to do. In this case we want to create an entangled pair in the node that we just generated.` +
-                `Therefore we can write on a new line 'outputGoal = create "A"`,
+            content: 'Next, we specify what the goal actually does. To create an entangled pair in the node we just made, add this on a new line: outputGoal = create "A"',
             action: (node) => {
                 setLockTour(true);
 
                 if (node) {
+                    const epoch = getTutorialEpoch();
                     const checkCodeInterval = setInterval(() => {
+                        if (getTutorialEpoch() !== epoch) {
+                            clearInterval(checkCodeInterval);
+                            return;
+                        }
                         const currentCode = getUserCodeCallback ? getUserCodeCallback() : "";
-
                         if (containsIgnoringSpaces(currentCode, 'outputGoal :: ProbBellKATPolicy') && containsIgnoringSpaces(currentCode, `outputGoal = create "A"`)) {
-
                             clearInterval(checkCodeInterval);
                             setLockTour(false);
                             setCurrentStep((prev) => prev + 1);
@@ -231,15 +268,15 @@ export const useTutorialSteps = () => {
         },
         {
             selector: '#run-protocol-button',
-            content: "Now that we have set up our network and the protocol we can run it. Press run.",
+            content: "With the network and protocol set up, you're ready to simulate. Click Run.",
             action: (node) => {
                 setLockTour(true);
-
-                // When they click run, unlock the tour and immediately advance to the waiting step
                 if (node) {
+                    const epoch = getTutorialEpoch();
                     node.addEventListener('click', () => {
+                        if (getTutorialEpoch() !== epoch) return;
                         setLockTour(false);
-                        setCurrentStep(prev => prev + 1); // Moves to the new waiting step
+                        setCurrentStep(prev => prev + 1);
                     }, {once: true});
                 }
             }
@@ -257,9 +294,8 @@ export const useTutorialSteps = () => {
         },
         {
             selector: '#result-display-window',
-            content: 'This is the result display window. Here you can visualize your results. As expected since we put the probability to create a pair at 0.5, the probability of creating C~C is 50%',
+            content: "Here are your results! As expected, since we set the creation probability to 0.5, the overall probability of successfully creating the pair is 50%.",
         },
-
     ], [setLockTour, setNodes, setEdges, getNodes, setCurrentStep, getUserCodeCallback, setUserCodeCallback]);
 
     const transTutorialSteps: StepType[] = useMemo(() => [
@@ -270,13 +306,14 @@ export const useTutorialSteps = () => {
                 windowWidth / 2 - width / 2,
                 windowHeight / 2 - height / 2,
             ],
-            content: "Let's learn how to use transmission (`trans`). We want to transmit an entangled pair across nodes.",
+            content: "Let's learn about Transmission ('trans'). Our goal is to transmit an entangled qubit from one node to another.",
             action: () => {
-                setNodes([])
-                setEdges([])
-                if (setUserCodeCallback) setUserCodeCallback("")
-                setNetworkGoalDisabled(true)
-                setNetworkCapacityDisabled(true)
+                bumpTutorialEpoch();
+                setNodes([]);
+                setEdges([]);
+                if (setUserCodeCallback) setUserCodeCallback("");
+                setNetworkGoalDisabled(true);
+                setNetworkCapacityDisabled(true);
 
                 addNodes([{
                     id: `A`,
@@ -301,47 +338,44 @@ export const useTutorialSteps = () => {
                             create_quality: 1,
                             swap_prob: 1,
                         },
-                    }])
+                    }]);
 
-                setTimeout(() => fitView(), 100)
+                setTimeout(() => fitView(), 100);
             },
             stepInteraction: false,
         },
         {
             selector: '#node-editor-container',
-            content: `In the protocol editor, we will use the "trans" operation to send a Bell pair. However for a transmission we need a link between 2 nodes.
-             Connect nodes A and B.`,
+            content: "To transmit a qubit, we first need a physical link. Connect Node A and Node B on the canvas.",
             padding: 0,
             action: (node) => {
-                setLockTour(true)
-
+                setLockTour(true);
                 if (node) {
+                    const epoch = getTutorialEpoch();
                     const checkEdge = setInterval(() => {
-                        const edges = getEdges()
-
-                        if (edges.length === 1 && (edges[0].source === "A" || edges[0].source === "B")) {
-                            clearInterval(checkEdge)
-                            setLockTour(false)
-                            setCurrentStep(prev => prev + 1)
+                        if (getTutorialEpoch() !== epoch) {
+                            clearInterval(checkEdge);
+                            return;
                         }
-
-                    }, 250)
+                        const edges = getEdges();
+                        if (edges.length === 1 && (edges[0].source === "A" || edges[0].source === "B")) {
+                            clearInterval(checkEdge);
+                            setLockTour(false);
+                            setCurrentStep(prev => prev + 1);
+                        }
+                    }, 250);
                 }
             }
         },
-
         {
             selector: '.react-flow__edge',
-            content: `Let's set the transmission probability to 0.5. Double-click on the edge or its label.`,
+            content: "Let's set the transmission probability to 0.5 (50%). Double-click the connection line or its label to open its properties.",
             padding: 20,
             action: () => {
                 setLockTour(true);
-
                 const container = document.querySelector('#node-editor-container');
-
                 if (container) {
                     const handleDoubleClick = () => {
-                        // Check if a dialog has opened (handles clicks on edge, label, etc.)
                         setTimeout(() => {
                             if (document.querySelector('[role="dialog"]')) {
                                 setLockTour(false);
@@ -350,18 +384,16 @@ export const useTutorialSteps = () => {
                             }
                         }, 150);
                     };
-
                     container.addEventListener('dblclick', handleDoubleClick);
                 }
             }
         },
         {
             selector: '[role="dialog"]',
-            content: "Perfect! Here is the properties sheet where you can configure the edge's settings. Set the Transmission Probability to 0.5 (50%) .",
+            content: "In the edge properties sheet, set the Transmission Probability to 0.5 (which is 50%).",
             padding: 1,
             action: (node) => {
                 setLockTour(true);
-
                 const preventMaskClose = (e: MouseEvent) => {
                     const target = e.target as HTMLElement;
                     if (!target.closest('[role="dialog"]') && !target.closest('[data-tour-elem="popover"]')) {
@@ -372,29 +404,36 @@ export const useTutorialSteps = () => {
                 document.addEventListener('mousedown', preventMaskClose, {capture: true});
 
                 if (node) {
+                    const epoch = getTutorialEpoch();
                     const checkDataInterval = setInterval(() => {
+                        if (getTutorialEpoch() !== epoch) {
+                            clearInterval(checkDataInterval);
+                            document.removeEventListener('mousedown', preventMaskClose, {capture: true});
+                            return;
+                        }
                         const currentEdges = getEdges();
-
                         if (currentEdges.length > 0) {
                             const EdgeData = currentEdges[0].data as EdgeData;
-
                             const isProbCorrect = Number(EdgeData.transmit_prob) === 0.5;
 
                             if (isProbCorrect) {
                                 clearInterval(checkDataInterval);
-                                setLockTour(false);
-
                                 document.removeEventListener('mousedown', preventMaskClose, {capture: true});
 
-                                setTimeout(() => {
-                                    document.dispatchEvent(
-                                        new KeyboardEvent('keydown', {
-                                            key: 'Escape',
-                                            bubbles: true,
-                                            cancelable: true
-                                        })
-                                    );
+                                // Dispatch the Escape key WHILE lockTour is still true (disableKeyboardNavigation
+                                // stays true), so @reactour/tour's own keyboard handler ignores this synthetic
+                                // event and only the radix Dialog reacts to it. Only unlock + advance afterwards,
+                                // so the tour step is never advanced twice for one completed action.
+                                document.dispatchEvent(
+                                    new KeyboardEvent('keydown', {
+                                        key: 'Escape',
+                                        bubbles: true,
+                                        cancelable: true
+                                    })
+                                );
 
+                                setTimeout(() => {
+                                    setLockTour(false);
                                     setCurrentStep((prev) => prev + 1);
                                 }, 50);
                             }
@@ -405,16 +444,19 @@ export const useTutorialSteps = () => {
         },
         {
             selector: '#monaco-editor-root',
-            content: `Now that we have the 2 nodes connected and set the transimission probability, we can write the protocol. First we want to create a Bell Pair in A.
-            write 'outputGoal :: ProbBellKATPolicy' to define outputGoal and then 'outputGoal = create "A"'`,
+            content: 'With our nodes connected, let us write the protocol. First, create a Bell pair in Node A. Type on two lines: outputGoal :: ProbBellKATPolicy and then outputGoal = create "A"',
             action: (node) => {
                 setLockTour(true);
                 if (setUserCodeCallback) setUserCodeCallback("");
 
                 if (node) {
+                    const epoch = getTutorialEpoch();
                     const checkCodeInterval = setInterval(() => {
+                        if (getTutorialEpoch() !== epoch) {
+                            clearInterval(checkCodeInterval);
+                            return;
+                        }
                         const currentCode = getUserCodeCallback ? getUserCodeCallback() : "";
-
                         if (containsIgnoringSpaces(currentCode, 'outputGoal :: ProbBellKATPolicy')
                             && containsIgnoringSpaces(currentCode, `outputGoal = create "A"`)) {
                             clearInterval(checkCodeInterval);
@@ -427,16 +469,17 @@ export const useTutorialSteps = () => {
         },
         {
             selector: '#monaco-editor-root',
-            content: `Great! Now that we have a Bell Pair in A, we want to transmit one qubit of the entangled pair to B.
-             To write an operation after the "create" we can use the sign "<>" and then have our transmit operation "trans "A" ("A", "B"). 
-             This means that from A we want to send one qubit to A and one to B. So in the end you should have
-             'outputGoal = create "A" <> trans "A" ("A", "B")'`,
+            content: 'Now, let us transmit one qubit of that pair to Node B. We chain operations using <>. Append the transmission command so your final line looks like this: outputGoal = create "A" <> trans "A" ("A", "B")',
             action: (node) => {
                 setLockTour(true);
                 if (node) {
+                    const epoch = getTutorialEpoch();
                     const checkCodeInterval = setInterval(() => {
+                        if (getTutorialEpoch() !== epoch) {
+                            clearInterval(checkCodeInterval);
+                            return;
+                        }
                         const currentCode = getUserCodeCallback ? getUserCodeCallback() : "";
-
                         if (containsIgnoringSpaces(currentCode, 'outputGoal :: ProbBellKATPolicy') && containsIgnoringSpaces(currentCode, `outputGoal = create "A" <> trans "A" ("A", "B")`)) {
                             clearInterval(checkCodeInterval);
                             setLockTour(false);
@@ -448,11 +491,13 @@ export const useTutorialSteps = () => {
         },
         {
             selector: '#run-protocol-button',
-            content: "Great! Now run the protocol to simulate the transmission.",
+            content: "Great! Click Run to simulate the transmission.",
             action: (node) => {
                 setLockTour(true);
                 if (node) {
+                    const epoch = getTutorialEpoch();
                     node.addEventListener('click', () => {
+                        if (getTutorialEpoch() !== epoch) return;
                         setLockTour(false);
                         setCurrentStep(prev => prev + 1);
                     }, {once: true});
@@ -484,13 +529,14 @@ export const useTutorialSteps = () => {
                 windowWidth / 2 - width / 2,
                 windowHeight / 2 - height / 2,
             ],
-            content: "Let's learn Entanglement Distillation (`distill`). This increases the fidelity of noisy Bell pairs. We setup nodes X and Y for you.",
+            content: "Let's learn about Entanglement Distillation ('distill'), which increases the fidelity of noisy Bell pairs. We have set up Nodes A and B for you.",
             action: () => {
-                setNodes([])
-                setEdges([])
-                if (setUserCodeCallback) setUserCodeCallback("")
-                setNetworkGoalDisabled(true)
-                setNetworkCapacityDisabled(true)
+                bumpTutorialEpoch();
+                setNodes([]);
+                setEdges([]);
+                if (setUserCodeCallback) setUserCodeCallback("");
+                setNetworkGoalDisabled(true);
+                setNetworkCapacityDisabled(true);
 
                 addNodes([
                     {
@@ -505,26 +551,28 @@ export const useTutorialSteps = () => {
                         position: {x: 400, y: 100},
                         data: {nodeLabel: `B`, coherence_time: 1, create_prob: 1, create_quality: 1, swap_prob: 1}
                     }
-                ])
+                ]);
                 setEdges([
                     {id: 'eA-B', source: 'A', target: 'B', data: {distance: 1, transmit_prob: 1}}
-                ] as Edge<EdgeData>[])
-                setTimeout(() => fitView(), 100)
+                ] as Edge<EdgeData>[]);
+                setTimeout(() => fitView(), 100);
             },
             stepInteraction: false,
         },
         {
             selector: '#monaco-editor-root',
-            content: "Before we can do distillation, we need 2 entangled pairs between A and B. Therefore we need to create A twice and transmit it to B twice." +
-                "let's start by writing a simple create and transmit operation before outputGoal. Let's say we call it a. First define 'a :: ProbBellKATPolicy'," +
-                `and then 'a = create "A" <> trans "A" ("A", "B")'`,
+            content: 'Distillation requires two entangled pairs between A and B. Let us define a helper operation named "a" that creates a pair and transmits it. Type on two lines: a :: ProbBellKATPolicy and then a = create "A" <> trans "A" ("A", "B")',
             action: (node) => {
                 setLockTour(true);
 
                 if (node) {
+                    const epoch = getTutorialEpoch();
                     const checkCodeInterval = setInterval(() => {
+                        if (getTutorialEpoch() !== epoch) {
+                            clearInterval(checkCodeInterval);
+                            return;
+                        }
                         const currentCode = getUserCodeCallback ? getUserCodeCallback() : "";
-
                         if (containsIgnoringSpaces(currentCode, 'a :: ProbBellKATPolicy') && containsIgnoringSpaces(currentCode, `a = create "A" <> trans "A" ("A", "B")`)) {
                             clearInterval(checkCodeInterval);
                             setLockTour(false);
@@ -536,14 +584,18 @@ export const useTutorialSteps = () => {
         },
         {
             selector: '#monaco-editor-root',
-            content: "Now we define the output goal type: `outputGoal :: ProbBellKATPolicy`",
+            content: "Now, define the output goal type: outputGoal :: ProbBellKATPolicy",
             action: (node) => {
                 setLockTour(true);
 
                 if (node) {
+                    const epoch = getTutorialEpoch();
                     const checkCodeInterval = setInterval(() => {
+                        if (getTutorialEpoch() !== epoch) {
+                            clearInterval(checkCodeInterval);
+                            return;
+                        }
                         const currentCode = getUserCodeCallback ? getUserCodeCallback() : "";
-
                         if (containsIgnoringSpaces(currentCode, 'outputGoal :: ProbBellKATPolicy')) {
                             clearInterval(checkCodeInterval);
                             setLockTour(false);
@@ -555,14 +607,17 @@ export const useTutorialSteps = () => {
         },
         {
             selector: '#monaco-editor-root',
-            content: `Now, in outputGoal we first execute 'a' twice in parallel using <||> and then we do distill ("A", "B"). So in the end
-            we have 'outputGoal = a <||> a <> distill ("A", "B")' `,
+            content: 'Finally, execute "a" twice in parallel using <||>, followed by the distillation operation. Type: outputGoal = a <||> a <> distill ("A", "B")',
             action: (node) => {
                 setLockTour(true);
                 if (node) {
+                    const epoch = getTutorialEpoch();
                     const checkCodeInterval = setInterval(() => {
+                        if (getTutorialEpoch() !== epoch) {
+                            clearInterval(checkCodeInterval);
+                            return;
+                        }
                         const currentCode = getUserCodeCallback ? getUserCodeCallback() : "";
-
                         if (containsIgnoringSpaces(currentCode, 'a <||> a <> distill ("A", "B")') && containsIgnoringSpaces(currentCode, 'outputGoal :: ProbBellKATPolicy')) {
                             clearInterval(checkCodeInterval);
                             setLockTour(false);
@@ -574,11 +629,13 @@ export const useTutorialSteps = () => {
         },
         {
             selector: '#run-protocol-button',
-            content: "Ready to distill! Click run to evaluate your distillation protocol.",
+            content: "Ready to distill! Click Run to evaluate your protocol.",
             action: (node) => {
                 setLockTour(true);
                 if (node) {
+                    const epoch = getTutorialEpoch();
                     node.addEventListener('click', () => {
+                        if (getTutorialEpoch() !== epoch) return;
                         setLockTour(false);
                         setCurrentStep(prev => prev + 1);
                     }, {once: true});
@@ -598,7 +655,7 @@ export const useTutorialSteps = () => {
         },
         {
             selector: '#result-display-window',
-            content: 'Distill tutorial complete!',
+            content: 'Distillation tutorial complete!',
         },
     ], [setLockTour, setNodes, setEdges, addNodes, fitView, setCurrentStep, getUserCodeCallback, setUserCodeCallback]);
 
@@ -610,14 +667,14 @@ export const useTutorialSteps = () => {
                 windowWidth / 2 - width / 2,
                 windowHeight / 2 - height / 2,
             ],
-            content: "Let's learn Entanglement Swapping (`swap`). This allows connecting two independent links via an intermediate node. " +
-                "We setup nodes A, B, and C for you, with a swap probability of 0.75 (75%) in node B.",
+            content: "Let's learn about Entanglement Swapping ('swap'). This connects two independent links via an intermediate node. We have set up Nodes A, B, and C, with a 75% swap probability at Node B.",
             action: () => {
-                setNodes([])
-                setEdges([])
-                if (setUserCodeCallback) setUserCodeCallback("")
-                setNetworkGoalDisabled(true)
-                setNetworkCapacityDisabled(true)
+                bumpTutorialEpoch();
+                setNodes([]);
+                setEdges([]);
+                if (setUserCodeCallback) setUserCodeCallback("");
+                setNetworkGoalDisabled(true);
+                setNetworkCapacityDisabled(true);
 
                 addNodes([
                     {
@@ -638,25 +695,28 @@ export const useTutorialSteps = () => {
                         position: {x: 500, y: 100},
                         data: {nodeLabel: `C`, coherence_time: 1, create_prob: 1, create_quality: 1, swap_prob: 1}
                     }
-                ])
+                ]);
                 setEdges([
                     {id: 'eA-B', source: 'A', target: 'B', data: {distance: 1, transmit_prob: 1}},
                     {id: 'eB-C', source: 'B', target: 'C', data: {distance: 1, transmit_prob: 1}}
-                ] as Edge<EdgeData>[])
-                setTimeout(() => fitView(), 100)
+                ] as Edge<EdgeData>[]);
+                setTimeout(() => fitView(), 100);
             },
             stepInteraction: false,
         },
         {
             selector: '#monaco-editor-root',
-            content: "Before we can swap, we need two adjacent entangled links. Let's define link 'a' (A to B) and link 'b' (B to C).\n" +
-                "Define 'a :: ProbBellKATPolicy' and 'a = create \"A\" <> trans \"A\" (\"A\", \"B\")'.\n" +
-                "Then define 'b :: ProbBellKATPolicy' and 'b = create \"B\" <> trans \"B\" (\"B\", \"C\")'.",
+            content: 'Swapping requires two adjacent entangled links. Let us define link "a" (A to B) and link "b" (B to C). Type: a :: ProbBellKATPolicy and then a = create "A" <> trans "A" ("A", "B"). Then do the same for b: b :: ProbBellKATPolicy and b = create "B" <> trans "B" ("B", "C")',
             action: (node) => {
                 setLockTour(true);
 
                 if (node) {
+                    const epoch = getTutorialEpoch();
                     const checkCodeInterval = setInterval(() => {
+                        if (getTutorialEpoch() !== epoch) {
+                            clearInterval(checkCodeInterval);
+                            return;
+                        }
                         const currentCode = getUserCodeCallback ? getUserCodeCallback() : "";
 
                         const hasA = containsIgnoringSpaces(currentCode, 'a :: ProbBellKATPolicy') && containsIgnoringSpaces(currentCode, `a = create "A" <> trans "A" ("A", "B")`);
@@ -673,12 +733,17 @@ export const useTutorialSteps = () => {
         },
         {
             selector: '#monaco-editor-root',
-            content: "Now we define the output goal type: `outputGoal :: ProbBellKATPolicy`",
+            content: "Now define the output goal type: outputGoal :: ProbBellKATPolicy",
             action: (node) => {
                 setLockTour(true);
 
                 if (node) {
+                    const epoch = getTutorialEpoch();
                     const checkCodeInterval = setInterval(() => {
+                        if (getTutorialEpoch() !== epoch) {
+                            clearInterval(checkCodeInterval);
+                            return;
+                        }
                         const currentCode = getUserCodeCallback ? getUserCodeCallback() : "";
 
                         if (containsIgnoringSpaces(currentCode, 'outputGoal :: ProbBellKATPolicy')) {
@@ -692,13 +757,17 @@ export const useTutorialSteps = () => {
         },
         {
             selector: '#monaco-editor-root',
-            content: `Now, in outputGoal we execute 'a' and 'b' in parallel using <||> and then we perform a swap at node B to connect A and C. So we write: 
-        'outputGoal = a <||> b <> swap "B" ("A", "C")'`,
+            content: 'Next, execute "a" and "b" in parallel using <||>, then perform a swap at Node B to bridge A and C. Type: outputGoal = a <||> b <> swap "B" ("A", "C")',
             action: (node) => {
                 setLockTour(true);
 
                 if (node) {
+                    const epoch = getTutorialEpoch();
                     const checkCodeInterval = setInterval(() => {
+                        if (getTutorialEpoch() !== epoch) {
+                            clearInterval(checkCodeInterval);
+                            return;
+                        }
                         const currentCode = getUserCodeCallback ? getUserCodeCallback() : "";
 
                         if (containsIgnoringSpaces(currentCode, 'a <||> b <> swap "B" ("A", "C")') && containsIgnoringSpaces(currentCode, 'outputGoal :: ProbBellKATPolicy')) {
@@ -712,11 +781,13 @@ export const useTutorialSteps = () => {
         },
         {
             selector: '#run-protocol-button',
-            content: "Protocol written! Click run to execute the entanglement swap.",
+            content: "Protocol written! Click Run to execute the entanglement swap.",
             action: (node) => {
                 setLockTour(true);
                 if (node) {
+                    const epoch = getTutorialEpoch();
                     node.addEventListener('click', () => {
+                        if (getTutorialEpoch() !== epoch) return;
                         setLockTour(false);
                         setCurrentStep(prev => prev + 1);
                     }, {once: true});
@@ -748,14 +819,15 @@ export const useTutorialSteps = () => {
                 windowWidth / 2 - width / 2,
                 windowHeight / 2 - height / 2,
             ],
-            content: "Let's learn Generation (`ucreate`). This represents pair creation directly across a link. We have initialized nodes A and B.",
+            content: "Let's learn about Generation ('ucreate'). This creates an entangled pair directly across a link. We have initialized Nodes A and B.",
             action: () => {
-                setNodes([])
-                setEdges([])
-                if (setUserCodeCallback) setUserCodeCallback("")
-                setNetworkGoalDisabled(true)
-                setNetworkCapacityDisabled(false)
-                setLockTour(false)
+                bumpTutorialEpoch();
+                setNodes([]);
+                setEdges([]);
+                if (setUserCodeCallback) setUserCodeCallback("");
+                setNetworkGoalDisabled(true);
+                setNetworkCapacityDisabled(false);
+                setLockTour(false);
 
                 addNodes([
                     {
@@ -770,26 +842,24 @@ export const useTutorialSteps = () => {
                         position: {x: 400, y: 100},
                         data: {nodeLabel: `B`, coherence_time: 1, create_prob: 1, create_quality: 1, swap_prob: 1}
                     }
-                ])
+                ]);
                 setEdges([
                     {id: 'eA-B', source: 'A', target: 'B', data: {distance: 1, transmit_prob: 1}}
-                ] as Edge<EdgeData>[])
-                setTimeout(() => fitView(), 100)
+                ] as Edge<EdgeData>[]);
+                setTimeout(() => fitView(), 100);
             },
             stepInteraction: false,
         },
         {
             selector: '.react-flow__edge',
-            content: `Let's set the Generation probability to 0.8. Double-click on the edge or its label.`,
+            content: "Set the Generation Probability to 0.8 (80%). Double-click the edge or its label to open its properties.",
             padding: 10,
             action: () => {
                 setLockTour(true);
-
                 const container = document.querySelector('#node-editor-container');
 
                 if (container) {
                     const handleDoubleClick = () => {
-
                         setTimeout(() => {
                             if (document.querySelector('[role="dialog"]')) {
                                 setLockTour(false);
@@ -798,14 +868,13 @@ export const useTutorialSteps = () => {
                             }
                         }, 150);
                     };
-
                     container.addEventListener('dblclick', handleDoubleClick);
                 }
             }
         },
         {
             selector: '[role="dialog"]',
-            content: "Perfect! Here is the properties sheet where you can configure the edge's settings. Set the Generation Probability to 0.8 (80%) .",
+            content: "In the properties sheet, set the Generation Probability to 0.8 (which is 80%).",
             padding: 1,
             action: (node) => {
                 setLockTour(true);
@@ -820,34 +889,41 @@ export const useTutorialSteps = () => {
                 document.addEventListener('mousedown', preventMaskClose, {capture: true});
 
                 if (node) {
-
                     if (node.textContent.includes("Create Probability")) {
                         setIsOpen(false);
-                        toast.error("You clicked on the node. Please restart the tutorial and double click on the edge, not on the node")
+                        toast.error("You clicked on the node! Please restart the tutorial and double-click the edge, not the node.");
                     }
+                    const epoch = getTutorialEpoch();
                     const checkDataInterval = setInterval(() => {
+                        if (getTutorialEpoch() !== epoch) {
+                            clearInterval(checkDataInterval);
+                            document.removeEventListener('mousedown', preventMaskClose, {capture: true});
+                            return;
+                        }
                         const currentEdges = getEdges();
 
                         if (currentEdges.length > 0) {
                             const EdgeData = currentEdges[0].data as EdgeData;
-
                             const isProbCorrect = Number(EdgeData.uCreate_prob) === 0.8;
 
                             if (isProbCorrect) {
                                 clearInterval(checkDataInterval);
-                                setLockTour(false);
-
                                 document.removeEventListener('mousedown', preventMaskClose, {capture: true});
 
-                                setTimeout(() => {
-                                    document.dispatchEvent(
-                                        new KeyboardEvent('keydown', {
-                                            key: 'Escape',
-                                            bubbles: true,
-                                            cancelable: true
-                                        })
-                                    );
+                                // Dispatch the Escape key WHILE lockTour is still true (disableKeyboardNavigation
+                                // stays true), so @reactour/tour's own keyboard handler ignores this synthetic
+                                // event and only the radix Dialog reacts to it. Only unlock + advance afterwards,
+                                // so the tour step is never advanced twice for one completed action.
+                                document.dispatchEvent(
+                                    new KeyboardEvent('keydown', {
+                                        key: 'Escape',
+                                        bubbles: true,
+                                        cancelable: true
+                                    })
+                                );
 
+                                setTimeout(() => {
+                                    setLockTour(false);
                                     setCurrentStep((prev) => prev + 1);
                                 }, 50);
                             }
@@ -858,15 +934,19 @@ export const useTutorialSteps = () => {
         },
         {
             selector: '#monaco-editor-root',
-            content: "First define the output goal type: `outputGoal :: ProbBellKATPolicy`",
+            content: "First define the output goal type: outputGoal :: ProbBellKATPolicy",
             action: (node) => {
                 setLockTour(true);
-                if (setUserCodeCallback) setUserCodeCallback("")
+                if (setUserCodeCallback) setUserCodeCallback("");
 
                 if (node) {
+                    const epoch = getTutorialEpoch();
                     const checkCodeInterval = setInterval(() => {
+                        if (getTutorialEpoch() !== epoch) {
+                            clearInterval(checkCodeInterval);
+                            return;
+                        }
                         const currentCode = getUserCodeCallback ? getUserCodeCallback() : "";
-
                         if (containsIgnoringSpaces(currentCode, 'outputGoal :: ProbBellKATPolicy')) {
                             clearInterval(checkCodeInterval);
                             setLockTour(false);
@@ -878,13 +958,17 @@ export const useTutorialSteps = () => {
         },
         {
             selector: '#monaco-editor-root',
-            content: "Now, implement the Generation syntax across our two nodes: `outputGoal = ucreate (\"A\", \"B\")`",
+            content: 'Now, implement the Generation syntax across our two nodes: outputGoal = ucreate ("A", "B")',
             action: (node) => {
                 setLockTour(true);
                 if (node) {
+                    const epoch = getTutorialEpoch();
                     const checkCodeInterval = setInterval(() => {
+                        if (getTutorialEpoch() !== epoch) {
+                            clearInterval(checkCodeInterval);
+                            return;
+                        }
                         const currentCode = getUserCodeCallback ? getUserCodeCallback() : "";
-
                         if (containsIgnoringSpaces(currentCode, 'outputGoal :: ProbBellKATPolicy') && containsIgnoringSpaces(currentCode, 'ucreate ("A", "B")')) {
                             clearInterval(checkCodeInterval);
                             setLockTour(false);
@@ -896,11 +980,13 @@ export const useTutorialSteps = () => {
         },
         {
             selector: '#run-protocol-button',
-            content: "Code written! Click run to see how the Generation performs.",
+            content: "Code written! Click Run to see how Generation performs.",
             action: (node) => {
                 setLockTour(true);
                 if (node) {
+                    const epoch = getTutorialEpoch();
                     node.addEventListener('click', () => {
+                        if (getTutorialEpoch() !== epoch) return;
                         setLockTour(false);
                         setCurrentStep(prev => prev + 1);
                     }, {once: true});
@@ -920,53 +1006,53 @@ export const useTutorialSteps = () => {
         },
         {
             selector: '#result-display-window',
-            content: 'Generation tutorial complete! ',
+            content: 'Generation tutorial complete!',
         },
     ], [setLockTour, setNodes, setEdges, addNodes, fitView, setCurrentStep, getUserCodeCallback, setUserCodeCallback]);
 
     const basicProtocolSteps: StepType[] = [
         {
             selector: '#node-editor-whole-container',
-            content: 'Let us start with Direct Transmission. Create two nodes, A and B, connected by a quantum channel of length L.',
+            content: "Let's start with Direct Transmission. Create two nodes, A and B, and connect them with a quantum channel of length L.",
         },
         {
             selector: '#network-capacity-box',
-            content: 'When transmitting qubits over a physical channel, the success probability decays exponentially with distance. Set your capacity and expected success probability (p_ge) here, factoring in the channel length.',
+            content: 'When transmitting qubits over a physical channel, success probability decays exponentially with distance. Set your capacity and expected success probability (p_ge) here, factoring in the channel length.',
         },
         {
             selector: '#settings-button',
-            content: 'We need to account for loss and noise. In the settings, you can define initial photon loss as well as length-dependent loss in dB/km[cite: 1].',
+            content: 'To account for loss and noise, use the settings to define initial photon loss and length-dependent loss in dB/km.',
         },
         {
             selector: '#monaco-editor-container',
-            content: 'Quantum memories and channels suffer from decoherence[cite: 1]. In your protocol code, define T1 (energy relaxation) and T2 (dephasing) time constants[cite: 1]. Relaxation destroys the encoded state, while dephasing washes out superpositions[cite: 1].',
+            content: 'Quantum memories and channels suffer from decoherence. In your protocol code, define T1 (energy relaxation) and T2 (dephasing) time constants. Relaxation destroys the encoded state, while dephasing washes out superpositions.',
         },
         {
             selector: '#network-goal-box',
-            content: 'Your basic goal is to successfully generate an entangled pair[cite: 1]. The fidelity of this pair will depend heavily on the distance and the T1/T2 coherence times you defined[cite: 1].',
+            content: 'Your basic goal is to successfully generate an entangled pair. The fidelity of this pair depends heavily on the distance and the T1/T2 coherence times you define.',
         }
     ];
 
     const advancedProtocolSteps: StepType[] = [
         {
             selector: '#node-editor-container',
-            content: 'To cope with long distances where direct transmission fails, we use quantum repeaters[cite: 1]. Add intermediate nodes to split the end-to-end distance into shorter segments[cite: 1].',
+            content: 'To cope with long distances where direct transmission fails, we use quantum repeaters. Add intermediate nodes to split the end-to-end distance into shorter segments.',
         },
         {
             selector: '#monaco-editor-container',
-            content: 'Write an Entanglement Swapping protocol[cite: 1]. A Bell-state measurement at the middle node will consume local entangled pairs and create a long-range entangled link between the outer nodes[cite: 1].',
+            content: 'Write an Entanglement Swapping protocol. A Bell-state measurement at the middle node consumes local entangled pairs to create a long-range entangled link between the outer nodes.',
         },
         {
             selector: '#monaco-editor-container',
-            content: 'Because of noise, generated links have limited quality[cite: 1]. Implement the DEJMPS Entanglement Distillation protocol to combine multiple noisy copies into fewer copies of higher fidelity[cite: 1].',
+            content: 'Generated links have limited quality due to noise. Implement the DEJMPS Entanglement Distillation protocol to combine multiple noisy copies into fewer copies of higher fidelity.',
         },
         {
             selector: '#flag-settings-button',
-            content: 'Configure your execution strategy[cite: 1]. You can choose "Distill->Swap" (purifying short links before swapping) or "Swap->Distill" (swapping first, then purifying the long link)[cite: 1]. Distill->Swap is generally more robust for realistic, noisy networks[cite: 1].',
+            content: 'Configure your execution strategy. Choose Distill->Swap (purifying short links before swapping) or Swap->Distill (swapping first, then purifying the long link). Distill->Swap is generally more robust for realistic, noisy networks.',
         },
         {
             selector: '#network-goal-box',
-            content: 'Set your advanced evaluation metric[cite: 1]. Instead of just fidelity, you can calculate the Secret-key rate of the BB84 protocol to see how many secure bits per second your repeater network generates[cite: 1].',
+            content: 'Set your advanced evaluation metric. Instead of just fidelity, calculate the Secret-key rate of the BB84 protocol to see how many secure bits per second your repeater network can generate.',
         }
     ];
 

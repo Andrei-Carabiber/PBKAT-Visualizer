@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, type ReactNode } from "react";
 import {ScrollArea} from "@/components/ui/scroll-area.tsx";
 
-export const ScrollContainerWithShadow = ({ children }: { children: ReactNode }) => {
+export const ScrollContainerWithShadow = ({ children, height = 70 }: { children: ReactNode, height?: number }) => {
     const [showTopShadow, setShowTopShadow] = useState(false);
     const [showBottomShadow, setShowBottomShadow] = useState(false);
 
@@ -47,7 +47,7 @@ export const ScrollContainerWithShadow = ({ children }: { children: ReactNode })
                 }`}
             />
 
-            <ScrollArea type="always" className="h-[70vh] w-full pr-4">
+            <ScrollArea type="always" className="w-full pr-4" style={{ height: `${height}vh` }}>
                 {/* Invisible target element at the very top */}
                 <div ref={topRef} className="h-px w-full shrink-0" />
 
