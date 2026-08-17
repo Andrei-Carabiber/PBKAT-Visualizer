@@ -52,7 +52,7 @@ const parseTerm = (rawTerm: string): DistributionTerm | null => {
     const setContent = trimmed.slice(SET_OPEN.length, setEnd).trim();
     const rest = trimmed.slice(setEnd + SET_CLOSE.length).trim();
 
-    let numerator = 0;
+    let numerator = 1;
     let denominator = 1;
 
     if (rest.startsWith(PROB_MARKER)) {
