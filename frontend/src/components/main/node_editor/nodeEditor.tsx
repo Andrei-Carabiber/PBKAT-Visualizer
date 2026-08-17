@@ -128,6 +128,8 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
     const [menu, setMenu] = useState<MenuType | null>(null);
     const [showNetworkCapacity, setShowNetworkCapacity] = useState(true);
 
+    const {lockTour} = useCustomization()
+
     const {takeSnapshot, undo, redo, canUndo, canRedo} =
         useUndoRedo(nodes, edges, setNodes, setEdges);
 
@@ -208,6 +210,8 @@ const NodeEditor = ({panelSize}: { panelSize: number }) => {
     //Double click handler on background
     const onPaneClick = useCallback(
         (event: React.MouseEvent | React.TouchEvent) => {
+            if (lockTour) return;
+
             setMenu(null);
             if ('detail' in event && event.detail === 2) {
                 const mouseEvent = event as React.MouseEvent;

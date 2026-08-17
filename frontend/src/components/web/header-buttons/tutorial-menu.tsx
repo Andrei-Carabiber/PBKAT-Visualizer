@@ -13,7 +13,10 @@ const TutorialMenu = () => {
 
     if (!setSteps) return null;
 
-    const {interfaceSteps, basicProtocolSteps, advancedProtocolSteps, createTutorialSteps} = useTutorialSteps();
+    const {
+        interfaceSteps, basicProtocolSteps, advancedProtocolSteps,
+        createTutorialSteps, transTutorialSteps, distillTutorialSteps, swapTutorialSteps, ucreateTutorialSteps
+    } = useTutorialSteps();
 
     const tutorials = [
         {
@@ -30,6 +33,26 @@ const TutorialMenu = () => {
         {
             name: "Protocol Tutorial Advanced", action: () => {
                 setSteps(advancedProtocolSteps);
+            }
+        },
+        {
+            name: "Transmission Tutorial", action: () => {
+                setSteps(transTutorialSteps);
+            }
+        },
+        {
+            name: "Distillation Tutorial", action: () => {
+                setSteps(distillTutorialSteps);
+            }
+        },
+        {
+            name: "Swap Tutorial", action: () => {
+                setSteps(swapTutorialSteps);
+            }
+        },
+        {
+            name: "Generation Tutorial", action: () => {
+                setSteps(ucreateTutorialSteps);
             }
         }
     ];

@@ -68,6 +68,7 @@ const MainView = () => {
                             <TextEditor panelSize={leftPanelSize} />
                         </Panel>
                         <Separator
+                            id="separator_main"
                             className="relative flex w-3 items-center justify-center bg-transparent group hover:bg-muted-foreground/10 transition-colors duration-150 cursor-col-resize rounded-sm"
                         >
                             <div className="h-8 w-1/2 bg-muted-foreground/30 group-hover:bg-muted-foreground rounded" />

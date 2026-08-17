@@ -16,6 +16,17 @@ function App() {
         if (!lockTour) return;
 
         const blockReactourKeys = (e: KeyboardEvent) => {
+            const target = e.target as HTMLElement;
+
+            if (
+                target.tagName === 'INPUT' ||
+                target.tagName === 'TEXTAREA' ||
+                target.closest('.nokey') ||
+                target.closest('.monaco-editor')
+            ) {
+                return;
+            }
+
             if (e.key === 'ArrowRight' || e.key === 'ArrowLeft' || e.key === 'Escape') {
                 e.stopPropagation();
                 e.preventDefault();
