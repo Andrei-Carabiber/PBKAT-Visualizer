@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams, Navigate } from "react-router-dom";
 import { useRunEngine } from "@/store/runEngine.ts";
+import { toast } from "sonner";
 
 export default function LoadRedirect() {
     const { token } = useParams<{ token: string }>();
     const [isDoneProcessing, setIsDoneProcessing] = useState(false);
+    const [hasError, setHasError] = useState(false);
 
     const {
         setGoalConnections,
@@ -18,33 +20,45 @@ export default function LoadRedirect() {
 
     useEffect(() => {
         if (!token) {
+            setHasError(true);
             setIsDoneProcessing(true);
             return;
         }
 
-        try {
-            const jsonStr = decodeURIComponent(atob(token));
-            const save = JSON.parse(jsonStr);
+        const fetchSharedState = async () => {
+            try {
+                const response = await fetch(`/api/share/${token}`);
 
-            setGoalConnections(save.goal || []);
-            setNetworkCapacityConnections(save.networkCapacity || []);
-            setNetworkCapacityDisabled(save.capacityDisabled ?? false);
-            setNetworkGoalDisabled(save.goalDisabled ?? false);
+                if (!response.ok) {
+                    throw new Error("Share link expired or not found");
+                }
 
-            if (setGraphCallback && setUserCodeCallback && save.graph && save.code) {
-                setGraphCallback(save.graph.nodes, save.graph.edges);
-                setUserCodeCallback(save.code);
-            } else {
-                setPendingSharedState({
-                    code: save.code || "",
-                    graph: save.graph || { nodes: [], edges: [] },
-                });
+                const save = await response.json();
+
+                setGoalConnections(save.goal || []);
+                setNetworkCapacityConnections(save.networkCapacity || []);
+                setNetworkCapacityDisabled(save.capacityDisabled ?? false);
+                setNetworkGoalDisabled(save.goalDisabled ?? false);
+
+                if (setGraphCallback && setUserCodeCallback && save.graph && save.code) {
+                    setGraphCallback(save.graph.nodes, save.graph.edges);
+                    setUserCodeCallback(save.code);
+                } else {
+                    setPendingSharedState({
+                        code: save.code || "",
+                        graph: save.graph || { nodes: [], edges: [] },
+                    });
+                }
+            } catch (error) {
+                console.error("Failed to load shareable state:", error);
+                toast.error("This share link is invalid or has expired.");
+                setHasError(true);
+            } finally {
+                setIsDoneProcessing(true);
             }
-        } catch (error) {
-            console.error("Failed to parse shareable token:", error);
-        } finally {
-            setIsDoneProcessing(true);
-        }
+        };
+
+        fetchSharedState();
     }, [
         token,
         setGoalConnections,
@@ -62,6 +76,10 @@ export default function LoadRedirect() {
                 Unpacking workspace details...
             </div>
         );
+    }
+
+    if (hasError) {
+        return <Navigate to="/" replace />;
     }
 
     return <Navigate to="/" replace />;

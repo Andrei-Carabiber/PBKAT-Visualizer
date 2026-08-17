@@ -1,0 +1,25 @@
+services:
+  backend:
+    image: ghcr.io/andrei-carabiber/pbkat-backend:main
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "8080"
+      PBKAT_ROOT: "/opt/pbkat"
+      REDIS_URL: "redis://redis"
+    expose:
+      - "8080"
+    depends_on:
+      - redis
+
+  frontend:
+    image: ghcr.io/andrei-carabiber/pbkat-frontend:main
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "127.0.0.1:6080:80"
+
+  redis:
+    image: redis:alpine
+    restart: unless-stopped

@@ -167,7 +167,7 @@ const SaveButtons = () => {
         }
     }
 
-    const handleShare = () => {
+    const handleShare = async () => {
         if (!getUserCodeCallback || !getGraphCallback) {
             toast.error("Editor is not loaded yet. Try again later.")
             return
@@ -182,12 +182,26 @@ const SaveButtons = () => {
             capacityDisabled: networkCapacityDisabled,
         };
 
-        const jsonStr = JSON.stringify(shareState);
-        const base64Token = btoa(encodeURIComponent(jsonStr));
-        const shareableUrl = `${window.location.origin}/load/${base64Token}`;
+        try {
+            const response = await fetch('/api/share', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(shareState),
+            });
 
-        navigator.clipboard.writeText(shareableUrl);
-        toast("Link has been copied to clipboard")
+            if (!response.ok) {
+                throw new Error("Failed to generate share link");
+            }
+
+            const data = await response.json();
+            const shareableUrl = `${window.location.origin}/load/${data.id}`;
+
+            navigator.clipboard.writeText(shareableUrl);
+            toast("Link has been copied to clipboard");
+        } catch (err) {
+            console.error("Share error:", err);
+            toast.error("Could not generate share link. Try again later.");
+        }
     };
 
     const runMobileAction = (action: () => void) => {
@@ -295,7 +309,7 @@ const SaveButtons = () => {
                                 </div>
                             </ScrollArea>
                             <div
-                                className="absolute bottom-[-1px] left-0 right-0 h-4 bg-linear-to-t from-background to-transparent z-10 pointer-events-none"/>
+                                className="absolute -bottom-px left-0 right-0 h-4 bg-linear-to-t from-background to-transparent z-10 pointer-events-none"/>
                         </div>
                     </DialogHeader>
                     <div className="flex justify-end gap-2 mt-4">
