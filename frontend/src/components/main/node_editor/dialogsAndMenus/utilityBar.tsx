@@ -217,7 +217,7 @@ const UtilityBar = ({panelSize, onUndo, onRedo, canUndo, canRedo, takeSnapshot, 
                     {availableActions.map((action) => (
                         <IconAndTextButton key={action.key} action={action}/>
                     ))}
-                    <div id="settings-button">
+                    <div id="settings-button" className="h-full">
                         <IconAndTextButton action={{
                             key: "defaultValueMenu",
                             label: "Settings",

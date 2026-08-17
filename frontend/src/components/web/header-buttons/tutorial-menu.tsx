@@ -7,6 +7,13 @@ import {useRunEngine} from "@/store/runEngine.ts";
 import {toast} from "sonner";
 import {ScrollContainerWithShadow} from "@/components/web/header-buttons/scroll-container-with-shadow.tsx";
 
+type Tutorial = {
+    name: string,
+    action: () => void
+}
+type Separator = {
+    title: string,
+}
 const TutorialMenu = () => {
     const [dialogOpen, setDialogOpen] = useState(false);
     const {setIsOpen, setSteps, setCurrentStep} = useTour();
@@ -19,11 +26,18 @@ const TutorialMenu = () => {
         createTutorialSteps, transTutorialSteps, distillTutorialSteps, swapTutorialSteps, ucreateTutorialSteps
     } = useTutorialSteps();
 
-    const tutorials = [
+
+    const tutorials: (Tutorial | Separator)[] = [
+        {
+            title: "Interface Tutorial"
+        },
         {
             name: "Interface Tutorial", action: () => {
                 setSteps(interfaceSteps);
             }
+        },
+        {
+            title: "Basic Actions Tutorials"
         },
         {
             name: "Create Pair Tutorial",
@@ -48,7 +62,20 @@ const TutorialMenu = () => {
             name: "Generation Tutorial", action: () => {
                 setSteps(ucreateTutorialSteps);
             }
-        }
+        },
+        {
+            title: "Advanced Protocol Writing Tutorials"
+        },
+        {
+            name: "Swap Tutorial", action: () => {
+                setSteps(swapTutorialSteps);
+            }
+        },
+        {
+            name: "Generation Tutorial", action: () => {
+                setSteps(ucreateTutorialSteps);
+            }
+        },
     ];
 
     const handleTriggerClick = (e: React.MouseEvent) => {
@@ -75,23 +102,33 @@ const TutorialMenu = () => {
             <DialogContent showCloseButton={true}>
                 <ScrollContainerWithShadow height={40}>
                     <div className="flex flex-col gap-4 p-2 py-4">
-                        {tutorials.map(tutorial => (
-                            <Button
-                                key={tutorial.name}
-                                className="rounded-sm py-4"
-                                onClick={() => {
-                                    bumpTutorialEpoch();
-                                    clearOutput()
-                                    setDialogOpen(false);
-                                    tutorial.action();
-                                    setCurrentStep(0);
-                                    setIsOpen(true);
-                                }}
-                            >
-                                {tutorial.name}
-                            </Button>
-                        ))}
-                    </div>
+                        {tutorials.map((tutorial) => {
+                            if ("title" in tutorial) {
+                                return (
+                                    <div key={tutorial.title} className="flex flex-col gap-1 text-sm text-foreground/70">
+                                        <p>{tutorial.title}</p>
+                                        <div className="w-full h-0.5 bg-foreground/40" />
+                                    </div>
+                                )
+                            } else {
+                                return (
+                                    <Button
+                                        key={tutorial.name}
+                                        className="rounded-sm py-4"
+                                        onClick={() => {
+                                            bumpTutorialEpoch();
+                                            clearOutput();
+                                            setDialogOpen(false);
+                                            tutorial.action();
+                                            setCurrentStep(0);
+                                            setIsOpen(true);
+                                        }}
+                                    >
+                                        {tutorial.name}
+                                    </Button>
+                                )
+                            }
+                        })}                    </div>
                 </ScrollContainerWithShadow>
             </DialogContent>
         </Dialog>

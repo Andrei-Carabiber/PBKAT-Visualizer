@@ -3,18 +3,11 @@ import {useMemo} from "react";
 import {useCustomization} from "@/store/customization.ts";
 import {type Edge, useReactFlow} from "@xyflow/react";
 import {useRunEngine} from "@/store/runEngine.ts";
-import type {EdgeData} from "@/components/main/node_editor/nodeEditor.tsx";
+import {type EdgeData, initialEdges, initialNodes} from "@/components/main/node_editor/nodeEditor.tsx";
 import {containsIgnoringSpaces} from "@/lib/utils.ts";
 import {toast} from "sonner";
 
-/**
- * Bumped every time a tutorial (re)starts or the tour is closed. Every setInterval /
- * click / dblclick watcher created by a step's `action` captures the epoch that was
- * current when it was set up, and checks it before doing anything. If the epoch has
- * since moved on (tutorial switched, restarted, or tour closed before this step's
- * condition was met), the watcher just clears itself instead of firing a stale
- * setCurrentStep() - which is what was causing the tour to randomly skip ahead.
- */
+
 let tutorialEpoch = 0;
 export const bumpTutorialEpoch = () => ++tutorialEpoch;
 const getTutorialEpoch = () => tutorialEpoch;
@@ -53,27 +46,50 @@ export const useTutorialSteps = () => {
         {
             selector: '#monaco-editor-container',
             content: 'This is the Protocol Editor. Here, you will write the instructions for your Quantum Protocol.',
+            action : () => {
+                setLockTour(true);
+                bumpTutorialEpoch();
+                if (setUserCodeCallback) setUserCodeCallback(`e :: ProbBellKATPolicy
+e = create "C" <> trans "C" ("A", "C")
+
+f :: ProbBellKATPolicy
+f = create "C" <> trans "C" ("B", "C")
+
+outputGoal :: ProbBellKATPolicy
+outputGoal = (e <||> f) <> (e <.> f)`)
+                setNodes(initialNodes)
+                setEdges(initialEdges)
+                setTimeout(() => fitView(), 25)
+                setLockTour(false)
+            },
+            stepInteraction: false
         },
         {
             selector: '#node-editor-container',
             content: 'This is the Node Editor. Use this canvas to design your quantum network and define its hardware specifications.',
+            stepInteraction: false
         },
         {
             selector: '#network-goal-box',
             content: 'This is the Network Goal box. Define the final state or target you want to calculate the success probability for.',
+            stepInteraction: false
         },
         {
             selector: '#network-capacity-box',
             content: 'This is the Network Capacity box. Set the maximum number of connections allowed between two nodes. If left empty, connections are unlimited.',
+            stepInteraction: false
         },
         {
             selector: '#flag-settings-button',
-            content: 'Click here to open the Execution Settings.',
-            padding: 2
+            content: 'This is the Execution Settings button.',
+            padding: 2,
+            stepInteraction: false
+
         },
         {
             selector: '#settings-button',
             content: 'This is the Node Editor Settings button. Use it to quickly apply default values or bulk-update properties across all nodes and edges.',
+            stepInteraction: false
         },
         {
             selector: '#run-protocol-button',
@@ -195,11 +211,6 @@ export const useTutorialSteps = () => {
                             if (isLabelCorrect && isProbCorrect) {
                                 clearInterval(checkDataInterval);
                                 document.removeEventListener('mousedown', preventMaskClose, {capture: true});
-
-                                // Dispatch the Escape key WHILE lockTour is still true (disableKeyboardNavigation
-                                // stays true), so @reactour/tour's own keyboard handler ignores this synthetic
-                                // event and only the radix Dialog reacts to it. Only unlock + advance afterwards,
-                                // so the tour step is never advanced twice for one completed action.
                                 document.dispatchEvent(
                                     new KeyboardEvent('keydown', {
                                         key: 'Escape',

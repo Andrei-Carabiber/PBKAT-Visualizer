@@ -29,7 +29,7 @@ import {Button} from "@/components/ui/button.tsx";
 import {ChevronDown, ChevronUp} from "lucide-react";
 
 
-const initialNodes: Node<NodeData>[] = [
+export const initialNodes: Node<NodeData>[] = [
     {
         id: '1',
         type: 'custom',
@@ -64,7 +64,7 @@ const initialNodes: Node<NodeData>[] = [
     },
 ];
 
-const initialEdges: Edge<EdgeData>[] = [
+export const initialEdges: Edge<EdgeData>[] = [
     {
         id: 'A-C',
         source: '1',
