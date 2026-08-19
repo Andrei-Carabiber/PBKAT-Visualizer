@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button.tsx";
+import {Button} from "@/components/ui/button.tsx";
 import {
     Dialog,
     DialogClose,
@@ -8,26 +8,24 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { useEffect, useRef, useState } from "react";
-import { type ActiveConnection, type HistoryItem, useRunEngine } from "@/store/runEngine.ts";
-import type { Edge, Node } from "@xyflow/react";
-import type { EdgeData, NodeData } from "@/components/main/node_editor/nodeEditor.tsx";
-import LocalSaveDisplayCard from "@/components/web/header-buttons/local-save-display-card.tsx";
-import { toast } from "sonner";
-import type { exampleQuantumSave, exampleSave } from "@/examples/type.ts";
+import {Input} from "@/components/ui/input.tsx";
+import {useEffect, useRef, useState} from "react";
+import {type ActiveConnection, type HistoryItem, useRunEngine} from "@/store/runEngine.ts";
+import type {Edge, Node} from "@xyflow/react";
+import type {EdgeData, NodeData} from "@/components/main/node_editor/nodeEditor.tsx";
+import {toast} from "sonner";
+import type {exampleQuantumSave, exampleSave} from "@/examples/type.ts";
 import ExampleSelectionCard from "@/components/web/header-buttons/example-selection-card.tsx";
 import HistoryDialog from "@/components/web/header-buttons/HistoryDialog.tsx";
-import { ScrollArea } from "@/components/ui/scroll-area.tsx";
-import { Menu } from "lucide-react";
+import {Menu} from "lucide-react";
 
 const exampleProbModules = import.meta.glob<{ default: exampleSave }>(
     "@/examples/probabilistic/*.json",
-    { eager: true }
+    {eager: true}
 );
 const exampleQuantumModules = import.meta.glob<{
     default: exampleQuantumSave;
-}>("@/examples/quantum/*.json", { eager: true });
+}>("@/examples/quantum/*.json", {eager: true});
 
 const exampleProbSaves: exampleSave[] = Object.values(exampleProbModules).map(
     (mod) => mod.default
@@ -71,7 +69,6 @@ const SaveButtons = () => {
         setCoverage,
     } = useRunEngine();
 
-    const [isLoadOpen, setIsLoadOpen] = useState(false);
     const [allSaves, setAllSaves] = useState<localStorageSave[]>([]);
     const [isSaveOpen, setIsSaveOpen] = useState(false);
     const [isExamplesOpen, setIsExamplesOpen] = useState(false);
@@ -138,12 +135,6 @@ const SaveButtons = () => {
         setAllSaves(loadAllSaves());
     }, []);
 
-    const handleDeleteSave = (saves: localStorageSave[], save: localStorageSave) => {
-        const newSaves = saves.filter((s) => s.id !== save.id);
-        localStorage.setItem("savedStates", JSON.stringify(newSaves));
-        setAllSaves(newSaves);
-    };
-
     const handleLoad = (save: localStorageSave | exampleSave | exampleQuantumSave) => {
         try {
             setGoalConnections(save.goal);
@@ -159,7 +150,6 @@ const SaveButtons = () => {
                 }, 0);
             }
 
-            setIsLoadOpen(false);
             setIsExamplesOpen(false);
             setIsHistoryOpen(false);
 
@@ -205,7 +195,7 @@ const SaveButtons = () => {
         try {
             const response = await fetch("/api/share", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {"Content-Type": "application/json"},
                 body: JSON.stringify(shareState),
             });
 
@@ -216,7 +206,7 @@ const SaveButtons = () => {
             const data = await response.json();
             const shareableUrl = `${window.location.origin}/load/${data.id}`;
 
-            navigator.clipboard.writeText(shareableUrl);
+            await navigator.clipboard.writeText(shareableUrl);
             toast("Link has been copied to clipboard");
         } catch (err) {
             console.error("Share error:", err);
@@ -242,17 +232,10 @@ const SaveButtons = () => {
                 </Button>
                 <Button
                     variant="outline"
-                    onClick={() => setIsLoadOpen(true)}
-                    className="p-5 border-2 dark:hover:bg-muted"
-                >
-                    Load
-                </Button>
-                <Button
-                    variant="outline"
                     onClick={() => setIsHistoryOpen(true)}
                     className="p-5 border-2 dark:hover:bg-muted"
                 >
-                    History
+                    History and Saves
                 </Button>
                 <Button
                     onClick={handleShare}
@@ -275,7 +258,7 @@ const SaveButtons = () => {
                 <Dialog open={isMobileSheetOpen} onOpenChange={setIsMobileSheetOpen}>
                     <DialogTrigger asChild>
                         <Button variant="outline" size="icon">
-                            <Menu className="h-5 w-5" />
+                            <Menu className="h-5 w-5"/>
                         </Button>
                     </DialogTrigger>
                     <DialogContent className="rounded-t-xl pb-10 max-w-100">
@@ -293,16 +276,9 @@ const SaveButtons = () => {
                             <Button
                                 variant="outline"
                                 className="w-full border-2 justify-start py-5 text-base border-secondary-foreground"
-                                onClick={() => runMobileAction(() => setIsLoadOpen(true))}
-                            >
-                                Load State
-                            </Button>
-                            <Button
-                                variant="outline"
-                                className="w-full border-2 justify-start py-5 text-base border-secondary-foreground"
                                 onClick={() => runMobileAction(() => setIsHistoryOpen(true))}
                             >
-                                History
+                                History and Saves
                             </Button>
                             <Button
                                 variant="outline"
@@ -331,7 +307,13 @@ const SaveButtons = () => {
                     if (!open) setError("");
                 }}
             >
-                <DialogContent showCloseButton={false}>
+                <DialogContent
+                    onKeyDown={(e) => {
+                        if (e.key !== "Enter") return
+                        e.stopPropagation()
+                        handleSave()
+                    }}
+                    showCloseButton={false}>
                     <DialogHeader>
                         <DialogTitle className="text-secondary-foreground text-xl">
                             Name your saved state
@@ -369,56 +351,13 @@ const SaveButtons = () => {
                 </DialogContent>
             </Dialog>
 
-            {/* LOAD DIALOG */}
-            <Dialog
-                open={isLoadOpen}
-                onOpenChange={(open) => {
-                    setIsLoadOpen(open);
-                    if (!open) setError("");
-                }}
-            >
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader className="flex flex-col items-center gap-4">
-                        <DialogTitle className="text-xl w-full text-left">Load a save</DialogTitle>
-                        <div className="relative w-full">
-                            <ScrollArea type="always" className="h-[70vh] w-full pr-4">
-                                <div className="flex flex-col gap-3">
-                                    {allSaves.length === 0 ? (
-                                        <p className="text-sm text-muted-foreground text-center py-6">
-                                            No saved states found.
-                                        </p>
-                                    ) : (
-                                        allSaves.map((save) => (
-                                            <LocalSaveDisplayCard
-                                                save={save}
-                                                deleteSave={() => handleDeleteSave(allSaves, save)}
-                                                handleLoad={() => handleLoad(save)}
-                                                key={save.id}
-                                            />
-                                        ))
-                                    )}
-                                </div>
-                            </ScrollArea>
-                            <div className="absolute -bottom-px left-0 right-0 h-4 bg-linear-to-t from-background to-transparent z-10 pointer-events-none" />
-                        </div>
-                    </DialogHeader>
-                    <div className="flex justify-end gap-2 mt-4">
-                        <DialogClose asChild>
-                            <Button
-                                variant="outline"
-                                className="text-sm px-10 py-4 border-2 border-secondary-foreground dark:hover:bg-muted"
-                            >
-                                Cancel
-                            </Button>
-                        </DialogClose>
-                    </div>
-                </DialogContent>
-            </Dialog>
-
             <HistoryDialog
                 isOpen={isHistoryOpen}
                 onOpenChange={setIsHistoryOpen}
                 onLoadHistory={handleLoadHistory}
+                saves={allSaves}
+                onLoadSave={handleLoad}
+                setAllSaves={setAllSaves}
             />
 
             {/* EXAMPLES DIALOG */}
