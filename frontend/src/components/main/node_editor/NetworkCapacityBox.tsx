@@ -23,6 +23,27 @@ import { Badge } from "@/components/ui/badge.tsx";
 import { Field } from "@/components/ui/field.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 
+export const aggregateConnections = (items?: Array<{ id: string; label: string }>) => {
+    if (!items || items.length === 0) return [];
+
+    const countMap = new Map<string, { count: number; firstId: string }>();
+
+    for (const item of items) {
+        const existing = countMap.get(item.label);
+        if (existing) {
+            existing.count += 1;
+        } else {
+            countMap.set(item.label, { count: 1, firstId: item.id });
+        }
+    }
+
+    return Array.from(countMap.entries()).map(([label, data]) => ({
+        id: data.firstId,
+        label,
+        count: data.count,
+    }));
+};
+
 const NetworkCapacityBox = () => {
     const [open, setOpen] = useState(false);
 
@@ -48,18 +69,35 @@ const NetworkCapacityBox = () => {
                 );
             }
         }
-        return connections.sort((a,b) => a.localeCompare(b));
+        return connections.sort((a, b) => a.localeCompare(b));
     }, [nodes]);
+
+    // Aggregate active connections and build an O(1) lookup map for counts
+    const aggregatedCapacity = useMemo(
+        () => aggregateConnections(networkCapacityConnections).sort((a, b) => a.label.localeCompare(b.label)),
+        [networkCapacityConnections]
+    );
+
+    const countsMap = useMemo(() => {
+        const map = new Map<string, number>();
+        aggregatedCapacity.forEach((item) => map.set(item.label, item.count));
+        return map;
+    }, [aggregatedCapacity]);
 
     const handleAddConnection = (label: string) => {
         setNetworkCapacityConnections((prev) => [
             ...prev,
             { id: crypto.randomUUID(), label }
-        ].sort((a,b) => a.label.localeCompare(b.label)));
+        ].sort((a, b) => a.label.localeCompare(b.label)));
     };
 
-    const handleRemoveConnection = (idToRemove: string) => {
-        setNetworkCapacityConnections((prev) => prev.filter((c) => c.id !== idToRemove));
+    // Removes one instance of the connection when clicked
+    const handleRemoveSingleInstance = (labelToRemove: string) => {
+        setNetworkCapacityConnections((prev) => {
+            const index = prev.findIndex((c) => c.label === labelToRemove);
+            if (index === -1) return prev;
+            return [...prev.slice(0, index), ...prev.slice(index + 1)];
+        });
     };
 
     return (
@@ -107,7 +145,7 @@ const NetworkCapacityBox = () => {
                                     <CommandEmpty>No connection found.</CommandEmpty>
                                     <CommandGroup>
                                         {possibleConnections.map((c) => {
-                                            const count = networkCapacityConnections.filter(ac => ac.label === c).length;
+                                            const count = countsMap.get(c) ?? 0;
                                             return (
                                                 <CommandItem
                                                     key={c}
@@ -141,23 +179,26 @@ const NetworkCapacityBox = () => {
                     )}
                 </div>
 
-                {networkCapacityConnections.length === 0 ? (
+                {aggregatedCapacity.length === 0 ? (
                     <p className="mt-6 text-sm text-muted-foreground">
                         No capacity active. If not selected, it is supposed that a link or node has unlimited capacity
                     </p>
                 ) : (
-                    <div className="mt-6 flex flex-wrap gap-2">
-                        {[...networkCapacityConnections].sort((a, b) => {
-                            return a.label.localeCompare(b.label);
-                        }).map((connection) => (
+                    <div className="mt-6 flex overflow-x-auto gap-2 pb-2 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-muted-foreground/30 hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/50">
+                        {aggregatedCapacity.map((connection) => (
                             <Badge
-                                key={connection.id}
+                                key={connection.label}
                                 variant="secondary"
-                                className="cursor-pointer select-none px-3 py-3 text-base transition-colors hover:bg-destructive hover:text-destructive-foreground"
-                                onClick={() => handleRemoveConnection(connection.id)}
+                                className="shrink-0 cursor-pointer select-none px-3 py-2 text-base transition-colors hover:bg-destructive hover:text-destructive-foreground inline-flex items-center gap-2"
+                                onClick={() => handleRemoveSingleInstance(connection.label)}
                             >
-                                {connection.label}
-                                <span className="ml-2 text-sm">✕</span>
+                                <span>{connection.label}</span>
+                                {connection.count > 1 && (
+                                    <span className="font-mono text-xs opacity-75 bg-background/50 px-1.5 py-0.5 rounded">
+                                        {connection.count}x
+                                    </span>
+                                )}
+                                <span className="text-sm">✕</span>
                             </Badge>
                         ))}
                     </div>

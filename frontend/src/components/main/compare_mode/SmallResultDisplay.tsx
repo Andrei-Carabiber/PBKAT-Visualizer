@@ -3,11 +3,12 @@ import FormattedOutput from "@/components/main/result_display/FormattedOutput.ts
 import FormattedQuantumOutput from "@/components/main/result_display/FormattedQuantumOutput.tsx";
 import {Switch} from "@/components/ui/switch.tsx";
 import {useState} from "react";
-import type {FormattedDataType} from "@/store/formatData.ts";
+import type {LastSettingsRan} from "@/store/runEngine.ts";
 
-const SmallResultDisplay = ({formattedData}: { formattedData: FormattedDataType }) => {
+const SmallResultDisplay = ({settings}: { settings: LastSettingsRan }) => {
     const [estimatedMode, setEstimatedMode] = useState<boolean>(false);
 
+    const formattedData = settings.result
     return (
         <>
             {formattedData && (
@@ -30,10 +31,10 @@ const SmallResultDisplay = ({formattedData}: { formattedData: FormattedDataType 
                         </div>
                     </div>
 
-                    {formattedData && (
+                    {settings && (
                         <>
                             {(formattedData.mode === "probability" || formattedData.mode === 'run') && (
-                                <FormattedOutput displayData={formattedData} estimatedMode={estimatedMode}/>
+                                <FormattedOutput compare={{displayData: formattedData, networkGoal: settings.goal}} estimatedMode={estimatedMode}/>
                             )}
 
                             {(formattedData.mode === "probQuality" || formattedData.mode === 'probOnly') && (

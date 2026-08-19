@@ -45,7 +45,7 @@ const CompareView = () => {
                     <div key={`result-${idx}`} className="flex flex-col gap-2 h-full">
                         <h3 className="text-xs font-semibold text-muted-foreground uppercase">Result</h3>
                         <div className="rounded-md border bg-background/50 p-2 flex-1">
-                            <SmallResultDisplay formattedData={item.settings.result}/>
+                            <SmallResultDisplay settings={item.settings}/>
                         </div>
                     </div>
                 ))}
