@@ -1,4 +1,4 @@
-import {Button} from "@/components/ui/button.tsx";
+import { Button } from "@/components/ui/button.tsx";
 import {
     Dialog,
     DialogClose,
@@ -7,23 +7,27 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-} from "@/components/ui/dialog.tsx"
-import {Input} from "@/components/ui/input.tsx";
-import {useEffect, useRef, useState} from "react";
-import {type ActiveConnection, useRunEngine} from "@/store/runEngine.ts";
-import type {Edge, Node} from "@xyflow/react";
-import type {EdgeData, NodeData} from "@/components/main/node_editor/nodeEditor.tsx";
+} from "@/components/ui/dialog.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { useEffect, useRef, useState } from "react";
+import { type ActiveConnection, type HistoryItem, useRunEngine } from "@/store/runEngine.ts";
+import type { Edge, Node } from "@xyflow/react";
+import type { EdgeData, NodeData } from "@/components/main/node_editor/nodeEditor.tsx";
 import LocalSaveDisplayCard from "@/components/web/header-buttons/local-save-display-card.tsx";
-import {toast} from "sonner";
-import type {exampleQuantumSave, exampleSave} from "@/examples/type.ts";
+import { toast } from "sonner";
+import type { exampleQuantumSave, exampleSave } from "@/examples/type.ts";
 import ExampleSelectionCard from "@/components/web/header-buttons/example-selection-card.tsx";
-import {ScrollArea} from "@/components/ui/scroll-area.tsx";
-import {Menu} from "lucide-react";
+import HistoryDialog from "@/components/web/header-buttons/HistoryDialog.tsx";
+import { ScrollArea } from "@/components/ui/scroll-area.tsx";
+import { Menu } from "lucide-react";
 
-const exampleProbModules = import.meta.glob<{ default: exampleSave }>('@/examples/probabilistic/*.json', {eager: true});
+const exampleProbModules = import.meta.glob<{ default: exampleSave }>(
+    "@/examples/probabilistic/*.json",
+    { eager: true }
+);
 const exampleQuantumModules = import.meta.glob<{
-    default: exampleQuantumSave
-}>('@/examples/quantum/*.json', {eager: true});
+    default: exampleQuantumSave;
+}>("@/examples/quantum/*.json", { eager: true });
 
 const exampleProbSaves: exampleSave[] = Object.values(exampleProbModules).map(
     (mod) => mod.default
@@ -33,23 +37,23 @@ const exampleQuantumSaves: exampleQuantumSave[] = Object.values(exampleQuantumMo
 );
 
 export type localStorageSave = {
-    id: string,
-    name: string,
-    savedDate: number,
-    code: string,
+    id: string;
+    name: string;
+    savedDate: number;
+    code: string;
     graph: {
-        nodes: Node<NodeData>[],
-        edges: Edge<EdgeData>[],
-    },
-    goal: ActiveConnection[],
-    goalDisabled: boolean,
-    networkCapacity: ActiveConnection[],
-    capacityDisabled: boolean,
-}
+        nodes: Node<NodeData>[];
+        edges: Edge<EdgeData>[];
+    };
+    goal: ActiveConnection[];
+    goalDisabled: boolean;
+    networkCapacity: ActiveConnection[];
+    capacityDisabled: boolean;
+};
 
 const SaveButtons = () => {
     const nameInputRef = useRef<HTMLInputElement>(null);
-    const [error, setError] = useState<string>("")
+    const [error, setError] = useState<string>("");
     const {
         goalConnections,
         networkGoalDisabled,
@@ -64,31 +68,33 @@ const SaveButtons = () => {
         setUserCodeCallback,
         setGraphCallback,
         setTruncation,
-        setCoverage
-    } = useRunEngine()
+        setCoverage,
+    } = useRunEngine();
+
     const [isLoadOpen, setIsLoadOpen] = useState(false);
-    const [allSaves, setAllSaves] = useState<localStorageSave[]>([])
+    const [allSaves, setAllSaves] = useState<localStorageSave[]>([]);
     const [isSaveOpen, setIsSaveOpen] = useState(false);
     const [isExamplesOpen, setIsExamplesOpen] = useState(false);
+    const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
 
     const handleSave = () => {
         const savedName = nameInputRef.current?.value;
-        const alreadyPresentNames = allSaves.map((save) => save.name)
+        const alreadyPresentNames = allSaves.map((save) => save.name);
 
-        if (savedName === "" || !savedName) {
-            setError("Please enter a valid name")
-            return
+        if (!savedName || savedName.trim() === "") {
+            setError("Please enter a valid name");
+            return;
         }
 
         if (alreadyPresentNames.includes(savedName)) {
-            setError("Save with this name already exists")
-            return
+            setError("Save with this name already exists");
+            return;
         }
 
         if (!getUserCodeCallback || !getGraphCallback) {
-            setError("Could not save. Please wait a few seconds and try again")
-            return
+            setError("Could not save. Please wait a few seconds and try again");
+            return;
         }
 
         setError("");
@@ -104,12 +110,12 @@ const SaveButtons = () => {
             goalDisabled: networkGoalDisabled,
             networkCapacity: networkCapacityConnections,
             capacityDisabled: networkCapacityDisabled,
-        }
+        };
 
         let saves: localStorageSave[] = [];
-        let memory = localStorage.getItem("savedStates")
+        const memory = localStorage.getItem("savedStates");
         if (memory) {
-            saves = JSON.parse(memory)
+            saves = JSON.parse(memory);
         }
 
         saves.push(save);
@@ -119,32 +125,31 @@ const SaveButtons = () => {
         setIsSaveOpen(false);
     };
 
-    const LoadAllSaves = () => {
-        let allSaves: localStorageSave[] = [];
-        let memory = localStorage.getItem("savedStates")
+    const loadAllSaves = () => {
+        let allSavesList: localStorageSave[] = [];
+        const memory = localStorage.getItem("savedStates");
         if (memory) {
-            allSaves = JSON.parse(memory)
+            allSavesList = JSON.parse(memory);
         }
-        return allSaves
-    }
+        return allSavesList;
+    };
 
     useEffect(() => {
-        setAllSaves(LoadAllSaves())
+        setAllSaves(loadAllSaves());
     }, []);
 
     const handleDeleteSave = (saves: localStorageSave[], save: localStorageSave) => {
-        localStorage.removeItem("savedStates");
-        const newSaves = saves.filter((s) => s !== save)
+        const newSaves = saves.filter((s) => s.id !== save.id);
         localStorage.setItem("savedStates", JSON.stringify(newSaves));
-        setAllSaves(newSaves)
-    }
+        setAllSaves(newSaves);
+    };
 
     const handleLoad = (save: localStorageSave | exampleSave | exampleQuantumSave) => {
         try {
             setGoalConnections(save.goal);
             setNetworkCapacityConnections(save.networkCapacity);
-            setNetworkCapacityDisabled(save.capacityDisabled)
-            setNetworkGoalDisabled(save.goalDisabled)
+            setNetworkCapacityDisabled(save.capacityDisabled);
+            setNetworkGoalDisabled(save.goalDisabled);
 
             if (setGraphCallback && setUserCodeCallback) {
                 setGraphCallback(save.graph.nodes, save.graph.edges);
@@ -155,22 +160,37 @@ const SaveButtons = () => {
             }
 
             setIsLoadOpen(false);
-            setIsExamplesOpen(false)
+            setIsExamplesOpen(false);
+            setIsHistoryOpen(false);
 
-            if ('truncation' in save && 'coverage' in save) {
+            if ("truncation" in save && "coverage" in save) {
                 setTruncation(save.truncation);
                 setCoverage(save.coverage);
             }
         } catch (err) {
-            console.log("There was an error loading the save: ", err);
+            console.error("There was an error loading the save: ", err);
             setError("Failed to parse or load data correctly.");
         }
-    }
+    };
+
+    const handleLoadHistory = (item: HistoryItem) => {
+        handleLoad({
+            id: item.id,
+            name: item.name,
+            savedDate: item.settings.dateWhenRan,
+            code: item.settings.code,
+            graph: item.settings.graph,
+            goal: item.settings.goal,
+            goalDisabled: item.settings.goalDisabled,
+            networkCapacity: item.settings.networkCapacity,
+            capacityDisabled: item.settings.capacityDisabled,
+        });
+    };
 
     const handleShare = async () => {
         if (!getUserCodeCallback || !getGraphCallback) {
-            toast.error("Editor is not loaded yet. Try again later.")
-            return
+            toast.error("Editor is not loaded yet. Try again later.");
+            return;
         }
 
         const shareState = {
@@ -183,9 +203,9 @@ const SaveButtons = () => {
         };
 
         try {
-            const response = await fetch('/api/share', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+            const response = await fetch("/api/share", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(shareState),
             });
 
@@ -213,20 +233,39 @@ const SaveButtons = () => {
         <>
             {/* DESKTOP VIEW */}
             <div className="hidden md:flex gap-4 text-center">
-                <Button variant="outline" onClick={() => setIsSaveOpen(true)}
-                        className="p-5 border-2 dark:hover:bg-muted">
+                <Button
+                    variant="outline"
+                    onClick={() => setIsSaveOpen(true)}
+                    className="p-5 border-2 dark:hover:bg-muted"
+                >
                     Save
                 </Button>
-                <Button variant="outline" onClick={() => setIsLoadOpen(true)}
-                        className="p-5 border-2 dark:hover:bg-muted">
+                <Button
+                    variant="outline"
+                    onClick={() => setIsLoadOpen(true)}
+                    className="p-5 border-2 dark:hover:bg-muted"
+                >
                     Load
                 </Button>
-                <Button onClick={handleShare} variant="outline"
-                        className="p-5 border-2 dark:hover:bg-muted">
+                <Button
+                    variant="outline"
+                    onClick={() => setIsHistoryOpen(true)}
+                    className="p-5 border-2 dark:hover:bg-muted"
+                >
+                    History
+                </Button>
+                <Button
+                    onClick={handleShare}
+                    variant="outline"
+                    className="p-5 border-2 dark:hover:bg-muted"
+                >
                     Share
                 </Button>
-                <Button variant="outline" onClick={() => setIsExamplesOpen(true)}
-                        className="p-5 border-2 dark:hover:bg-muted">
+                <Button
+                    variant="outline"
+                    onClick={() => setIsExamplesOpen(true)}
+                    className="p-5 border-2 dark:hover:bg-muted"
+                >
                     Examples
                 </Button>
             </div>
@@ -236,7 +275,7 @@ const SaveButtons = () => {
                 <Dialog open={isMobileSheetOpen} onOpenChange={setIsMobileSheetOpen}>
                     <DialogTrigger asChild>
                         <Button variant="outline" size="icon">
-                            <Menu className="h-5 w-5"/>
+                            <Menu className="h-5 w-5" />
                         </Button>
                     </DialogTrigger>
                     <DialogContent className="rounded-t-xl pb-10 max-w-100">
@@ -244,20 +283,39 @@ const SaveButtons = () => {
                             <DialogTitle className="text-lg">Menu</DialogTitle>
                         </DialogHeader>
                         <div className="flex flex-col gap-3">
-                            <Button variant="outline" className="w-full border-2 justify-start py-5 text-base border-secondary-foreground"
-                                    onClick={() => runMobileAction(() => setIsSaveOpen(true))}>
+                            <Button
+                                variant="outline"
+                                className="w-full border-2 justify-start py-5 text-base border-secondary-foreground"
+                                onClick={() => runMobileAction(() => setIsSaveOpen(true))}
+                            >
                                 Save State
                             </Button>
-                            <Button variant="outline" className="w-full border-2 justify-start py-5 text-base border-secondary-foreground"
-                                    onClick={() => runMobileAction(() => setIsLoadOpen(true))}>
+                            <Button
+                                variant="outline"
+                                className="w-full border-2 justify-start py-5 text-base border-secondary-foreground"
+                                onClick={() => runMobileAction(() => setIsLoadOpen(true))}
+                            >
                                 Load State
                             </Button>
-                            <Button variant="outline" className="w-full border-2 justify-start py-5 text-base border-secondary-foreground"
-                                    onClick={() => runMobileAction(() => setIsExamplesOpen(true))}>
+                            <Button
+                                variant="outline"
+                                className="w-full border-2 justify-start py-5 text-base border-secondary-foreground"
+                                onClick={() => runMobileAction(() => setIsHistoryOpen(true))}
+                            >
+                                History
+                            </Button>
+                            <Button
+                                variant="outline"
+                                className="w-full border-2 justify-start py-5 text-base border-secondary-foreground"
+                                onClick={() => runMobileAction(() => setIsExamplesOpen(true))}
+                            >
                                 Examples
                             </Button>
-                            <Button variant="outline" className="w-full border-2 justify-start py-5 text-base border-secondary-foreground"
-                                    onClick={() => runMobileAction(handleShare)}>
+                            <Button
+                                variant="outline"
+                                className="w-full border-2 justify-start py-5 text-base border-secondary-foreground"
+                                onClick={() => runMobileAction(handleShare)}
+                            >
                                 Share Link
                             </Button>
                         </div>
@@ -265,76 +323,131 @@ const SaveButtons = () => {
                 </Dialog>
             </div>
 
-            <Dialog open={isSaveOpen} onOpenChange={(open) => {
-                setIsSaveOpen(open);
-                if (!open) setError("");
-            }}>
+            {/* SAVE DIALOG */}
+            <Dialog
+                open={isSaveOpen}
+                onOpenChange={(open) => {
+                    setIsSaveOpen(open);
+                    if (!open) setError("");
+                }}
+            >
                 <DialogContent showCloseButton={false}>
                     <DialogHeader>
-                        <DialogTitle className="text-secondary-foreground text-xl">Name your saved state</DialogTitle>
+                        <DialogTitle className="text-secondary-foreground text-xl">
+                            Name your saved state
+                        </DialogTitle>
                         <DialogDescription className="pt-4 space-y-4">
-                            <Input ref={nameInputRef} placeholder="Enter state name..."
-                                   className="text-secondary-foreground"/>
-                            {error &&
-                                <p className="text-sm font-medium text-destructive bg-destructive/10 p-2 rounded-md">{error}</p>}
+                            <Input
+                                ref={nameInputRef}
+                                placeholder="Enter state name..."
+                                className="text-secondary-foreground"
+                            />
+                            {error && (
+                                <p className="text-sm font-medium text-destructive bg-destructive/10 p-2 rounded-md">
+                                    {error}
+                                </p>
+                            )}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="flex justify-end gap-2 mt-4">
                         <DialogClose asChild>
-                            <Button variant="outline"
-                                    className="px-5 border-secondary-foreground dark:hover:bg-muted">Cancel</Button>
-                        </DialogClose>
-                        <Button variant="outline"
+                            <Button
+                                variant="outline"
                                 className="px-5 border-secondary-foreground dark:hover:bg-muted"
-                                onClick={handleSave}>Save</Button>
+                            >
+                                Cancel
+                            </Button>
+                        </DialogClose>
+                        <Button
+                            variant="outline"
+                            className="px-5 border-secondary-foreground dark:hover:bg-muted"
+                            onClick={handleSave}
+                        >
+                            Save
+                        </Button>
                     </div>
                 </DialogContent>
             </Dialog>
 
-            <Dialog open={isLoadOpen} onOpenChange={(open) => {
-                setIsLoadOpen(open);
-                if (!open) setError("");
-            }}>
+            {/* LOAD DIALOG */}
+            <Dialog
+                open={isLoadOpen}
+                onOpenChange={(open) => {
+                    setIsLoadOpen(open);
+                    if (!open) setError("");
+                }}
+            >
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader className="flex flex-col items-center gap-4">
                         <DialogTitle className="text-xl w-full text-left">Load a save</DialogTitle>
                         <div className="relative w-full">
-                            <ScrollArea type='always' className="h-[70vh] w-full pr-4">
+                            <ScrollArea type="always" className="h-[70vh] w-full pr-4">
                                 <div className="flex flex-col gap-3">
-                                    {allSaves.map((save) => (
-                                        <LocalSaveDisplayCard save={save}
-                                                              deleteSave={() => handleDeleteSave(allSaves, save)}
-                                                              handleLoad={() => handleLoad(save)} key={save.id}/>
-                                    ))}
+                                    {allSaves.length === 0 ? (
+                                        <p className="text-sm text-muted-foreground text-center py-6">
+                                            No saved states found.
+                                        </p>
+                                    ) : (
+                                        allSaves.map((save) => (
+                                            <LocalSaveDisplayCard
+                                                save={save}
+                                                deleteSave={() => handleDeleteSave(allSaves, save)}
+                                                handleLoad={() => handleLoad(save)}
+                                                key={save.id}
+                                            />
+                                        ))
+                                    )}
                                 </div>
                             </ScrollArea>
-                            <div
-                                className="absolute -bottom-px left-0 right-0 h-4 bg-linear-to-t from-background to-transparent z-10 pointer-events-none"/>
+                            <div className="absolute -bottom-px left-0 right-0 h-4 bg-linear-to-t from-background to-transparent z-10 pointer-events-none" />
                         </div>
                     </DialogHeader>
                     <div className="flex justify-end gap-2 mt-4">
                         <DialogClose asChild>
-                            <Button variant="outline"
-                                    className="text-sm px-10 py-4 border-2 border-secondary-foreground dark:hover:bg-muted">Cancel</Button>
+                            <Button
+                                variant="outline"
+                                className="text-sm px-10 py-4 border-2 border-secondary-foreground dark:hover:bg-muted"
+                            >
+                                Cancel
+                            </Button>
                         </DialogClose>
                     </div>
                 </DialogContent>
             </Dialog>
 
-            <Dialog open={isExamplesOpen} onOpenChange={(open) => {
-                setIsExamplesOpen(open);
-                if (!open) setError("");
-            }}>
+            <HistoryDialog
+                isOpen={isHistoryOpen}
+                onOpenChange={setIsHistoryOpen}
+                onLoadHistory={handleLoadHistory}
+            />
+
+            {/* EXAMPLES DIALOG */}
+            <Dialog
+                open={isExamplesOpen}
+                onOpenChange={(open) => {
+                    setIsExamplesOpen(open);
+                    if (!open) setError("");
+                }}
+            >
                 <DialogContent className="sm:max-w-xl">
                     <DialogHeader className="flex flex-col items-center gap-4">
-                        <DialogTitle className="text-xl text-left w-full pl-3">Load an Example</DialogTitle>
-                        <ExampleSelectionCard probabilisticSaves={exampleProbSaves}
-                                              quantisticSaves={exampleQuantumSaves} handleLoad={handleLoad}/>
+                        <DialogTitle className="text-xl text-left w-full pl-3">
+                            Load an Example
+                        </DialogTitle>
+                        <ExampleSelectionCard
+                            probabilisticSaves={exampleProbSaves}
+                            quantisticSaves={exampleQuantumSaves}
+                            handleLoad={handleLoad}
+                        />
                     </DialogHeader>
                     <div className="flex justify-end gap-2 mt-4">
                         <DialogClose asChild>
-                            <Button variant="outline"
-                                    className="text-sm px-10 py-4 border-2 border-secondary-foreground dark:hover:bg-muted">Cancel</Button>
+                            <Button
+                                variant="outline"
+                                className="text-sm px-10 py-4 border-2 border-secondary-foreground dark:hover:bg-muted"
+                            >
+                                Cancel
+                            </Button>
                         </DialogClose>
                     </div>
                 </DialogContent>

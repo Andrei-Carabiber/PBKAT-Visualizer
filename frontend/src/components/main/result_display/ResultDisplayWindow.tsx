@@ -5,11 +5,12 @@ import {X} from 'lucide-react';
 import FormattedOutput from "@/components/main/result_display/FormattedOutput.tsx";
 import FormattedQuantumOutput from "@/components/main/result_display/FormattedQuantumOutput.tsx";
 import {Switch} from "@/components/ui/switch.tsx";
-import { useState} from "react";
+import {useState} from "react";
 import {useCustomization} from "@/store/customization.ts";
 import StatisticsBar from "@/components/main/result_display/StatisticsBar.tsx";
 import SaveResultsButton from "@/components/main/result_display/SaveResultsButtons.tsx";
 import {useReactFlow} from "@xyflow/react";
+import SaveToHistoryButton from "@/components/main/result_display/SaveToHistoryButton.tsx";
 
 const ResultDisplayWindow = () => {
     const {formattedData, error, loading, clearOutput} = useRunEngine();
@@ -40,7 +41,10 @@ const ResultDisplayWindow = () => {
                                     />
                                 </div>
                                 {formattedData && (
-                                    <SaveResultsButton />
+                                    <div className="flex items-center gap-2 h-full">
+                                        <SaveToHistoryButton />
+                                        <SaveResultsButton/>
+                                    </div>
                                 )}
                             </div>
                         </div>
@@ -77,7 +81,7 @@ const ResultDisplayWindow = () => {
                             )}
 
                             {showStatistics && (
-                                <StatisticsBar estimatedMode={estimatedMode} />
+                                <StatisticsBar estimatedMode={estimatedMode}/>
                             )}
                         </>
                     )}
