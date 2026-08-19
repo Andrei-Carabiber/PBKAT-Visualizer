@@ -1,6 +1,8 @@
 import {useRunEngine} from "@/store/runEngine.ts";
+import type {FormattedDataType} from "@/store/formatData.ts";
 
 type OutputProps = {
+    displayData?: FormattedDataType
     estimatedMode: boolean;
 };
 
@@ -50,16 +52,24 @@ const EmptyState = () => (
 
 // --- Main Component ---
 
-const FormattedOutput = ({estimatedMode}: OutputProps) => {
-    const {goalConnections, formattedData, data} = useRunEngine();
+const FormattedOutput = ({displayData, estimatedMode}: OutputProps) => {
+    const {formattedData, goalConnections} = useRunEngine();
 
-    if (!data || !formattedData) {
+
+    let dataToDisplay;
+    if (displayData) {
+        dataToDisplay = displayData;
+    } else {
+        dataToDisplay = formattedData
+    }
+
+    if (!dataToDisplay) {
         return
     }
 
     // Single Probability Goal Mode
-    if (formattedData.mode === "probability") {
-        const {lowerEnd, higherEnd} = formattedData.probability;
+    if (dataToDisplay.mode === "probability") {
+        const {lowerEnd, higherEnd} = dataToDisplay.probability;
         const isExact = lowerEnd.numerator === higherEnd.numerator && lowerEnd.denominator === higherEnd.denominator;
 
         return (
@@ -100,10 +110,10 @@ const FormattedOutput = ({estimatedMode}: OutputProps) => {
     }
 
     // Full Run Mode
-    if (formattedData.mode === "run") {
+    if (dataToDisplay.mode === "run") {
 
-        if (formattedData.isInterval) {
-            const rows = formattedData.probability as RangeRow[]
+        if (dataToDisplay.isInterval) {
+            const rows = dataToDisplay.probability as RangeRow[]
 
             if (rows.length === 0) {
                 return (
@@ -142,7 +152,7 @@ const FormattedOutput = ({estimatedMode}: OutputProps) => {
         }
 
         // Single term run output (no interval)
-        const singleTerms = formattedData.probability as DistributionTerm[]
+        const singleTerms = dataToDisplay.probability as DistributionTerm[]
         if (singleTerms.length === 0) {
             return (
                 <div className="flex flex-col gap-2 bg-background p-4 rounded-lg border shadow-inner">

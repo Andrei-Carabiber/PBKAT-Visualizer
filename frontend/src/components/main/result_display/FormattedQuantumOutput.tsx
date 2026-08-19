@@ -4,8 +4,10 @@ import WernerGraph from "@/components/main/result_display/WernerGraph.tsx";
 import {Switch} from "@/components/ui/switch.tsx";
 import {Label} from "@/components/ui/label.tsx";
 import {useRunEngine} from "@/store/runEngine.ts";
+import type {FormattedDataType} from "@/store/formatData.ts";
 
-const FormattedQuantumOutput = ({estimatedMode}: {
+const FormattedQuantumOutput = ({displayData, estimatedMode}: {
+    displayData?: FormattedDataType;
     estimatedMode: boolean
 }) => {
     const [syncZoom, setSyncZoom] = useState(true);
@@ -14,7 +16,15 @@ const FormattedQuantumOutput = ({estimatedMode}: {
 
     const {formattedData} = useRunEngine();
 
-    if (!formattedData) return;
+    let dataToDisplay;
+
+    if (dataToDisplay) {
+        dataToDisplay = displayData
+    } else {
+        dataToDisplay = formattedData;
+    }
+
+    if (!dataToDisplay) return;
 
     const handleZoomChange = (left: string | number, right: string | number) => {
         setZoomLeft(left);
@@ -34,9 +44,9 @@ const FormattedQuantumOutput = ({estimatedMode}: {
     } : {};
 
     const graphs = () => {
-        if (formattedData.mode === "probOnly") {
-            const cdf_max = formattedData.probabilityMax;
-            const cdf_min = formattedData.probabilityMin;
+        if (dataToDisplay.mode === "probOnly") {
+            const cdf_max = dataToDisplay.probabilityMax;
+            const cdf_min = dataToDisplay.probabilityMin;
 
             let areIdentical = true;
             for (let i = 0; i < cdf_min.length; i++) {
@@ -58,8 +68,8 @@ const FormattedQuantumOutput = ({estimatedMode}: {
                     </div>
                 </div>
             );
-        } else if (formattedData.mode === 'probQuality') {
-            const probabilities = formattedData.probability;
+        } else if (dataToDisplay.mode === 'probQuality') {
+            const probabilities = dataToDisplay.probability;
             return (
                 <div className="w-full h-175 flex gap-4">
                     <div id="quantum-output" className="flex min-h-0 flex-1 flex-col gap-4">
@@ -74,7 +84,7 @@ const FormattedQuantumOutput = ({estimatedMode}: {
 
                         <div className="min-h-0 flex-1">
                             <WernerGraph
-                                wernerArray={formattedData.wernerArray}
+                                wernerArray={dataToDisplay.wernerArray}
                                 estimatedMode={estimatedMode}
                                 {...sharedZoomProps}
                             />

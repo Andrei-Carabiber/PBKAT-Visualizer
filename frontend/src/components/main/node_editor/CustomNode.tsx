@@ -22,14 +22,13 @@ export default function CustomNode({ id, data }: Readonly<props>) {
                     <Handle className="customHandle handleBand handleBand-left" id="left" position={Position.Left} type="source" />
                 </>
             )}
-            {isTarget && (
-                <Handle
-                    className="customHandle handleFull"
-                    position={Position.Top}
-                    type="target"
-                    isConnectableStart={false}
-                />
-            )}
+
+            <Handle
+                className={isTarget ? "customHandle handleFull" : "customHandle handleFull invisible pointer-events-none"}
+                position={Position.Top}
+                type="target"
+                isConnectableStart={false}
+            />
 
             <div className="customNodeBody items-center flex justify-around">
                 <div className="custom-drag-handle flex items-center justify-around text-base">
