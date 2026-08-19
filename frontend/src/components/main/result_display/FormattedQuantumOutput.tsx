@@ -18,7 +18,7 @@ const FormattedQuantumOutput = ({displayData, estimatedMode}: {
 
     let dataToDisplay;
 
-    if (dataToDisplay) {
+    if (displayData) {
         dataToDisplay = displayData
     } else {
         dataToDisplay = formattedData;

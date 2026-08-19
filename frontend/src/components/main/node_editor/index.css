@@ -114,3 +114,27 @@ body {
 .custom-drag-handle:active {
     cursor: grabbing;
 }
+
+
+
+
+
+
+
+/*For compare view mode*/
+.small-node-viewer .react-flow__node,
+.small-node-viewer .customNode,
+.small-node-viewer .customNodeBody,
+.small-node-viewer .custom-drag-handle {
+    cursor: pointer !important;
+}
+
+.small-node-viewer .react-flow__edge,
+.small-node-viewer #edge-label,
+.small-node-viewer .react-flow__edge g,
+.small-node-viewer .react-flow__edge path,
+.small-node-viewer .react-flow__edge-path,
+.small-node-viewer .react-flow__edge-interaction {
+    pointer-events: all !important;
+    cursor: pointer !important;
+}

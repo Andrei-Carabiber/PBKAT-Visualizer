@@ -40,6 +40,7 @@ function FloatingEdge({id, source, target, markerEnd, style}: EdgeProps) {
             />
             <EdgeLabelRenderer>
                 <div
+                    id="edge-label"
                     style={{
                         position: 'absolute',
                         transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
