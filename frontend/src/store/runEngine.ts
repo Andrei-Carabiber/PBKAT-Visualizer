@@ -14,11 +14,33 @@ export interface ActiveConnection {
     label: string;
 }
 
+//Used for comparison
+export type LastSettingsRan = {
+    id: string;
+    code: string;
+    graph: { nodes: Node<NodeData>[]; edges: Edge<EdgeData>[] };
+    goal: ActiveConnection[];
+    goalDisabled: boolean;
+    networkCapacity: ActiveConnection[];
+    capacityDisabled: boolean;
+    result: FormattedDataType;
+    dateWhenRan: number;
+};
+
+export interface HistoryItem {
+    id: string;
+    name: string;
+    settings: LastSettingsRan;
+    savedAt: string;
+}
+
 interface RunEngineState {
     loading: boolean;
     data: DataType | null;
     cached: boolean;
     formattedData: FormattedDataType | null;
+    lastSettingsRan: LastSettingsRan | null;
+    setLastSettingsRan: (newSettings: LastSettingsRan) => void;
     error: string | null;
     getCodeCallback: (() => string) | null;
     getUserCodeCallback: (() => string) | null;
@@ -79,6 +101,8 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
     loading: false,
     data: null,
     formattedData: null,
+    lastSettingsRan: null,
+    setLastSettingsRan: (newSettings) => {set({lastSettingsRan: newSettings})},
     cached: false,
     error: null,
     getCodeCallback: null,
@@ -240,6 +264,39 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
             set({cached: result._cached ?? false})
 
             const formattedData = formatData(result)
+
+            if (getGraphCallback) {
+                const runId = crypto.randomUUID();
+                const lastSettingsRan: LastSettingsRan = {
+                    id: runId,
+                    code: userRawCode,
+                    graph: getGraphCallback(),
+                    capacityDisabled: get().networkCapacityDisabled,
+                    networkCapacity: get().networkCapacityConnections,
+                    goal: get().goalConnections,
+                    goalDisabled: networkGoalDisabled,
+                    result: formattedData,
+                    dateWhenRan: Date.now(),
+                };
+
+                try {
+                    const rawHistory = localStorage.getItem("history");
+                    const historyArray: HistoryItem[] = rawHistory ? JSON.parse(rawHistory) : [];
+                    historyArray.push({
+                        id: runId,
+                        name: "Untitled",
+                        settings: lastSettingsRan,
+                        savedAt: new Date().toISOString(),
+                    });
+                    localStorage.setItem("history", JSON.stringify(historyArray));
+                } catch (storageError) {
+                    console.error("Failed to write history to localStorage:", storageError);
+                }
+
+                set({ lastSettingsRan });
+            }
+
+
 
             set({
                 data: result,
