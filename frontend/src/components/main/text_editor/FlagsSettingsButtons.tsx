@@ -41,7 +41,7 @@ const FlagsSettingsButtons = () => {
                     </DialogTitle>
                 </DialogHeader>
 
-                <div className="grid grid-cols-[1fr_auto_auto] gap-y-6 gap-x-6 py-4 items-center">
+                <div id="settings-flags-inside-dialog" className="grid grid-cols-[1fr_auto_auto] gap-y-6 gap-x-6 py-4 items-center">
 
                     {/* Segmented Control Switch */}
                     <button

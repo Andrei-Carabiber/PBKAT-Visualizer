@@ -23,7 +23,8 @@ const TutorialMenu = () => {
 
     const {
         interfaceSteps,
-        createTutorialSteps, transTutorialSteps, distillTutorialSteps, swapTutorialSteps, ucreateTutorialSteps
+        createTutorialSteps, transTutorialSteps, distillTutorialSteps, swapTutorialSteps, ucreateTutorialSteps,
+        qbkatTutorialSteps
     } = useTutorialSteps();
 
 
@@ -64,16 +65,17 @@ const TutorialMenu = () => {
             }
         },
         {
+            name: "QBKAT Tutorial", action : () => {setSteps(qbkatTutorialSteps)}
+        },
+        {
             title: "Advanced Protocol Writing Tutorials"
         },
         {
-            name: "Swap Tutorial", action: () => {
-                setSteps(swapTutorialSteps);
+            name: "Tutorial 1", action: () => {
             }
         },
         {
-            name: "Generation Tutorial", action: () => {
-                setSteps(ucreateTutorialSteps);
+            name: "Tutorial 2", action: () => {
             }
         },
     ];
@@ -105,7 +107,7 @@ const TutorialMenu = () => {
                         {tutorials.map((tutorial) => {
                             if ("title" in tutorial) {
                                 return (
-                                    <div key={tutorial.title} className="flex flex-col gap-1 text-sm text-foreground/70">
+                                    <div key={tutorial.title + "separator"} className="flex flex-col gap-1 text-sm text-foreground/70">
                                         <p>{tutorial.title}</p>
                                         <div className="w-full h-0.5 bg-foreground/40" />
                                     </div>
@@ -113,7 +115,7 @@ const TutorialMenu = () => {
                             } else {
                                 return (
                                     <Button
-                                        key={tutorial.name}
+                                        key={tutorial.name + "button"}
                                         className="rounded-sm py-4"
                                         onClick={() => {
                                             bumpTutorialEpoch();

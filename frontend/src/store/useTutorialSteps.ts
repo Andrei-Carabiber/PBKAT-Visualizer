@@ -1,5 +1,5 @@
 import {type StepType, useTour} from "@reactour/tour";
-import {useMemo} from "react";
+import {useEffect, useMemo} from "react";
 import {useCustomization} from "@/store/customization.ts";
 import {type Edge, useReactFlow} from "@xyflow/react";
 import {useRunEngine} from "@/store/runEngine.ts";
@@ -11,6 +11,26 @@ import {toast} from "sonner";
 let tutorialEpoch = 0;
 export const bumpTutorialEpoch = () => ++tutorialEpoch;
 const getTutorialEpoch = () => tutorialEpoch;
+let dialogGuardHandler: ((e: MouseEvent) => void) | null = null;
+
+const installDialogGuard = (selector: string) => {
+    if (dialogGuardHandler) return;
+    dialogGuardHandler = (e: MouseEvent) => {
+        const target = e.target as HTMLElement;
+        if (!target.closest(selector) && !target.closest('[data-tour-elem="popover"]')) {
+            e.stopPropagation();
+            e.preventDefault();
+        }
+    };
+    document.addEventListener('mousedown', dialogGuardHandler, {capture: true});
+};
+
+const removeDialogGuard = () => {
+    if (dialogGuardHandler) {
+        document.removeEventListener('mousedown', dialogGuardHandler, {capture: true});
+        dialogGuardHandler = null;
+    }
+};
 
 export const useTutorialSteps = () => {
     const {setLockTour} = useCustomization();
@@ -21,6 +41,7 @@ export const useTutorialSteps = () => {
         setUserCodeCallback,
         setNetworkGoalDisabled,
         setNetworkCapacityDisabled,
+        setGoalConnections
     } = useRunEngine();
 
     const waitForResult = () => {
@@ -41,6 +62,34 @@ export const useTutorialSteps = () => {
             }
         }, 100);
     }
+
+    useEffect(() => {
+        const isPasteShortcut = (e: KeyboardEvent) =>
+            (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v';
+
+        const keyGuardHandler = (e: KeyboardEvent) => {
+            if (!useCustomization.getState().lockTour) return;
+            if (isPasteShortcut(e)) {
+                e.preventDefault();
+                e.stopPropagation();
+                toast.error("Type the code yourself so you can follow along with the tutorial!");
+            }
+        };
+
+        const pasteGuardHandler = (e: ClipboardEvent) => {
+            if (!useCustomization.getState().lockTour) return;
+            e.preventDefault();
+            e.stopPropagation();
+            toast.error("Type the code yourself so you can follow along with the tutorial!");
+        };
+
+        document.addEventListener('keydown', keyGuardHandler, {capture: true});
+        document.addEventListener('paste', pasteGuardHandler, {capture: true});
+        return () => {
+            document.removeEventListener('keydown', keyGuardHandler, {capture: true});
+            document.removeEventListener('paste', pasteGuardHandler, {capture: true});
+        };
+    }, []);
 
     const interfaceSteps: StepType[] = useMemo(() => [
         {
@@ -1021,6 +1070,324 @@ outputGoal = (e <||> f) <> (e <.> f)`)
         },
     ], [setLockTour, setNodes, setEdges, addNodes, fitView, setCurrentStep, getUserCodeCallback, setUserCodeCallback]);
 
+    const qbkatTutorialSteps: StepType[] = useMemo(() => [
+                {
+                    selector: '#separator_main',
+                    padding: -10,
+                    position: ({windowWidth, windowHeight, width, height}) => [
+                        windowWidth / 2 - width / 2,
+                        windowHeight / 2 - height / 2,
+                    ],
+                    content: "So far we have used ProbBellKATPolicy. This gives us a result as a percentage. However the result varies in function of time. To get the probability of successfully achieving a protocol in function of time we have to use QBKATPolicy.",
+                    action: () => {
+                        bumpTutorialEpoch();
+                        setNodes([]);
+                        setEdges([]);
+                        if (setUserCodeCallback) setUserCodeCallback("");
+                        setNetworkGoalDisabled(true);
+                        setNetworkCapacityDisabled(true);
+                    },
+                    stepInteraction: false,
+                },
+                {
+                    selector: '#separator_main',
+                    padding: -10,
+                    position: ({windowWidth, windowHeight, width, height}) => [
+                        windowWidth / 2 - width / 2,
+                        windowHeight / 2 - height / 2,
+                    ],
+                    content: "In order to use QBKATPolicy, all you have to do is rename the type of our operations from 'ProbBellKATPolicy' to 'QBKATPolicy'. Also you always need to set a goal for this. Now let's see how the result is with QBKAT.",
+                    stepInteraction: false,
+                },
+                {
+                    selector: '#node-editor-container',
+                    content: "We will do a swap operation. I have set up nodes A, B and C for you. B has a swap probability of 75%.",
+                    stepInteraction: false,
+                    action: () => {
+                        addNodes([
+                            {
+                                id: `A`,
+                                type: 'custom',
+                                position: {x: 100, y: 100},
+                                data: {nodeLabel: `A`, coherence_time: 1, create_prob: 1, create_quality: 1, swap_prob: 1}
+                            },
+                            {
+                                id: `B`,
+                                type: 'custom',
+                                position: {x: 300, y: 100},
+                                data: {nodeLabel: `B`, coherence_time: 1, create_prob: 1, create_quality: 1, swap_prob: 0.75}
+                            },
+                            {
+                                id: `C`,
+                                type: 'custom',
+                                position: {x: 500, y: 100},
+                                data: {nodeLabel: `C`, coherence_time: 1, create_prob: 1, create_quality: 1, swap_prob: 1}
+                            }
+                        ]);
+                        setEdges([
+                            {id: 'eA-B', source: 'A', target: 'B', data: {distance: 1, transmit_prob: 1}},
+                            {id: 'eB-C', source: 'B', target: 'C', data: {distance: 1, transmit_prob: 1}}
+                        ] as Edge<EdgeData>[]);
+                        setTimeout(() => fitView(), 100);
+                    }
+                },
+                {
+                    selector: '#monaco-editor-root',
+                    content: 'Let us define link "a" (A to B) and link "b" (B to C). Type: a :: QBKATPolicy and then a = create "A" <> trans "A" ("A", "B"). Then do the same for b: b :: QBKATPolicy and b = create "B" <> trans "B" ("B", "C"). Notice how now we use QBKATPolicy.',
+                    action: (node) => {
+                        setLockTour(true);
+
+                        if (node) {
+                            const epoch = getTutorialEpoch();
+                            const checkCodeInterval = setInterval(() => {
+                                if (getTutorialEpoch() !== epoch) {
+                                    clearInterval(checkCodeInterval);
+                                    return;
+                                }
+                                const currentCode = getUserCodeCallback ? getUserCodeCallback() : "";
+
+                                const hasA = containsIgnoringSpaces(currentCode, 'a :: QBKATPolicy') && containsIgnoringSpaces(currentCode, `a = create "A" <> trans "A" ("A", "B")`);
+                                const hasB = containsIgnoringSpaces(currentCode, 'b :: QBKATPolicy') && containsIgnoringSpaces(currentCode, `b = create "B" <> trans "B" ("B", "C")`);
+
+                                if (hasA && hasB) {
+                                    clearInterval(checkCodeInterval);
+                                    setLockTour(false);
+                                    setCurrentStep((prev) => prev + 1);
+                                }
+                            }, 500);
+                        }
+                    }
+                },
+                {
+                    selector: '#monaco-editor-root',
+                    content: "Now define the output goal type: outputGoal :: QBKATPolicy",
+                    action: (node) => {
+                        setLockTour(true);
+
+                        if (node) {
+                            const epoch = getTutorialEpoch();
+                            const checkCodeInterval = setInterval(() => {
+                                if (getTutorialEpoch() !== epoch) {
+                                    clearInterval(checkCodeInterval);
+                                    return;
+                                }
+                                const currentCode = getUserCodeCallback ? getUserCodeCallback() : "";
+
+                                if (containsIgnoringSpaces(currentCode, 'outputGoal :: QBKATPolicy')) {
+                                    clearInterval(checkCodeInterval);
+                                    setLockTour(false);
+                                    setCurrentStep((prev) => prev + 1);
+                                }
+                            }, 500);
+                        }
+                    }
+                },
+                {
+                    selector: '#monaco-editor-root',
+                    content: 'Next, execute "a" and "b" in parallel using <||>, then perform a swap at Node B to bridge A and C. Type: outputGoal = a <||> b <> swap "B" ("A", "C")',
+                    action: (node) => {
+                        setLockTour(true);
+
+                        if (node) {
+                            const epoch = getTutorialEpoch();
+                            const checkCodeInterval = setInterval(() => {
+                                if (getTutorialEpoch() !== epoch) {
+                                    clearInterval(checkCodeInterval);
+                                    return;
+                                }
+                                const currentCode = getUserCodeCallback ? getUserCodeCallback() : "";
+
+                                if (containsIgnoringSpaces(currentCode, 'a <||> b <> swap "B" ("A", "C")') && containsIgnoringSpaces(currentCode, 'outputGoal :: QBKATPolicy')) {
+                                    clearInterval(checkCodeInterval);
+                                    setLockTour(false);
+                                    setCurrentStep((prev) => prev + 1);
+                                }
+                            }, 500);
+                        }
+                    }
+                },
+                {
+                    selector: "#network-goal-box",
+                    content: "Now however we do need a goal. Since we create A~B and B~C and then swap in B we want to set our goal to A~C. Select it.",
+                    action: (node) => {
+                        setLockTour(true);
+                        setGoalConnections([]);
+                        setNetworkGoalDisabled(false);
+
+                        const preventMaskClose = (e: MouseEvent) => {
+                            const target = e.target as HTMLElement;
+                            if (!target.closest('#network-goal-box') && !target.closest('[data-tour-elem="popover"]')) {
+                                e.stopPropagation();
+                                e.preventDefault();
+                            }
+                        };
+                        document.addEventListener('mousedown', preventMaskClose, {capture: true});
+
+                        if (node) {
+                            const epoch = getTutorialEpoch();
+                            const checkGoalInterval = setInterval(() => {
+                                if (getTutorialEpoch() !== epoch) {
+                                    clearInterval(checkGoalInterval);
+                                    document.removeEventListener('mousedown', preventMaskClose, {capture: true});
+                                    return;
+                                }
+                                const currentGoalConnections = useRunEngine.getState().goalConnections;
+                                const currentCode = getUserCodeCallback ? getUserCodeCallback() : "";
+                                if (containsIgnoringSpaces(currentCode, 'a <||> b <> swap "B" ("A", "C")')
+                                    && containsIgnoringSpaces(currentCode, 'outputGoal :: QBKATPolicy')
+                                    && currentGoalConnections.length === 1
+                                    && (currentGoalConnections[0].label === `"A" ~ "C"` || currentGoalConnections[0].label === `"C" ~ "A"`)) {
+                                    clearInterval(checkGoalInterval);
+                                    document.removeEventListener('mousedown', preventMaskClose, {capture: true});
+                                    useCustomization.getState().setGoalPopoverOpen(false);
+                                    setLockTour(false);
+                                    setCurrentStep((prev) => prev + 1);
+                                }
+                            }, 500);
+                        }
+                    }
+                },
+                {
+                    selector: "#flag-settings-button",
+                    content: "Now the last thing we have to do is set how long it will go for. Click on this settings button.",
+                    action: (node) => {
+                        setLockTour(true);
+
+                        // Intercept and block clicks on anything that isn't the flag settings button or the tour itself
+                        const preventOtherClicks = (e: MouseEvent) => {
+                            const target = e.target as HTMLElement;
+                            if (!target.closest('#flag-settings-button') && !target.closest('[data-tour-elem="popover"]')) {
+                                e.stopPropagation();
+                                e.preventDefault();
+                            }
+                        };
+
+                        document.addEventListener('mousedown', preventOtherClicks, {capture: true});
+                        document.addEventListener('click', preventOtherClicks, {capture: true});
+
+                        if (node) {
+                            const epoch = getTutorialEpoch();
+
+                            const cleanupInterval = setInterval(() => {
+                                if (getTutorialEpoch() !== epoch) {
+                                    clearInterval(cleanupInterval);
+                                    document.removeEventListener('mousedown', preventOtherClicks, {capture: true});
+                                    document.removeEventListener('click', preventOtherClicks, {capture: true});
+                                }
+                            }, 250);
+
+                            node.addEventListener('click', () => {
+                                if (getTutorialEpoch() !== epoch) return;
+
+                                clearInterval(cleanupInterval);
+                                document.removeEventListener('mousedown', preventOtherClicks, {capture: true});
+                                document.removeEventListener('click', preventOtherClicks, {capture: true});
+
+                                // Wait for the settings dialog to actually mount before advancing the
+                                // tour to the step that targets it — otherwise reactour resolves
+                                // `[data-slot="dialog-content"]` a tick too early and never attaches
+                                // its highlight/mask to it.
+                                const waitForDialog = setInterval(() => {
+                                    if (getTutorialEpoch() !== epoch) {
+                                        clearInterval(waitForDialog);
+                                        return;
+                                    }
+                                    if (document.querySelector('[data-slot="dialog-content"]')) {
+                                        clearInterval(waitForDialog);
+                                        setLockTour(false);
+                                        setCurrentStep(prev => prev + 1);
+                                    }
+                                }, 50);
+                            }, {once: true});
+                        }
+                    }
+                },
+                {
+                    selector: '[data-slot="dialog-content"]',
+                    content: "Here you can set either truncation or coverage. Truncation stops it after X iterations while coverage stops it is X% sure that you will achieve a connection.",
+                    stepInteraction: false,
+                    action: () => {
+                        installDialogGuard('[data-slot="dialog-content"]');
+                    }
+                },
+                {
+                    selector: '#settings-flags-inside-dialog',
+                    content: "Let's try settings coverage to 0.90 (90%)",
+                    action: (node) => {
+                        setLockTour(true);
+                        if (node) {
+                            const epoch = getTutorialEpoch();
+                            const checkCoverageInterval = setInterval(() => {
+                                if (getTutorialEpoch() !== epoch) {
+                                    clearInterval(checkCoverageInterval);
+                                    return;
+                                }
+                                const mode = useRunEngine.getState().truncationActive;
+                                const coverageAmount = useRunEngine.getState().coverage;
+                                if (!mode && coverageAmount === 0.9) {
+                                    clearInterval(checkCoverageInterval);
+                                    removeDialogGuard();
+
+                                    document.dispatchEvent(
+                                        new KeyboardEvent('keydown', {
+                                            key: 'Escape',
+                                            bubbles: true,
+                                            cancelable: true
+                                        })
+                                    );
+
+                                    setTimeout(() => {
+                                        setLockTour(false);
+                                        setCurrentStep(prev => prev + 1);
+                                    }, 50);
+                                }
+                            }, 250);
+                        }
+                    }
+                },
+                {
+                    selector: '#run-protocol-button',
+                    content: "Protocol written! Click Run to execute the entanglement swap.",
+                    action: (node) => {
+                        setLockTour(true);
+                        if (node) {
+                            const epoch = getTutorialEpoch();
+                            node.addEventListener('click', () => {
+                                if (getTutorialEpoch() !== epoch) return;
+                                setLockTour(false);
+                                setCurrentStep(prev => prev + 1);
+                            }, {once: true});
+                        }
+                    }
+                },
+                {
+                    selector: '#separator_main',
+                    padding:
+                        -10,
+                    position:
+                        ({windowWidth, windowHeight, width, height}) => [
+                            windowWidth / 2 - width / 2,
+                            windowHeight / 2 - height / 2,
+                        ],
+                    content:
+                        "Running swap protocol... Please wait.",
+                    stepInteraction:
+                        false,
+                    action:
+                    waitForResult
+                }
+                ,
+                {
+                    selector: '#result-display-window',
+                    content:
+                        'Swap tutorial complete! Check out how the end-to-end entanglement was established.',
+                }
+                ,
+            ],
+            [setLockTour, setNodes, setEdges, addNodes, fitView, setCurrentStep, getUserCodeCallback, setUserCodeCallback]
+        )
+    ;
+
     const basicProtocolSteps: StepType[] = [
         {
             selector: '#node-editor-whole-container',
@@ -1069,6 +1436,11 @@ outputGoal = (e <||> f) <> (e <.> f)`)
 
     return {
         interfaceSteps, basicProtocolSteps, advancedProtocolSteps,
-        createTutorialSteps, distillTutorialSteps, transTutorialSteps, swapTutorialSteps, ucreateTutorialSteps
+        createTutorialSteps,
+        distillTutorialSteps,
+        transTutorialSteps,
+        swapTutorialSteps,
+        ucreateTutorialSteps,
+        qbkatTutorialSteps
     };
 };

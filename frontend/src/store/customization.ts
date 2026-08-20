@@ -23,7 +23,8 @@ interface customizationState {
 
     lockTour: boolean,
     setLockTour: (bool: boolean) => void,
-
+    goalPopoverOpen: boolean;
+    setGoalPopoverOpen: (open: boolean) => void;
 }
 
 export const DEFAULT_NODE_VALUES: GenericNodeData = {
@@ -82,14 +83,16 @@ export const useCustomization = create<customizationState>()(
             },
 
             lockTour: false,
-            setLockTour: (bool) => set({lockTour: bool})
+            setLockTour: (bool) => set({lockTour: bool}),
+            goalPopoverOpen: false,
+            setGoalPopoverOpen: (open) => set({ goalPopoverOpen: open }),
         }),
         {
             name: "customization-storage",
             storage: createJSONStorage(() => localStorage),
 
             partialize: (state) => {
-                const { lockTour, ...stateToPersist } = state;
+                const { lockTour, goalPopoverOpen, ...stateToPersist } = state;
                 return stateToPersist;
             },
         }

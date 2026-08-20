@@ -1,15 +1,11 @@
-import { useMemo, useState } from "react";
-import { useRunEngine } from "@/store/runEngine.ts";
-import type { Node } from "@xyflow/react";
-import type { NodeData } from "@/components/main/node_editor/nodeEditor.tsx";
+import {useMemo} from "react";
+import {useRunEngine} from "@/store/runEngine.ts";
+import type {Node} from "@xyflow/react";
+import type {NodeData} from "@/components/main/node_editor/nodeEditor.tsx";
 
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover.tsx";
+import {Popover, PopoverContent, PopoverTrigger,} from "@/components/ui/popover.tsx";
 
-import { Button } from "@/components/ui/button.tsx";
+import {Button} from "@/components/ui/button.tsx";
 import {
     Command,
     CommandEmpty,
@@ -19,9 +15,10 @@ import {
     CommandList,
 } from "@/components/ui/command.tsx";
 
-import { Badge } from "@/components/ui/badge.tsx";
-import { Field } from "@/components/ui/field.tsx";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
+import {Badge} from "@/components/ui/badge.tsx";
+import {Field} from "@/components/ui/field.tsx";
+import {Checkbox} from "@/components/ui/checkbox.tsx";
+import {useCustomization} from "@/store/customization.ts";
 
 export const aggregateConnections = (items?: Array<{ id: string; label: string }>) => {
     if (!items || items.length === 0) return [];
@@ -45,7 +42,6 @@ export const aggregateConnections = (items?: Array<{ id: string; label: string }
 };
 
 const NetworkGoalBox = () => {
-    const [open, setOpen] = useState(false);
 
     const {
         getGraphCallback,
@@ -54,6 +50,8 @@ const NetworkGoalBox = () => {
         networkGoalDisabled: disabled,
         setNetworkGoalDisabled: setDisabled
     } = useRunEngine();
+
+    const {setGoalPopoverOpen, goalPopoverOpen} = useCustomization()
 
     let nodes: Node<NodeData>[] = [];
     if (getGraphCallback) {
@@ -127,7 +125,7 @@ const NetworkGoalBox = () => {
                 }
             >
                 <div className="flex items-center gap-2">
-                    <Popover open={open} onOpenChange={setOpen}>
+                    <Popover open={goalPopoverOpen} onOpenChange={setGoalPopoverOpen}>
                         <PopoverTrigger asChild disabled={disabled}>
                             <Button
                                 className="flex-1"
@@ -138,7 +136,10 @@ const NetworkGoalBox = () => {
                             </Button>
                         </PopoverTrigger>
 
-                        <PopoverContent className="w-60 md:w-80 lg:w-100 p-0">
+                        <PopoverContent
+                            data-tour-elem="popover"
+                            className="w-60 md:w-80 lg:w-100 p-0 z-[100000]"
+                        >
                             <Command>
                                 <CommandInput placeholder="Search connections..." />
                                 <CommandList>
