@@ -56,6 +56,7 @@ const FormattedQuantumOutput = ({displayData, estimatedMode}: {
                 }
             }
 
+            //TODO: Add downsampling. Make sure to reduce number of points in order to keep lag minimum. You can still view in zoom mode
             return (
                 <div className="w-full h-100 flex gap-4">
                     <div id="quantum-probability-output" className="min-h-0 flex-1">
