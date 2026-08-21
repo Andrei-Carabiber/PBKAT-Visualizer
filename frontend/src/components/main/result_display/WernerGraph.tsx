@@ -1,6 +1,7 @@
 import {useState} from "react";
 import {Area, AreaChart, ReferenceArea, ResponsiveContainer, Tooltip, XAxis, YAxis} from "recharts";
 import {Slider} from "@/components/ui/slider.tsx";
+import {downsampleData} from "@/lib/utils.ts";
 
 interface WernerGraphProps {
     wernerArray: number[];
@@ -25,11 +26,6 @@ const WernerGraph = ({
         werner: number | null;
     };
 
-    const plot_array: PlotPoint[] = wernerArray.map((value, index) => ({
-        werner: value === -1 ? null : value,
-        index,
-    }));
-
     const unavailableRanges = wernerArray.reduce<{ start: number; end: number }[]>(
         (ranges, value, index) => {
             if (value !== -1) return ranges;
@@ -53,6 +49,13 @@ const WernerGraph = ({
     const right = zoomRight !== undefined ? zoomRight : internalRight;
     const [refAreaLeft, setRefAreaLeft] = useState<string | number>("");
     const [refAreaRight, setRefAreaRight] = useState<string | number>("");
+
+    const rawPlotArray: PlotPoint[] = wernerArray.map((value, index) => ({
+        werner: value === -1 ? null : value,
+        index,
+    }))
+
+    const plot_array: PlotPoint[] = downsampleData(rawPlotArray, left, right, 500)
 
     const ZOOM_MIN_DIFFERENCE = 3;
 
@@ -104,7 +107,7 @@ const WernerGraph = ({
     const [YDomain, setYDomain] = useState([0, 1]);
 
     return (
-        <div className="w-full h-full min-h-[300px] flex">
+        <div className="w-full h-full min-h-75 flex">
             <div className="flex justify-between h-[90%] w-12 items-center mr-2">
                 <div className="h-full flex flex-col justify-between text-sm text-muted-foreground">
                     <p>{YDomain[1]}</p>
@@ -119,7 +122,7 @@ const WernerGraph = ({
                         className="h-full"
                 />
             </div>
-            <div className="w-full h-full min-h-[300px] flex flex-col">
+            <div className="w-full h-full min-h-75 flex flex-col">
 
                 <div className="flex justify-end px-4 py-1">
                     {(left !== "dataMin" || right !== "dataMax") && (
@@ -132,7 +135,7 @@ const WernerGraph = ({
                     )}
                 </div>
 
-                <div className="w-full flex-1 min-h-[260px]">
+                <div className="w-full flex-1 min-h-65">
                     <ResponsiveContainer width="100%" height="100%">
                         <AreaChart
                             data={plot_array}
@@ -203,8 +206,7 @@ const WernerGraph = ({
                                 fillOpacity={1}
                                 fill="url(#colorUv)"
                                 connectNulls={false}
-                                animationBegin={200}
-                                animationDuration={1300}
+                                isAnimationActive={false}
                             />
 
                             {refAreaLeft && refAreaRight ? (

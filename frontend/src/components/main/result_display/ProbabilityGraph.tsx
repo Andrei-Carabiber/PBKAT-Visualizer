@@ -1,6 +1,7 @@
 import {useState} from "react";
 import {Area, AreaChart, ReferenceArea, ResponsiveContainer, Tooltip, XAxis, YAxis} from "recharts";
 import {Slider} from "@/components/ui/slider.tsx";
+import {downsampleData} from "@/lib/utils.ts";
 
 type PlotPoint = {
     index: number;
@@ -44,16 +45,16 @@ const ProbabilityGraph = ({
 
     const [YDomain, setYDomain] = useState([0, 1]);
 
-    const plot_array: PlotPoint[] = !cdf_min
-        ? cdf_max.map((value, index) => ({
-            probability: value,
-            index: index
-        }))
+    const raw_plot_array = !cdf_min
+        ? cdf_max.map((value, index) => ({ probability: value, index: index }))
         : cdf_max.map((value, index) => ({
             min_probability: cdf_min[index],
             max_probability: value,
             index: index
         }));
+
+// 2. Apply downsampling based on the current zoom state
+    const plot_array = downsampleData(raw_plot_array, left, right, 400);
 
     const zoom = () => {
         let l = refAreaLeft;
@@ -98,7 +99,7 @@ const ProbabilityGraph = ({
     };
 
     return (
-        <div className="w-full h-full min-h-[300px] flex">
+        <div className="w-full h-full min-h-75 flex">
             <div className="flex justify-between h-[90%] w-12 items-center mr-2">
                 <div className="h-full flex flex-col justify-between text-sm text-muted-foreground">
                     <p>{YDomain[1]}</p>
@@ -114,7 +115,7 @@ const ProbabilityGraph = ({
                 />
             </div>
 
-            <div className="w-full h-full min-h-[300px] flex flex-col">
+            <div className="w-full h-full min-h-75 flex flex-col">
                 {/* Optional Header with Zoom Out Button */}
                 <div className="flex justify-end px-4 py-1">
                     {(left !== "dataMin" || right !== "dataMax") && (
@@ -127,7 +128,7 @@ const ProbabilityGraph = ({
                     )}
                 </div>
 
-                <div className="w-full flex-1 min-h-[260px]">
+                <div className="w-full flex-1 min-h-65">
                     <ResponsiveContainer width="100%" height="100%">
                         <AreaChart
                             data={plot_array}
@@ -170,8 +171,7 @@ const ProbabilityGraph = ({
                                         stroke="#8884d8"
                                         fillOpacity={1}
                                         fill="url(#colorUv)"
-                                        animationBegin={200}
-                                        animationDuration={1300}
+                                        isAnimationActive={false}
                                     />
                                     <Tooltip
                                         content={({active, payload}) => {
@@ -200,14 +200,14 @@ const ProbabilityGraph = ({
                                         stroke="#8884d8"
                                         fillOpacity={1}
                                         fill="url(#colorUv)"
-                                        animationBegin={200}
-                                        animationDuration={1300}
+                                        isAnimationActive={false}
                                     />
                                     <Area
                                         type="monotone"
                                         dataKey="max_probability"
                                         stroke="#82ca9d"
                                         fillOpacity={1}
+                                        isAnimationActive={false}
                                         fill="url(#colorPv)"
                                     />
                                     <Tooltip

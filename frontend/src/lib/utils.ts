@@ -43,3 +43,39 @@ export const aggregateConnections = (items?: Array<{ id: string; label: string }
     count: data.count,
   }));
 };
+
+
+
+//Downsample huge arrays
+export const downsampleData = (
+    data: any[],
+    zoomLeft: string | number,
+    zoomRight: string | number,
+    maxPoints: number = 1000
+) => {
+  let startIndex = 0;
+  let endIndex = data.length - 1;
+
+  if (typeof zoomLeft === "number" && typeof zoomRight === "number") {
+    startIndex = Math.max(0, Math.floor(zoomLeft));
+    endIndex = Math.min(data.length - 1, Math.ceil(zoomRight));
+  }
+
+  const visibleData = data.slice(startIndex, endIndex + 1);
+
+  // 2. If the visible range is smaller than maxPoints, return it directly
+  if (visibleData.length <= maxPoints) {
+    return visibleData;
+  }
+
+  // 3. Otherwise, bucket the data and take the average (or min/max) of each bucket
+  const downsampled = [];
+  const bucketSize = Math.ceil(visibleData.length / maxPoints);
+
+  for (let i = 0; i < visibleData.length; i += bucketSize) {
+    const bucket = visibleData.slice(i, i + bucketSize);
+    downsampled.push(bucket[0]);
+  }
+
+  return downsampled;
+};
