@@ -7,7 +7,6 @@ import {jsPDF} from "jspdf";
 import {toPng} from "html-to-image";
 import {useState} from "react";
 import {useTheme} from "@/components/theme-provider.tsx";
-import {EDITABLE_END_MARKER, EDITABLE_START_MARKER} from "@/components/main/text_editor/haskellBoilerplate.ts";
 
 const SaveResultsButton = () => {
     const {formattedData} = useRunEngine();
@@ -17,19 +16,13 @@ const SaveResultsButton = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [isPreviewLoading, setIsPreviewLoading] = useState(false);
-    const {getCodeCallback} = useRunEngine();
 
     const [includeCode, setIncludeCode] = useState(false);
-
-    const rawCode = getCodeCallback ? getCodeCallback() : "Couldn't load protocol";
-
-    const userCode = rawCode.split(EDITABLE_END_MARKER)[0].replaceAll("\n\n", "\n")
-        .split(EDITABLE_START_MARKER)[1]
-    const network = rawCode.split("actionConfig = PAC")[1].split("goal :: ProbBellKATTest\n")[0]
-
-    const code = (userCode + "\n" + network).replace(/\n{2,}/g, "\n");
-
     if (!formattedData) return null;
+
+
+    const code = (formattedData?.originalCode.userCode + "\n" + formattedData?.originalCode.network)
+
 
     const getTargetElement = () => {
         if (formattedData.mode === "run") {

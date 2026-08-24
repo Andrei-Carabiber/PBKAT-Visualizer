@@ -1,5 +1,6 @@
 export type DataType = (QBKATProbQualityOutput | QBKATProbOutput | PBKATOutput) & {
-    _cached?: boolean
+    _cached?: boolean,
+    originalCode: { userCode: string, network: string },
 }
 
 export type QBKATProbOutput = {

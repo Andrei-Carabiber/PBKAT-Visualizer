@@ -127,6 +127,7 @@ export const formatData = (data: DataType): FormattedDataType => {
 
         return {
             mode: "probability",
+            originalCode: data.originalCode,
             probability: {
                 lowerEnd: lowerTerm,
                 higherEnd: upperTerm
@@ -153,6 +154,7 @@ export const formatData = (data: DataType): FormattedDataType => {
 
             return {
                 mode: 'run',
+                originalCode: data.originalCode,
                 duration: data.durations.firstDuration,
                 isInterval: isInterval,
                 probability: rows
@@ -162,6 +164,7 @@ export const formatData = (data: DataType): FormattedDataType => {
         else {
             return {
                 mode: 'run',
+                originalCode: data.originalCode,
                 duration: data.durations.firstDuration,
                 isInterval: isInterval,
                 probability: parseDistribution(inner)
@@ -172,7 +175,9 @@ export const formatData = (data: DataType): FormattedDataType => {
     }
 }
 
-export type FormattedDataType = QBKATProbQualityOutput | QBKATProbOutput | FormattedPBKATOutput;
+export type FormattedDataType = (QBKATProbQualityOutput | QBKATProbOutput | FormattedPBKATOutput) & {
+    originalCode: { userCode: string, network: string },
+}
 
 type QBKATProbOutput = {
     mode: "probOnly",
