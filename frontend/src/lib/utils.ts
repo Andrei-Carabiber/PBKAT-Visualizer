@@ -9,7 +9,7 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * Removes all whitespace (spaces, tabs, newlines) from a string.
  */
-export const stripWhitespace = (str: string) => str.replace(/\s+/g, '');
+const stripWhitespace = (str: string) => str.replace(/\s+/g, '');
 
 /**
  * Checks if a larger block of text contains a specific substring, ignoring all spaces.

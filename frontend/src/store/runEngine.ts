@@ -314,7 +314,7 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
         try {
             const response = await fetch(`${RUN_PROTOCOL_URL}/${jobId}`, { method: "DELETE" });
             const job = await response.json() as ProtocolJob | { error?: string };
-            if (!response.ok) throw new Error("error" in job ? job.error : "Could not cancel the calculation.");
+            if (!response.ok) set ({error: job.error ?? "Could not retry the calculation."})
             set({ activeJob: null, loading: false });
         } catch (error: any) {
             set({ error: error.message || "Could not cancel the calculation." });
@@ -327,7 +327,9 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
         try {
             const response = await fetch(`${RUN_PROTOCOL_URL}/${jobId}/retry`, { method: "POST" });
             const job = await response.json() as ProtocolJob | { error?: string };
-            if (!response.ok) throw new Error("error" in job ? job.error : "Could not retry the calculation.");
+            if (!response.ok) {
+                set({error: job.error ?? "Could not retry the calculation."})
+            }
             saveActiveJobId(jobId);
             set({ activeJob: job as ProtocolJob, loading: true, error: null, data: null, formattedData: null });
             await get().pollProtocolJob(jobId);
@@ -349,7 +351,7 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
             try {
                 const response = await fetch(`${RUN_PROTOCOL_URL}/${jobId}`);
                 const job = await response.json() as ProtocolJob | { error?: string };
-                if (!response.ok) throw new Error("error" in job ? job.error : "Could not check calculation status.");
+                if (!response.ok) set({error: job.error ?? "Could not retry the calculation."})
                 const protocolJob = job as ProtocolJob;
 
                 if (get().activeJob && get().activeJob?.jobId !== jobId) return;

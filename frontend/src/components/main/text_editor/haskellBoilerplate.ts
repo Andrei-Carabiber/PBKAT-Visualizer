@@ -47,7 +47,7 @@ export function isQuantumCode(userCode: string): boolean {
     return userCode.includes("QBKATPolicy");
 }
 
-export const EDITOR_PRELUDE_ALL_IMPORTS = `
+const EDITOR_PRELUDE_ALL_IMPORTS = `
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE OverloadedLists #-}
 
@@ -58,7 +58,7 @@ ${EDITABLE_START_MARKER}
 `
 
 
-export const PROBABILISTIC_PRELUDE = `
+const PROBABILISTIC_PRELUDE = `
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE OverloadedLists #-}
 
@@ -67,7 +67,7 @@ import BellKAT.ProbabilisticPrelude
 ${EDITABLE_START_MARKER}
 `;
 
-export const QUANTUM_PRELUDE = `
+const QUANTUM_PRELUDE = `
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE OverloadedLists #-}
 

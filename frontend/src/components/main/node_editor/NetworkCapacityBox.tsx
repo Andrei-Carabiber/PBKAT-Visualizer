@@ -22,27 +22,7 @@ import {
 import { Badge } from "@/components/ui/badge.tsx";
 import { Field } from "@/components/ui/field.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
-
-export const aggregateConnections = (items?: Array<{ id: string; label: string }>) => {
-    if (!items || items.length === 0) return [];
-
-    const countMap = new Map<string, { count: number; firstId: string }>();
-
-    for (const item of items) {
-        const existing = countMap.get(item.label);
-        if (existing) {
-            existing.count += 1;
-        } else {
-            countMap.set(item.label, { count: 1, firstId: item.id });
-        }
-    }
-
-    return Array.from(countMap.entries()).map(([label, data]) => ({
-        id: data.firstId,
-        label,
-        count: data.count,
-    }));
-};
+import {aggregateConnections} from "@/lib/utils.ts";
 
 const NetworkCapacityBox = () => {
     const [open, setOpen] = useState(false);
