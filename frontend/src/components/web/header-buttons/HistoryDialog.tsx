@@ -5,7 +5,7 @@ import {
     Bookmark,
     History,
     RefreshCw,
-    Square,
+    SquareX,
     Trash2,
 } from "lucide-react";
 import {toast} from "sonner";
@@ -36,6 +36,7 @@ import {
     TabsTrigger,
 } from "@/components/ui/tabs.tsx";
 import RunStatusBadge from "@/components/main/result_display/RunStatusBadge.tsx";
+import RenameRunButton from "@/components/main/result_display/RenameRunButton.tsx";
 
 interface HistoryDialogProps {
     isOpen: boolean;
@@ -462,6 +463,11 @@ const HistoryDialog = ({
                                 Load
                             </Button>
 
+                            <RenameRunButton
+                                item={item}
+                                compact
+                            />
+
                             {active && item.jobId && (
                                 <Button
                                     variant="ghost"
@@ -473,7 +479,7 @@ const HistoryDialog = ({
                                     }}
                                     className="h-8 w-8 text-muted-foreground hover:text-destructive"
                                 >
-                                    <Square className="h-3.5 w-3.5" />
+                                    <SquareX className="h-4 w-4" />
                                 </Button>
                             )}
 

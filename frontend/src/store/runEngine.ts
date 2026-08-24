@@ -18,11 +18,19 @@ export interface ActiveConnection {
 export type LastSettingsRan = {
     id: string;
     code: string;
-    graph: { nodes: Node<NodeData>[]; edges: Edge<EdgeData>[] };
+    graph: {
+        nodes: Node<NodeData>[];
+        edges: Edge<EdgeData>[];
+    };
     goal: ActiveConnection[];
     goalDisabled: boolean;
     networkCapacity: ActiveConnection[];
     capacityDisabled: boolean;
+
+    truncation?: number;
+    coverage?: number;
+    truncationActive?: boolean;
+
     result?: FormattedDataType;
     dateWhenRan: number;
 };
@@ -53,6 +61,7 @@ export type ProtocolJob = {
     result?: DataType;
     error?: string;
 };
+
 
 interface RunEngineState {
     loading: boolean;
@@ -101,6 +110,7 @@ interface RunEngineState {
     registerUserCodeSetter: (callback: (code: string) => void) => void;
     handleRun: () => Promise<void>;
     runHistory: HistoryItem[];
+    renameRunHistory: (id: string, name: string) => void;
     hydrateRunHistory: () => void;
     upsertRunHistory: (item: HistoryItem) => void;
     removeRunHistory: (id: string) => void;
@@ -110,7 +120,11 @@ interface RunEngineState {
     retryJob: (jobId: string) => Promise<void>;
     retryActiveJob: () => Promise<void>;
     resumeSavedJob: () => Promise<void>;
-    pollProtocolJob: (jobId: string) => Promise<void>;
+    pollProtocolJob: (
+        jobId: string,
+        options?: { showInOutput?: boolean }
+    ) => Promise<void>;
+    showHistoryResult: (item: HistoryItem) => void;
     clearOutput: () => void;
 
     viewMode: "protocol" | "node"
@@ -127,6 +141,10 @@ export type RunContext = {
     goalDisabled: boolean;
     networkCapacity: ActiveConnection[];
     capacityDisabled: boolean;
+
+    truncation: number;
+    coverage: number;
+    truncationActive: boolean;
 };
 
 //State before editors loaded
@@ -167,6 +185,8 @@ function writeRunHistory(items: HistoryItem[]): void {
     }
 }
 const POLL_INTERVAL_MS = 2_000;
+const resumingJobIds = new Set<string>();
+
 
 const terminalJobStatuses: ProtocolJobStatus[] = ["completed", "failed", "cancelled", "interrupted", "timed_out"];
 
@@ -323,6 +343,7 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
             coverage,
             truncationActive,
         } = get();
+
         if (!getCodeCallback) {
             set({
                 error: "The code editor is still initializing language servers. Please wait a moment and try again. (Wait 10seconds)",
@@ -412,8 +433,14 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
                 graphSnapshot,
                 goal: structuredClone(goalConnections),
                 goalDisabled: networkGoalDisabled,
-                networkCapacity: structuredClone(networkCapacityConnections),
+                networkCapacity: structuredClone(
+                    networkCapacityConnections
+                ),
                 capacityDisabled: networkCapacityDisabled,
+
+                truncation,
+                coverage,
+                truncationActive,
             };
 
             const settings: LastSettingsRan = {
@@ -424,6 +451,11 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
                 goalDisabled: runContext.goalDisabled,
                 networkCapacity: runContext.networkCapacity,
                 capacityDisabled: runContext.capacityDisabled,
+
+                truncation: runContext.truncation,
+                coverage: runContext.coverage,
+                truncationActive: runContext.truncationActive,
+
                 dateWhenRan: Date.now(),
             };
 
@@ -565,30 +597,85 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
     },
 
     resumeSavedJob: async () => {
-        const jobId = localStorage.getItem(ACTIVE_PROTOCOL_JOB_STORAGE_KEY);
+        const jobId = localStorage.getItem(
+            ACTIVE_PROTOCOL_JOB_STORAGE_KEY
+        );
 
-        if (!jobId || get().activeJob) return;
+        if (!jobId || resumingJobIds.has(jobId)) {
+            return;
+        }
 
-        await get().pollProtocolJob(jobId);
+        resumingJobIds.add(jobId);
+
+        try {
+
+            await get().pollProtocolJob(jobId, {
+                showInOutput: false,
+            });
+        } finally {
+            resumingJobIds.delete(jobId);
+        }
     },
-    pollProtocolJob: async (jobId: string) => {
+
+    renameRunHistory: (id, name) => {
+        const trimmedName = name.trim();
+
+        if (!trimmedName) return;
+
+        set((state) => {
+            const next = state.runHistory.map((item) => {
+                if (item.id !== id && item.jobId !== id) {
+                    return item;
+                }
+
+                return {
+                    ...item,
+                    name: trimmedName,
+                };
+            });
+
+            writeRunHistory(next);
+
+            return {
+                runHistory: next,
+            };
+        });
+    },
+
+    pollProtocolJob: async (
+        jobId: string,
+        options?: { showInOutput?: boolean }
+    ) => {
+        const showInOutput = options?.showInOutput ?? true;
+
         while (true) {
             try {
-                const response = await fetch(`${RUN_PROTOCOL_URL}/${jobId}`);
-                const job = await response.json() as ProtocolJob | { error?: string };
+                const response = await fetch(
+                    `${RUN_PROTOCOL_URL}/${jobId}`
+                );
+
+                const body = await response.json() as
+                    | ProtocolJob
+                    | { error?: string };
+
                 if (!response.ok) {
                     throw new Error(
-                        "error" in job
-                            ? job.error
+                        "error" in body
+                            ? body.error
                             : "Could not check calculation status."
                     );
                 }
 
-                const protocolJob = job as ProtocolJob;
+                const protocolJob = body as ProtocolJob;
 
+                /*
+                 * Always update history, including when polling silently
+                 * after restoring a job from local storage.
+                 */
                 const existingHistoryItem = get().runHistory.find(
                     (item) => item.jobId === protocolJob.jobId
                 );
+
                 if (existingHistoryItem) {
                     get().upsertRunHistory({
                         ...existingHistoryItem,
@@ -601,44 +688,101 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
                     });
                 }
 
-                if (get().activeJob && get().activeJob?.jobId !== jobId) return;
-                set({ activeJob: protocolJob, loading: !isTerminalJob(protocolJob.status) });
+                /*
+                 * A foreground polling loop should stop controlling the
+                 * output if another foreground job has replaced it.
+                 *
+                 * Background polling should continue because it only
+                 * updates history.
+                 */
+                if (
+                    showInOutput &&
+                    get().activeJob &&
+                    get().activeJob?.jobId !== jobId
+                ) {
+                    return;
+                }
 
-                if (protocolJob.status === "completed" && protocolJob.result) {
-                    const result = protocolJob.result;
-                    const formattedData = formatData(result);
-
+                /*
+                 * Only foreground polling controls the result window.
+                 */
+                if (showInOutput) {
                     set({
-                        cached: result._cached ?? false,
-                        data: result,
-                        formattedData,
-                        loading: false,
+                        activeJob: protocolJob,
+                        loading: !isTerminalJob(
+                            protocolJob.status
+                        ),
                     });
+                }
 
-                    const historyItem = get().runHistory.find(
-                        (item) => item.jobId === protocolJob.jobId
-                    );
+                if (protocolJob.status === "completed") {
+                    if (protocolJob.result) {
+                        const result = protocolJob.result;
+                        const formattedData = formatData(result);
 
-                    if (historyItem) {
-                        const completedSettings: LastSettingsRan = {
-                            ...historyItem.settings,
-                            result: formattedData,
-                        };
+                        const historyItem =
+                            get().runHistory.find(
+                                (item) =>
+                                    item.jobId ===
+                                    protocolJob.jobId
+                            );
 
-                        get().upsertRunHistory({
-                            ...historyItem,
-                            settings: completedSettings,
-                            status: "completed",
-                            stage: undefined,
-                            queuePosition: undefined,
-                            error: undefined,
-                            updatedAt: new Date().toISOString(),
+                        if (historyItem) {
+                            const completedSettings: LastSettingsRan = {
+                                ...historyItem.settings,
+                                result: formattedData,
+                            };
+
+                            get().upsertRunHistory({
+                                ...historyItem,
+                                settings: completedSettings,
+                                status: "completed",
+                                stage: undefined,
+                                queuePosition: undefined,
+                                error: undefined,
+                                updatedAt:
+                                    new Date().toISOString(),
+                            });
+
+                            /*
+                             * lastSettingsRan belongs to the visible
+                             * output. Do not change it when polling in
+                             * the background.
+                             */
+                            if (showInOutput) {
+                                set({
+                                    lastSettingsRan:
+                                    completedSettings,
+                                });
+                            }
+                        }
+
+                        /*
+                         * Only open/populate the output for a foreground
+                         * run.
+                         */
+                        if (showInOutput) {
+                            set({
+                                cached: result._cached ?? false,
+                                data: result,
+                                formattedData,
+                                loading: false,
+                                error: null,
+                            });
+                        }
+                    } else if (showInOutput) {
+                        set({
+                            loading: false,
+                            error:
+                                "The calculation completed but did not return a result.",
                         });
-
-                        set({ lastSettingsRan: completedSettings });
                     }
 
-                    if (localStorage.getItem(ACTIVE_PROTOCOL_JOB_STORAGE_KEY) === jobId) {
+                    if (
+                        localStorage.getItem(
+                            ACTIVE_PROTOCOL_JOB_STORAGE_KEY
+                        ) === jobId
+                    ) {
                         saveActiveJobId(null);
                     }
 
@@ -650,12 +794,21 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
                     protocolJob.status === "interrupted" ||
                     protocolJob.status === "timed_out"
                 ) {
-                    set({
-                        error: protocolJob.error || "The calculation failed.",
-                        loading: false,
-                    });
+                    if (showInOutput) {
+                        set({
+                            activeJob: protocolJob,
+                            error:
+                                protocolJob.error ||
+                                "The calculation failed.",
+                            loading: false,
+                        });
+                    }
 
-                    if (localStorage.getItem(ACTIVE_PROTOCOL_JOB_STORAGE_KEY) === jobId) {
+                    if (
+                        localStorage.getItem(
+                            ACTIVE_PROTOCOL_JOB_STORAGE_KEY
+                        ) === jobId
+                    ) {
                         saveActiveJobId(null);
                     }
 
@@ -663,24 +816,79 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
                 }
 
                 if (protocolJob.status === "cancelled") {
-                    set({
-                        activeJob: protocolJob,
-                        loading: false,
-                    });
+                    if (showInOutput) {
+                        set({
+                            activeJob: protocolJob,
+                            loading: false,
+                        });
+                    }
 
-                    if (localStorage.getItem(ACTIVE_PROTOCOL_JOB_STORAGE_KEY) === jobId) {
+                    if (
+                        localStorage.getItem(
+                            ACTIVE_PROTOCOL_JOB_STORAGE_KEY
+                        ) === jobId
+                    ) {
                         saveActiveJobId(null);
                     }
 
                     return;
                 }
-            } catch (error: any) {
-                set({ error: error.message || "Could not check calculation status.", loading: false });
+            } catch (error: unknown) {
+                const message =
+                    error instanceof Error
+                        ? error.message
+                        : "Could not check calculation status.";
+
+                if (showInOutput) {
+                    set({
+                        error: message,
+                        loading: false,
+                    });
+                } else {
+                    /*
+                     * A background polling failure should not open the
+                     * result window.
+                     */
+                    console.error(
+                        `Could not resume protocol job ${jobId}:`,
+                        error
+                    );
+                }
+
                 return;
             }
 
-            await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+            await new Promise((resolve) =>
+                setTimeout(resolve, POLL_INTERVAL_MS)
+            );
         }
+    },
+    showHistoryResult: (item) => {
+        const result = item.settings.result;
+
+        if (
+            (item.status ?? "completed") !== "completed" ||
+            !result
+        ) {
+            return;
+        }
+
+        const jobId = item.jobId ?? item.id;
+
+        set({
+            formattedData: result,
+            data: null,
+            cached: false,
+            error: null,
+            loading: false,
+            lastSettingsRan: item.settings,
+            activeJob: {
+                jobId,
+                status: "completed",
+                createdAt: item.savedAt,
+                attempt: item.attempt ?? 1,
+            },
+        });
     },
     clearOutput: () => set({data: null, formattedData: null, error: null, activeJob: null}),
 

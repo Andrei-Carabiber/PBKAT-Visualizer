@@ -13,8 +13,8 @@ import FormattedOutput from "@/components/main/result_display/FormattedOutput.ts
 import FormattedQuantumOutput from "@/components/main/result_display/FormattedQuantumOutput.tsx";
 import StatisticsBar from "@/components/main/result_display/StatisticsBar.tsx";
 import SaveResultsButton from "@/components/main/result_display/SaveResultsButtons.tsx";
-import SaveToHistoryButton from "@/components/main/result_display/SaveToHistoryButton.tsx";
 import RunStatusBadge from "@/components/main/result_display/RunStatusBadge.tsx";
+import RenameRunButton from "@/components/main/result_display/RenameRunButton.tsx";
 
 const ResultDisplayWindow = () => {
     const {
@@ -26,7 +26,12 @@ const ResultDisplayWindow = () => {
         retryActiveJob,
         resumeSavedJob,
         clearOutput,
+        runHistory
     } = useRunEngine();
+
+    const displayedHistoryItem = runHistory.find(
+        (item) => item.jobId === activeJob?.jobId
+    );
 
     const {showStatistics} = useCustomization();
     const [estimatedMode, setEstimatedMode] = useState(false);
@@ -94,6 +99,15 @@ const ResultDisplayWindow = () => {
                         Output
                     </span>
 
+                    {displayedHistoryItem && (
+                        <span
+                            className="max-w-48 truncate text-xs font-semibold normal-case text-foreground"
+                            title={displayedHistoryItem.name}
+                        >
+                            {displayedHistoryItem.name}
+                        </span>
+                    )}
+
                     {activeJob && (
                         <RunStatusBadge
                             status={activeJob.status}
@@ -109,6 +123,10 @@ const ResultDisplayWindow = () => {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
+                    {activeJob && (
+                        <RenameRunButton/>
+                    )}
+
                     {formattedData && (
                         <>
                             <div className="mr-2 flex items-center gap-2">
@@ -126,7 +144,6 @@ const ResultDisplayWindow = () => {
                                 />
                             </div>
 
-                            <SaveToHistoryButton />
                             <SaveResultsButton />
                         </>
                     )}

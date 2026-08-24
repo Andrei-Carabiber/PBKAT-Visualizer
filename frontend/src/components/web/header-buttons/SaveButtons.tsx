@@ -47,6 +47,10 @@ export type localStorageSave = {
     goalDisabled: boolean;
     networkCapacity: ActiveConnection[];
     capacityDisabled: boolean;
+
+    truncation: number;
+    coverage: number;
+    truncationActive: boolean;
 };
 
 const SaveButtons = () => {
@@ -65,8 +69,15 @@ const SaveButtons = () => {
         setNetworkCapacityConnections,
         setUserCodeCallback,
         setGraphCallback,
+
+        truncation,
+        coverage,
+        truncationActive,
         setTruncation,
         setCoverage,
+        setTruncationActive,
+
+        showHistoryResult,
     } = useRunEngine();
 
     const [allSaves, setAllSaves] = useState<localStorageSave[]>([]);
@@ -107,6 +118,10 @@ const SaveButtons = () => {
             goalDisabled: networkGoalDisabled,
             networkCapacity: networkCapacityConnections,
             capacityDisabled: networkCapacityDisabled,
+
+            truncation,
+            coverage,
+            truncationActive,
         };
 
         let saves: localStorageSave[] = [];
@@ -135,34 +150,54 @@ const SaveButtons = () => {
         setAllSaves(loadAllSaves());
     }, []);
 
-    const handleLoad = (save: localStorageSave | exampleSave | exampleQuantumSave) => {
+    const handleLoad = (
+        save:
+            | localStorageSave
+            | exampleSave
+            | exampleQuantumSave
+    ) => {
         try {
             setGoalConnections(save.goal);
-            setNetworkCapacityConnections(save.networkCapacity);
-            setNetworkCapacityDisabled(save.capacityDisabled);
+            setNetworkCapacityConnections(
+                save.networkCapacity
+            );
+            setNetworkCapacityDisabled(
+                save.capacityDisabled
+            );
             setNetworkGoalDisabled(save.goalDisabled);
 
             if (setGraphCallback && setUserCodeCallback) {
-                setGraphCallback(save.graph.nodes, save.graph.edges);
+                setGraphCallback(
+                    save.graph.nodes,
+                    save.graph.edges
+                );
 
                 setTimeout(() => {
                     setUserCodeCallback(save.code);
                 }, 0);
             }
-
-            setIsExamplesOpen(false);
-            setIsHistoryOpen(false);
-
             if ("truncation" in save && "coverage" in save) {
                 setTruncation(save.truncation);
                 setCoverage(save.coverage);
             }
+
+            if ("truncationActive" in save) {
+                setTruncationActive(save.truncationActive)
+            }
+
+            setIsExamplesOpen(false);
+            setIsHistoryOpen(false);
         } catch (err) {
-            console.error("There was an error loading the save: ", err);
-            setError("Failed to parse or load data correctly.");
+            console.error(
+                "There was an error loading the save:",
+                err
+            );
+
+            setError(
+                "Failed to parse or load data correctly."
+            );
         }
     };
-
     const handleLoadHistory = (item: HistoryItem) => {
         handleLoad({
             id: item.id,
@@ -172,9 +207,24 @@ const SaveButtons = () => {
             graph: item.settings.graph,
             goal: item.settings.goal,
             goalDisabled: item.settings.goalDisabled,
-            networkCapacity: item.settings.networkCapacity,
-            capacityDisabled: item.settings.capacityDisabled,
+            networkCapacity:
+            item.settings.networkCapacity,
+            capacityDisabled:
+            item.settings.capacityDisabled,
+
+            truncation: item.settings.truncation,
+            coverage: item.settings.coverage,
+            truncationActive:
+            item.settings.truncationActive,
         });
+
+        if (
+            (item.status ?? "completed") ===
+            "completed" &&
+            item.settings.result
+        ) {
+            showHistoryResult(item);
+        }
     };
 
     const handleShare = async () => {
