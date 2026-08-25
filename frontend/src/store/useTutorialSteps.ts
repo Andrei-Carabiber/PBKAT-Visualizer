@@ -1,5 +1,5 @@
 import {type StepType, useTour} from "@reactour/tour";
-import {useEffect, useMemo} from "react";
+import {useMemo} from "react";
 import {useCustomization} from "@/store/customization.ts";
 import {type Edge, useReactFlow} from "@xyflow/react";
 import {useRunEngine} from "@/store/runEngine.ts";
@@ -62,34 +62,6 @@ export const useTutorialSteps = () => {
             }
         }, 100);
     }
-
-    useEffect(() => {
-        const isPasteShortcut = (e: KeyboardEvent) =>
-            (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v';
-
-        const keyGuardHandler = (e: KeyboardEvent) => {
-            if (!useCustomization.getState().lockTour) return;
-            if (isPasteShortcut(e)) {
-                e.preventDefault();
-                e.stopPropagation();
-                toast.error("Type the code yourself so you can follow along with the tutorial!");
-            }
-        };
-
-        const pasteGuardHandler = (e: ClipboardEvent) => {
-            if (!useCustomization.getState().lockTour) return;
-            e.preventDefault();
-            e.stopPropagation();
-            toast.error("Type the code yourself so you can follow along with the tutorial!");
-        };
-
-        document.addEventListener('keydown', keyGuardHandler, {capture: true});
-        document.addEventListener('paste', pasteGuardHandler, {capture: true});
-        return () => {
-            document.removeEventListener('keydown', keyGuardHandler, {capture: true});
-            document.removeEventListener('paste', pasteGuardHandler, {capture: true});
-        };
-    }, []);
 
     const interfaceSteps: StepType[] = useMemo(() => [
         {
@@ -1388,54 +1360,569 @@ outputGoal = (e <||> f) <> (e <.> f)`)
         )
     ;
 
-    const basicProtocolSteps: StepType[] = [
+    const basicProtocolSteps: StepType[] = useMemo(() => [
         {
-            selector: '#node-editor-whole-container',
-            content: "Let's start with Direct Transmission. Create two nodes, A and B, and connect them with a quantum channel of length L.",
+            selector: '#separator_main',
+            padding: -10,
+            position: ({windowWidth, windowHeight, width, height}) => [
+                windowWidth / 2 - width / 2,
+                windowHeight / 2 - height / 2,
+            ],
+            content: "Now we will write a more complex, entire protocol.",
+            action: () => {
+                bumpTutorialEpoch();
+                setNodes([]);
+                setEdges([]);
+                if (setUserCodeCallback) setUserCodeCallback("");
+                setNetworkGoalDisabled(true);
+                setNetworkCapacityDisabled(true);
+                setTimeout(() => fitView(), 100);
+            },
+            stepInteraction: false,
         },
         {
-            selector: '#network-capacity-box',
-            content: 'When transmitting qubits over a physical channel, success probability decays exponentially with distance. Set your capacity and expected success probability (p_ge) here, factoring in the channel length.',
+            selector: '#separator_main',
+            padding: -10,
+            position: ({windowWidth, windowHeight, width, height}) => [
+                windowWidth / 2 - width / 2,
+                windowHeight / 2 - height / 2,
+            ],
+            content: "We have set up 4 nodes: A, B, C and H. A, B and C are each connected to H. " +
+                "We want to first create 3 connections: A~H, B~H and C~H (in parallel), and then swap A~H with H~C in H, " +
+                "and B~H with H~C in H, giving priority to the first swap. This sounds complicated but it will get clearer once we start.",
+            stepInteraction: false,
         },
         {
-            selector: '#settings-button',
-            content: 'To account for loss and noise, use the settings to define initial photon loss and length-dependent loss in dB/km.',
+            selector: "#monaco-editor-container",
+            content: 'We will start by writing outputGoal. First define its type: `outputGoal :: QBKATPolicy` and then ' +
+                'start the definition: `outputGoal = ` (leave the right-hand side empty for now).',
+            action: (node) => {
+                setLockTour(true);
+                if (node) {
+                    const epoch = getTutorialEpoch();
+                    const checkCodeInterval = setInterval(() => {
+                        if (getTutorialEpoch() !== epoch) {
+                            clearInterval(checkCodeInterval);
+                            return;
+                        }
+                        const currentCode = getUserCodeCallback ? getUserCodeCallback() : "";
+                        if (containsIgnoringSpaces(currentCode, 'outputGoal :: QBKATPolicy') && containsIgnoringSpaces(currentCode, 'outputGoal = ')) {
+                            clearInterval(checkCodeInterval);
+                            setLockTour(false);
+                            setCurrentStep((prev) => prev + 1);
+                        }
+                    }, 500);
+                }
+            }
         },
         {
-            selector: '#monaco-editor-container',
-            content: 'Quantum memories and channels suffer from decoherence. In your protocol code, define T1 (energy relaxation) and T2 (dephasing) time constants. Relaxation destroys the encoded state, while dephasing washes out superpositions.',
+            selector: "#monaco-editor-container",
+            content: `Great! Now we want a while loop, so the protocol doesn't stop until we've achieved what we want: A~C and B~C. ` +
+                `After 'outputGoal =' write 'while ("A" /~? "C" &&* "B" /~? "C")'. '/~?' means "if not connected". ` +
+                `This makes the loop stop only once both A~C and B~C exist. In summary you need: ` +
+                `'outputGoal = while ("A" /~? "C" &&* "B" /~? "C")'`,
+            action: (node) => {
+                setLockTour(true);
+                if (node) {
+                    const epoch = getTutorialEpoch();
+                    const checkCodeInterval = setInterval(() => {
+                        if (getTutorialEpoch() !== epoch) {
+                            clearInterval(checkCodeInterval);
+                            return;
+                        }
+                        const currentCode = getUserCodeCallback ? getUserCodeCallback() : "";
+                        if (containsIgnoringSpaces(currentCode, 'outputGoal :: QBKATPolicy')
+                            && containsIgnoringSpaces(currentCode, 'outputGoal = ')
+                            && containsIgnoringSpaces(currentCode, 'while ("A" /~? "C" &&* "B" /~? "C")')
+                        ) {
+                            clearInterval(checkCodeInterval);
+                            setLockTour(false);
+                            setCurrentStep((prev) => prev + 1);
+                        }
+                    }, 500);
+                }
+            }
         },
         {
-            selector: '#network-goal-box',
-            content: 'Your basic goal is to successfully generate an entangled pair. The fidelity of this pair depends heavily on the distance and the T1/T2 coherence times you define.',
-        }
-    ];
+            selector: "#monaco-editor-container",
+            content: `Good job! Don't worry if it shows red underlines for now — we haven't closed everything yet. ` +
+                `After the while condition's closing parenthesis, open a new pair of parentheses for what happens inside the loop: ` +
+                `write () and, with your cursor between them, press enter to make a new line. On that line we want to generate A~H, ` +
+                `so write 'ucreate ("A", "H")'. In the end you should have: while (...) ( ucreate ("A", "H") )`,
+            action: (node) => {
+                setLockTour(true);
+                if (node) {
+                    const epoch = getTutorialEpoch();
+                    const checkCodeInterval = setInterval(() => {
+                        if (getTutorialEpoch() !== epoch) {
+                            clearInterval(checkCodeInterval);
+                            return;
+                        }
+                        const currentCode = getUserCodeCallback ? getUserCodeCallback() : "";
+                        if (containsIgnoringSpaces(currentCode, 'outputGoal :: QBKATPolicy')
+                            && containsIgnoringSpaces(currentCode, 'outputGoal = ')
+                            && containsIgnoringSpaces(currentCode, 'while ("A" /~? "C" &&* "B" /~? "C")')
+                            && containsIgnoringSpaces(currentCode, '(ucreate ("A", "H"))')
+                        ) {
+                            clearInterval(checkCodeInterval);
+                            setLockTour(false);
+                            setCurrentStep((prev) => prev + 1);
+                        }
+                    }, 500);
+                }
+            }
+        },
+        {
+            selector: "#monaco-editor-container",
+            content: `Great. Make sure the last closing parenthesis is indented (press tab before it if it isn't) — you shouldn't ` +
+                `see any red underlines now. Now also add 'ucreate ("B", "H")' and 'ucreate ("C", "H")'. Put <||> between each ` +
+                `ucreate since we want to run them in parallel. It should look like this: ` +
+                `( ucreate ("A", "H") <||> ucreate ("B", "H") <||> ucreate ("C", "H") )`,
+            action: (node) => {
+                setLockTour(true);
+                if (node) {
+                    const epoch = getTutorialEpoch();
+                    const checkCodeInterval = setInterval(() => {
+                        if (getTutorialEpoch() !== epoch) {
+                            clearInterval(checkCodeInterval);
+                            return;
+                        }
+                        const currentCode = getUserCodeCallback ? getUserCodeCallback() : "";
+                        if (containsIgnoringSpaces(currentCode, 'outputGoal :: QBKATPolicy')
+                            && containsIgnoringSpaces(currentCode, 'outputGoal = ')
+                            && containsIgnoringSpaces(currentCode, 'while ("A" /~? "C" &&* "B" /~? "C")')
+                            && containsIgnoringSpaces(currentCode, '(' +
+                                'ucreate ("A", "H")' +
+                                '<||>' +
+                                'ucreate ("B", "H")' +
+                                '<||>' +
+                                'ucreate ("C", "H")' +
+                                ')')
+                        ) {
+                            clearInterval(checkCodeInterval);
+                            setLockTour(false);
+                            setCurrentStep((prev) => prev + 1);
+                        }
+                    }, 500);
+                }
+            }
+        },
+        {
+            selector: "#monaco-editor-container",
+            content: `Good. Now we only want to generate a connection if it doesn't already exist — "if A~H doesn't exist, generate it, ` +
+                `otherwise do nothing." For this we add a GUARD: 'ite (condition) (thenBranch) (elseBranch)' is like an IF. ` +
+                `Wrap each ucreate with ite ("X" /~? "H") (ucreate (...)) mempty — 'mempty' is the "do nothing" else-branch. You should have:\n` +
+                `ite ("A" /~? "H") (ucreate ("A", "H")) mempty\n    <||>\n` +
+                `ite ("B" /~? "H") (ucreate ("B", "H")) mempty\n    <||>\n` +
+                `ite ("C" /~? "H") (ucreate ("C", "H")) mempty`,
+            action: (node) => {
+                setLockTour(true);
+                if (node) {
+                    const epoch = getTutorialEpoch();
+                    const checkCodeInterval = setInterval(() => {
+                        if (getTutorialEpoch() !== epoch) {
+                            clearInterval(checkCodeInterval);
+                            return;
+                        }
+                        const currentCode = getUserCodeCallback ? getUserCodeCallback() : "";
+                        if (containsIgnoringSpaces(currentCode, 'outputGoal :: QBKATPolicy')
+                            && containsIgnoringSpaces(currentCode, 'outputGoal = ')
+                            && containsIgnoringSpaces(currentCode, 'while ("A" /~? "C" &&* "B" /~? "C")')
+                            && containsIgnoringSpaces(currentCode, `ite ("A" /~? "H") (ucreate ("A", "H")) mempty
+                    <||>
+                ite ("B" /~? "H") (ucreate ("B", "H")) mempty
+                    <||>
+                ite ("C" /~? "H") (ucreate ("C", "H")) mempty`)
+                        ) {
+                            clearInterval(checkCodeInterval);
+                            setLockTour(false);
+                            setCurrentStep((prev) => prev + 1);
+                        }
+                    }, 500);
+                }
+            }
+        },
+        {
+            selector: "#monaco-editor-container",
+            content: `Good. Now we want to add the swaps, which come after this generation step. First put all three guarded ` +
+                `ucreates inside one more pair of parentheses, so you have: while (condition) ( (ite (...) (ucreate (...)) mempty x3) )`,
+            action: (node) => {
+                setLockTour(true);
+                if (node) {
+                    const epoch = getTutorialEpoch();
+                    const checkCodeInterval = setInterval(() => {
+                        if (getTutorialEpoch() !== epoch) {
+                            clearInterval(checkCodeInterval);
+                            return;
+                        }
+                        const currentCode = getUserCodeCallback ? getUserCodeCallback() : "";
+                        if (containsIgnoringSpaces(currentCode, 'outputGoal :: QBKATPolicy')
+                            && containsIgnoringSpaces(currentCode, 'outputGoal = ')
+                            && containsIgnoringSpaces(currentCode, 'while ("A" /~? "C" &&* "B" /~? "C")')
+                            && containsIgnoringSpaces(currentCode, `((
+                ite ("A" /~? "H") (ucreate ("A", "H")) mempty
+                    <||>
+                ite ("B" /~? "H") (ucreate ("B", "H")) mempty
+                    <||>
+                ite ("C" /~? "H") (ucreate ("C", "H")) mempty
+                ))`)
+                        ) {
+                            clearInterval(checkCodeInterval);
+                            setLockTour(false);
+                            setCurrentStep((prev) => prev + 1);
+                        }
+                    }, 500);
+                }
+            }
+        },
+        {
+            selector: "#monaco-editor-container",
+            content: `Perfect. Now, after the generation block, add <> followed by another pair of parentheses for the final block: ` +
+                `while (condition) ( (generation block) <> () )`,
+            action: (node) => {
+                setLockTour(true);
+                if (node) {
+                    const epoch = getTutorialEpoch();
+                    const checkCodeInterval = setInterval(() => {
+                        if (getTutorialEpoch() !== epoch) {
+                            clearInterval(checkCodeInterval);
+                            return;
+                        }
+                        const currentCode = getUserCodeCallback ? getUserCodeCallback() : "";
+                        if (containsIgnoringSpaces(currentCode, 'outputGoal :: QBKATPolicy')
+                            && containsIgnoringSpaces(currentCode, 'outputGoal = ')
+                            && containsIgnoringSpaces(currentCode, 'while ("A" /~? "C" &&* "B" /~? "C")')
+                            && containsIgnoringSpaces(currentCode, `(
+                ite ("A" /~? "H") (ucreate ("A", "H")) mempty
+                    <||>
+                ite ("B" /~? "H") (ucreate ("B", "H")) mempty
+                    <||>
+                ite ("C" /~? "H") (ucreate ("C", "H")) mempty
+                ) <> ()`)
+                        ) {
+                            clearInterval(checkCodeInterval);
+                            setLockTour(false);
+                            setCurrentStep((prev) => prev + 1);
+                        }
+                    }, 500);
+                }
+            }
+        },
+        {
+            selector: "#monaco-editor-container",
+            content: `For our last step: we want the swaps in H for A~C and B~C. Notice both need an H~C pair. So we give priority ` +
+                `to A~C, meaning if only one H~C pair is available it goes to that swap first, using <.>. In the new block write:\n` +
+                `swap "H" ("A", "C")\n<.>\nswap "H" ("B", "C")`,
+            action: (node) => {
+                setLockTour(true);
+                if (node) {
+                    const epoch = getTutorialEpoch();
+                    const checkCodeInterval = setInterval(() => {
+                        if (getTutorialEpoch() !== epoch) {
+                            clearInterval(checkCodeInterval);
+                            return;
+                        }
+                        const currentCode = getUserCodeCallback ? getUserCodeCallback() : "";
+                        if (containsIgnoringSpaces(currentCode, 'outputGoal :: QBKATPolicy')
+                            && containsIgnoringSpaces(currentCode, 'outputGoal = ')
+                            && containsIgnoringSpaces(currentCode, 'while ("A" /~? "C" &&* "B" /~? "C")')
+                            && containsIgnoringSpaces(currentCode, `(
+                ite ("A" /~? "H") (ucreate ("A", "H")) mempty
+                    <||>
+                ite ("B" /~? "H") (ucreate ("B", "H")) mempty
+                    <||>
+                ite ("C" /~? "H") (ucreate ("C", "H")) mempty
+                ) <> (
+                swap "H" ("A", "C")
+                <.>
+                swap "H" ("B", "C")
+                )`)
+                        ) {
+                            clearInterval(checkCodeInterval);
+                            setLockTour(false);
+                            setCurrentStep((prev) => prev + 1);
+                        }
+                    }, 500);
+                }
+            }
+        },
+        {
+            selector: "#node-editor-whole-container",
+            content: `Great. Now the protocol is complete. We can auto-create the nodes and edges. Click on Auto-Create button or if it isn't showing then on the 3 dots (...) and then on auto-create. `,
+            action: (node) => {
+                setLockTour(true);
+                if (node) {
+                    const epoch = getTutorialEpoch();
+                    const checkCodeInterval = setInterval(() => {
+                        if (getTutorialEpoch() !== epoch) {
+                            clearInterval(checkCodeInterval);
+                            return;
+                        }
+                        const graphGetter = useRunEngine.getState().getGraphCallback
+                        let passed = false
+                        if (graphGetter) {
+                            const graph = graphGetter()
 
-    const advancedProtocolSteps: StepType[] = [
-        {
-            selector: '#node-editor-container',
-            content: 'To cope with long distances where direct transmission fails, we use quantum repeaters. Add intermediate nodes to split the end-to-end distance into shorter segments.',
+                            const nodes = graph.nodes.map((node) => node.data.nodeLabel)
+                            const edges = graph.edges.map((edge) => edge.id)
+
+                            if (nodes.length === 4 &&
+                                nodes.includes("H") &&
+                                nodes.includes("A") &&
+                                nodes.includes("C") &&
+                                nodes.includes("B") &&
+                                edges.length === 3
+                            ) {
+                                passed = true
+                            }
+                        }
+                        if (passed) {
+                            clearInterval(checkCodeInterval);
+                            setLockTour(false);
+                            setCurrentStep((prev) => prev + 1);
+                        }
+                    }, 500);
+                }
+            }
         },
         {
-            selector: '#monaco-editor-container',
-            content: 'Write an Entanglement Swapping protocol. A Bell-state measurement at the middle node consumes local entangled pairs to create a long-range entangled link between the outer nodes.',
+            selector: "body",
+            content: "Great. Now let's configure it. In H set coherence time to 200 and swap probability to 0.5." +
+                "On edge H-A make sure generate probability = 0.25 and generate quality = 0.9." +
+                "On edges H-B and H-C make sure generate probability = 0.4 and generate quality = 0.95." +
+                "Also make sure distance between H and B is 3.",
+            position: ({windowWidth, windowHeight, width, height}) => [
+                windowWidth / 4 - width / 2,
+                windowHeight / 4 - height / 2,
+            ],
+            action: (node) => {
+                setLockTour(true);
+                if (node) {
+                    const epoch = getTutorialEpoch();
+                    const checkCodeInterval = setInterval(() => {
+                        if (getTutorialEpoch() !== epoch) {
+                            clearInterval(checkCodeInterval);
+                            return;
+                        }
+                        const graphGetter = useRunEngine.getState().getGraphCallback
+                        let passed = false
+                        if (graphGetter) {
+                            const {nodes, edges} = graphGetter()
+                            const curatedEdges = edges.map((edge) => {
+                                const source = edge.source
+                                const target = edge.target
+                                const sourceLabel = nodes.filter(node => node.id == source)[0].data.nodeLabel
+                                const targetLabel = nodes.filter(node => node.id == target)[0].data.nodeLabel
+                                const name = sourceLabel + "~" + targetLabel
+                                return {
+                                    name: name,
+                                    edgeData: edge.data
+                                }
+                            })
+                            try {
+                                const HNode = nodes.filter((node) => node.data.nodeLabel === "H")[0]
+                                const HALink = curatedEdges.filter(edge => edge.name === "H~A")[0]
+                                const HBLink = curatedEdges.filter(edge => edge.name === "H~B")[0]
+                                const HCLink = curatedEdges.filter(edge => edge.name === "H~C")[0]
+
+                                if (HNode.data.coherence_time === 200 && HNode.data.swap_prob === 0.5 &&
+                                    HALink.edgeData?.uCreate_prob === 0.25 && HALink.edgeData?.uCreate_quality === 0.9
+                                && HBLink.edgeData?.uCreate_prob === 0.4 && HCLink.edgeData?.uCreate_prob === 0.4 &&
+                                HBLink.edgeData?.uCreate_quality === 0.95 && HCLink.edgeData?.uCreate_quality === 0.95
+                                && HBLink.edgeData.distance === 3) {
+                                    passed = true
+                                }
+                            }
+                            catch (error) {
+                                toast.error('There was an unexpected error. We are sorry. You can check the H-Swap example from QBKAT to see how it would have been.')
+                                clearInterval(checkCodeInterval)
+                                setLockTour(false)
+                                setCurrentStep(0)
+                                setIsOpen(false)
+                            }
+
+                        }
+                        if (passed) {
+                            clearInterval(checkCodeInterval);
+
+                            document.dispatchEvent(
+                                new KeyboardEvent('keydown', {
+                                    key: 'Escape',
+                                    bubbles: true,
+                                    cancelable: true
+                                })
+                            );
+
+                            setLockTour(false);
+                            setCurrentStep((prev) => prev + 1);
+                        }
+                    }, 500);
+                }
+            }
         },
         {
-            selector: '#monaco-editor-container',
-            content: 'Generated links have limited quality due to noise. Implement the DEJMPS Entanglement Distillation protocol to combine multiple noisy copies into fewer copies of higher fidelity.',
+            selector: "#network-goal-box",
+            content: "Now we need to set the network goal to match what our protocol targets: A~C and B~C. Select both.",
+            action: (node) => {
+                setLockTour(true);
+                setGoalConnections([]);
+                setNetworkGoalDisabled(false);
+
+                const preventMaskClose = (e: MouseEvent) => {
+                    const target = e.target as HTMLElement;
+                    if (!target.closest('#network-goal-box') && !target.closest('[data-tour-elem="popover"]')) {
+                        e.stopPropagation();
+                        e.preventDefault();
+                    }
+                };
+                document.addEventListener('mousedown', preventMaskClose, {capture: true});
+
+                if (node) {
+                    const epoch = getTutorialEpoch();
+                    const checkGoalInterval = setInterval(() => {
+                        if (getTutorialEpoch() !== epoch) {
+                            clearInterval(checkGoalInterval);
+                            document.removeEventListener('mousedown', preventMaskClose, {capture: true});
+                            return;
+                        }
+                        const currentGoalConnections = useRunEngine.getState().goalConnections;
+                        const labels = currentGoalConnections.map(c => c.label);
+                        const hasAC = labels.includes(`"A" ~ "C"`) || labels.includes(`"C" ~ "A"`);
+                        const hasBC = labels.includes(`"B" ~ "C"`) || labels.includes(`"C" ~ "B"`);
+
+                        if (currentGoalConnections.length === 2 && hasAC && hasBC) {
+                            clearInterval(checkGoalInterval);
+                            document.removeEventListener('mousedown', preventMaskClose, {capture: true});
+                            useCustomization.getState().setGoalPopoverOpen(false);
+                            setLockTour(false);
+                            setCurrentStep((prev) => prev + 1);
+                        }
+                    }, 500);
+                }
+            }
         },
         {
-            selector: '#flag-settings-button',
-            content: 'Configure your execution strategy. Choose Distill->Swap (purifying short links before swapping) or Swap->Distill (swapping first, then purifying the long link). Distill->Swap is generally more robust for realistic, noisy networks.',
+            selector: "#flag-settings-button",
+            content: "Last thing: set how long the protocol should run for. Click this settings button.",
+            action: (node) => {
+                setLockTour(true);
+
+                const preventOtherClicks = (e: MouseEvent) => {
+                    const target = e.target as HTMLElement;
+                    if (!target.closest('#flag-settings-button') && !target.closest('[data-tour-elem="popover"]')) {
+                        e.stopPropagation();
+                        e.preventDefault();
+                    }
+                };
+                document.addEventListener('mousedown', preventOtherClicks, {capture: true});
+                document.addEventListener('click', preventOtherClicks, {capture: true});
+
+                if (node) {
+                    const epoch = getTutorialEpoch();
+
+                    const cleanupInterval = setInterval(() => {
+                        if (getTutorialEpoch() !== epoch) {
+                            clearInterval(cleanupInterval);
+                            document.removeEventListener('mousedown', preventOtherClicks, {capture: true});
+                            document.removeEventListener('click', preventOtherClicks, {capture: true});
+                        }
+                    }, 250);
+
+                    node.addEventListener('click', () => {
+                        if (getTutorialEpoch() !== epoch) return;
+
+                        clearInterval(cleanupInterval);
+                        document.removeEventListener('mousedown', preventOtherClicks, {capture: true});
+                        document.removeEventListener('click', preventOtherClicks, {capture: true});
+
+                        const waitForDialog = setInterval(() => {
+                            if (getTutorialEpoch() !== epoch) {
+                                clearInterval(waitForDialog);
+                                return;
+                            }
+                            if (document.querySelector('[data-slot="dialog-content"]')) {
+                                clearInterval(waitForDialog);
+                                setLockTour(false);
+                                setCurrentStep(prev => prev + 1);
+                            }
+                        }, 50);
+                    }, {once: true});
+                }
+            }
         },
         {
-            selector: '#network-goal-box',
-            content: 'Set your advanced evaluation metric. Instead of just fidelity, calculate the Secret-key rate of the BB84 protocol to see how many secure bits per second your repeater network can generate.',
-        }
-    ];
+            selector: '[data-slot="dialog-content"]',
+            content: "Set truncation to 200 so the loop stops after 200 iterations.",
+            action: (node) => {
+                setLockTour(true);
+                installDialogGuard('[data-slot="dialog-content"]');
+                if (node) {
+                    const epoch = getTutorialEpoch();
+                    const checkCoverageInterval = setInterval(() => {
+                        if (getTutorialEpoch() !== epoch) {
+                            clearInterval(checkCoverageInterval);
+                            return;
+                        }
+                        const mode = useRunEngine.getState().truncationActive;
+                        const truncationAmount = useRunEngine.getState().truncation;
+                        if (mode && truncationAmount === 200) {
+                            clearInterval(checkCoverageInterval);
+                            removeDialogGuard();
+
+                            document.dispatchEvent(
+                                new KeyboardEvent('keydown', {
+                                    key: 'Escape',
+                                    bubbles: true,
+                                    cancelable: true
+                                })
+                            );
+
+                            setTimeout(() => {
+                                setLockTour(false);
+                                setCurrentStep(prev => prev + 1);
+                            }, 50);
+                        }
+                    }, 250);
+                }
+            }
+        },
+        {
+            selector: '#run-protocol-button',
+            content: "Protocol complete! Click Run to execute it.",
+            action: (node) => {
+                setLockTour(true);
+                if (node) {
+                    const epoch = getTutorialEpoch();
+                    node.addEventListener('click', () => {
+                        if (getTutorialEpoch() !== epoch) return;
+                        setLockTour(false);
+                        setCurrentStep(prev => prev + 1);
+                    }, {once: true});
+                }
+            }
+        },
+        {
+            selector: '#separator_main',
+            padding: -10,
+            position: ({windowWidth, windowHeight, width, height}) => [
+                windowWidth / 2 - width / 2,
+                windowHeight / 2 - height / 2,
+            ],
+            content: "Running protocol... Please wait.",
+            stepInteraction: false,
+            action: waitForResult
+        },
+        {
+            selector: '#result-display-window',
+            content: 'Congratulations, you wrote a full protocol with loops, guards, and prioritized swaps! ' +
+                'You can see the probability of achieving both A~C and B~C over time here.',
+        },
+    ], [setLockTour, setNodes, setEdges, addNodes, fitView, setCurrentStep, getUserCodeCallback, setUserCodeCallback, setGoalConnections]);
+
+
 
     return {
-        interfaceSteps, basicProtocolSteps, advancedProtocolSteps,
+        interfaceSteps, basicProtocolSteps,
         createTutorialSteps,
         distillTutorialSteps,
         transTutorialSteps,

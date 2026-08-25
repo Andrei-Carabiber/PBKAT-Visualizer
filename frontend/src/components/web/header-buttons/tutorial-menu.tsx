@@ -24,7 +24,7 @@ const TutorialMenu = () => {
     const {
         interfaceSteps,
         createTutorialSteps, transTutorialSteps, distillTutorialSteps, swapTutorialSteps, ucreateTutorialSteps,
-        qbkatTutorialSteps
+        qbkatTutorialSteps, basicProtocolSteps
     } = useTutorialSteps();
 
 
@@ -71,11 +71,8 @@ const TutorialMenu = () => {
             title: "Advanced Protocol Writing Tutorials"
         },
         {
-            name: "Tutorial 1", action: () => {
-            }
-        },
-        {
-            name: "Tutorial 2", action: () => {
+            name: "Advanced Protocol Writing", action: () => {
+                setSteps(basicProtocolSteps)
             }
         },
     ];

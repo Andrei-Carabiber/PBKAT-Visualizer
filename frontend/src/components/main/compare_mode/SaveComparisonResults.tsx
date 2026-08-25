@@ -83,13 +83,18 @@ const produceJson = (comparisonObjectsArray: (HistoryItem | null)[], exportOptio
                 nodeData: nodeData
             }
         })
-        console.log(edges)
         const curatedEdges = edges.map((edge) => {
+            const source = edge.source
+            const target = edge.target
+            const sourceLabel = nodes.filter(node => node.id == source)[0].data.nodeLabel
+            const targetLabel = nodes.filter(node => node.id == target)[0].data.nodeLabel
+            const name = sourceLabel + "~" + targetLabel
             return {
-                name: edge.id,
+                name: name,
                 edgeData: edge.data
             }
         })
+        console.log(curatedEdges)
         let curatedItem: Record<string, unknown> = {
             name
         }
