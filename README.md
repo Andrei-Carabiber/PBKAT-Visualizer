@@ -9,18 +9,18 @@
 
 
 ##  Table of Contents
-- [Overview](#-overview)
--  [Features](#-features) 
-- [Architecture](#-architecture) 
- - [Tech Stack](#-tech-stack) 
- - [Prerequisites](#-prerequisites) 
- - [Getting Started](#-getting-started) 
- - [Using the Visualizer](#-using-the-visualizer) 
- - [Project Structure](#-project-structure) 
- - [Environment Variables](#-environment-variables)
- - [Deployment](#-deployment) 
- - [Troubleshooting](#-troubleshooting) 
- - [Documentation](#-documentation) 
+- [Overview](#overview)
+-  [Features](#features) 
+- [Architecture](#architecture) 
+ - [Tech Stack](#tech-stack) 
+ - [Prerequisites](#prerequisites) 
+ - [Getting Started](#getting-started) 
+ - [Using the Visualizer](#using-the-visualizer) 
+ - [Project Structure](#project-structure) 
+ - [Environment Variables](#environment-variables)
+ - [Deployment](#deployment) 
+ - [Troubleshooting](#troubleshooting) 
+ - [Documentation](#documentation) 
 
 ##  Overview
 
