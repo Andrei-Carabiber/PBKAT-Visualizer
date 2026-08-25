@@ -105,6 +105,11 @@ body {
     align-items: center;
     cursor: grab;
     transition: background-color 0.2s ease;
+    color: black;
+}
+
+.custom-drag-handle.dark {
+    color: black;
 }
 
 .customNodeBody:hover .custom-drag-handle {

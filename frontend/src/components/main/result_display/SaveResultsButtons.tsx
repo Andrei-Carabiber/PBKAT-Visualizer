@@ -3,10 +3,10 @@ import {useRunEngine} from "@/store/runEngine.ts";
 import {Dialog, DialogContent, DialogTrigger} from "@/components/ui/dialog.tsx";
 import {Checkbox} from "@/components/ui/checkbox.tsx";
 import {Label} from "@/components/ui/label.tsx";
-import {jsPDF} from "jspdf";
 import {toPng} from "html-to-image";
 import {useState} from "react";
 import {useTheme} from "@/components/theme-provider.tsx";
+import {handleSavePDF, handleSavePNG} from "@/components/main/compare_mode/SaveComparisonResults.tsx";
 
 const SaveResultsButton = () => {
     const {formattedData} = useRunEngine();
@@ -183,45 +183,6 @@ const SaveResultsButton = () => {
         }
     };
 
-    const handleSavePDF = () => {
-        if (!previewUrl) return;
-
-        try {
-            setIsSaving(true);
-            const pdf = new jsPDF("p", "mm", "a4");
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-
-            const imgProps = pdf.getImageProperties(previewUrl);
-            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-
-            pdf.addImage(previewUrl, "PNG", 0, 0, pdfWidth, pdfHeight);
-            pdf.save("quantum-results.pdf");
-        } catch (error) {
-            console.error("Error generating PDF:", error);
-        } finally {
-            setIsSaving(false);
-        }
-    };
-
-    const handleSavePNG = () => {
-        if (!previewUrl) return;
-
-        try {
-            setIsSaving(true);
-            const link = document.createElement("a");
-            link.download = "quantum-results.png";
-            link.href = previewUrl;
-
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-        } catch (error) {
-            console.error("Error saving PNG:", error);
-        } finally {
-            setIsSaving(false);
-        }
-    };
-
     const handleSaveJSON = () => {
         const payload = includeCode ? {code, ...formattedData} : formattedData;
         const textData = JSON.stringify(payload, null, 2);
@@ -270,7 +231,7 @@ const SaveResultsButton = () => {
                     </div>
 
                     <div
-                        className="w-full min-w-[400px] min-h-[200px] max-h-[400px] overflow-auto border rounded-md bg-muted/30 flex items-center justify-center p-4">
+                        className="w-full min-w-100 min-h-50 max-h-100 overflow-auto border rounded-md bg-muted/30 flex items-center justify-center p-4">
                         {isPreviewLoading ? (
                             <span className="text-sm text-muted-foreground animate-pulse">
                                 Generating preview...
@@ -295,7 +256,7 @@ const SaveResultsButton = () => {
                     <div className="flex w-full gap-4 mt-2">
                         <Button
                             className="flex-1"
-                            onClick={handleSavePDF}
+                            onClick={() => handleSavePDF(previewUrl, setIsSaving)}
                             disabled={isSaving || isPreviewLoading || !previewUrl}
                         >
                             {isSaving ? "Saving..." : "Save as PDF"}
@@ -303,7 +264,7 @@ const SaveResultsButton = () => {
 
                         <Button
                             className="flex-1"
-                            onClick={handleSavePNG}
+                            onClick={() => handleSavePNG(previewUrl, setIsSaving)}
                             disabled={isSaving || isPreviewLoading || !previewUrl}
                             variant="outline"
                         >
