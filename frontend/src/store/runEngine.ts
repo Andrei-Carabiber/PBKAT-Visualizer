@@ -356,6 +356,8 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
         const userRawCode = getUserCodeCallback?.() ?? fullCode;
         const graphSnapshot = getGraphCallback?.() ?? {nodes: [], edges: []};
 
+
+        console.log(fullCode)
         set({loading: true, error: null, data: null, formattedData:null});
 
         if (fullCode) {
