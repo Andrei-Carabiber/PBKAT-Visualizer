@@ -324,7 +324,8 @@ const MonacoEditor = forwardRef<any, { panelSize: number }>(({panelSize}, _ref) 
                 connection: {
                     options: {
                         $type: 'WebSocketUrl',
-                        url: webSocketUrl.toString()
+                        url: webSocketUrl.toString(),
+
                     }
                 },
                 clientOptions: {
@@ -367,10 +368,14 @@ const MonacoEditor = forwardRef<any, { panelSize: number }>(({panelSize}, _ref) 
 
             if (editorRef.current) {
                 const editorApp = new EditorApp(editorAppConfig);
+
+                const lcStartPromise = lcWrapper.start();
+
                 await editorApp.start(editorRef.current)
                 editorRefInstance.current = editorApp.getEditor();
                 applyHiddenAreasRef.current = restrictToEditableRegion(editorRefInstance.current!);
-                await lcWrapper.start()
+
+                await lcStartPromise;
 
                 setIsEditorReady(true);
             }
