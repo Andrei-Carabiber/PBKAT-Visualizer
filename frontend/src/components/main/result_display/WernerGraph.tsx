@@ -47,8 +47,8 @@ const WernerGraph = ({
 
     const left = zoomLeft !== undefined ? zoomLeft : internalLeft;
     const right = zoomRight !== undefined ? zoomRight : internalRight;
-    const [refAreaLeft, setRefAreaLeft] = useState<string | number>("");
-    const [refAreaRight, setRefAreaRight] = useState<string | number>("");
+    const [refAreaLeft, setRefAreaLeft] = useState<string | number | null>(null);
+    const [refAreaRight, setRefAreaRight] = useState<string | number | null>(null);
 
     const rawPlotArray: PlotPoint[] = wernerArray.map((value, index) => ({
         werner: value === -1 ? null : value,
@@ -63,9 +63,9 @@ const WernerGraph = ({
         let l = refAreaLeft;
         let r = refAreaRight;
 
-        if (l === r || r === "") {
-            setRefAreaLeft("");
-            setRefAreaRight("");
+        if (l === null || r === null || l === r) {
+            setRefAreaLeft(null);
+            setRefAreaRight(null);
             return;
         }
 
@@ -74,15 +74,14 @@ const WernerGraph = ({
         }
 
         if (typeof l === "number" && typeof r === "number" && r - l < ZOOM_MIN_DIFFERENCE) {
-            setRefAreaLeft("");
-            setRefAreaRight("");
+            setRefAreaLeft(null);
+            setRefAreaRight(null);
             return;
         }
 
-        setRefAreaLeft("");
-        setRefAreaRight("");
+        setRefAreaLeft(null);
+        setRefAreaRight(null);
 
-        // Notify parent component if callback exists, otherwise update locally
         if (onZoomChange) {
             onZoomChange(l, r);
         } else {
@@ -92,10 +91,8 @@ const WernerGraph = ({
     };
 
     const zoomOut = () => {
-        setRefAreaLeft("");
-        setRefAreaRight("");
-
-        // Notify parent component to reset, otherwise reset locally
+        setRefAreaLeft(null);
+        setRefAreaRight(null);
         if (onResetZoom) {
             onResetZoom();
         } else {
@@ -209,10 +206,10 @@ const WernerGraph = ({
                                 isAnimationActive={false}
                             />
 
-                            {refAreaLeft && refAreaRight ? (
+                            {refAreaLeft !== null && refAreaRight !== null && (
                                 <ReferenceArea x1={refAreaLeft} x2={refAreaRight} strokeOpacity={0.3} fill="#8884d8"
                                                fillOpacity={0.3}/>
-                            ) : null}
+                            )}
                         </AreaChart>
                     </ResponsiveContainer>
                 </div>

@@ -38,8 +38,8 @@ const ProbabilityGraph = ({
     const left = zoomLeft ?? internalLeft;
     const right = zoomRight ?? internalRight;
 
-    const [refAreaLeft, setRefAreaLeft] = useState<string | number>("");
-    const [refAreaRight, setRefAreaRight] = useState<string | number>("");
+    const [refAreaLeft, setRefAreaLeft] = useState<string | number | null>(null);
+    const [refAreaRight, setRefAreaRight] = useState<string | number | null>(null);
 
     const ZOOM_MIN_DIFFERENCE = 3;
 
@@ -60,9 +60,9 @@ const ProbabilityGraph = ({
         let l = refAreaLeft;
         let r = refAreaRight;
 
-        if (l === r || r === "") {
-            setRefAreaLeft("");
-            setRefAreaRight("");
+        if (l === null || r === null || l === r) {
+            setRefAreaLeft(null);
+            setRefAreaRight(null);
             return;
         }
 
@@ -71,13 +71,13 @@ const ProbabilityGraph = ({
         }
 
         if (typeof l === "number" && typeof r === "number" && r - l < ZOOM_MIN_DIFFERENCE) {
-            setRefAreaLeft("");
-            setRefAreaRight("");
+            setRefAreaLeft(null);
+            setRefAreaRight(null);
             return;
         }
 
-        setRefAreaLeft("");
-        setRefAreaRight("");
+        setRefAreaLeft(null);
+        setRefAreaRight(null);
 
         if (onZoomChange) {
             onZoomChange(l, r);
@@ -88,8 +88,8 @@ const ProbabilityGraph = ({
     };
 
     const zoomOut = () => {
-        setRefAreaLeft("");
-        setRefAreaRight("");
+        setRefAreaLeft(null);
+        setRefAreaRight(null);
         if (onResetZoom) {
             onResetZoom();
         } else {
@@ -237,10 +237,10 @@ const ProbabilityGraph = ({
                                 </>
                             )}
 
-                            {refAreaLeft && refAreaRight ? (
+                            {refAreaLeft !== null && refAreaRight !== null && (
                                 <ReferenceArea x1={refAreaLeft} x2={refAreaRight} strokeOpacity={0.3} fill="#8884d8"
                                                fillOpacity={0.3}/>
-                            ) : null}
+                            )}
                         </AreaChart>
                     </ResponsiveContainer>
                 </div>
