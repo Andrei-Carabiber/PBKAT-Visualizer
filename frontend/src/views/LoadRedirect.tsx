@@ -3,6 +3,20 @@ import { useParams, Navigate } from "react-router-dom";
 import { useRunEngine } from "@/store/runEngine.ts";
 import { toast } from "sonner";
 
+export type ShareStateType = {
+    code: string;
+    graph: {
+        nodes: any[];
+        edges: any[];
+    };
+    goal: any[];
+    goalDisabled: boolean;
+    networkCapacity: any[];
+    capacityDisabled: boolean;
+    truncationActive: boolean;
+    truncationCoverageAmount: number;
+};
+
 export default function LoadRedirect() {
     const { token } = useParams<{ token: string }>();
     const [isDoneProcessing, setIsDoneProcessing] = useState(false);
@@ -16,6 +30,9 @@ export default function LoadRedirect() {
         setPendingSharedState,
         setGraphCallback,
         setUserCodeCallback,
+        setTruncationActive,
+        setCoverage,
+        setTruncation
     } = useRunEngine();
 
     useEffect(() => {
@@ -33,12 +50,25 @@ export default function LoadRedirect() {
                     throw new Error("Share link expired or not found");
                 }
 
-                const save = await response.json();
+                const save: ShareStateType = await response.json();
 
                 setGoalConnections(save.goal || []);
                 setNetworkCapacityConnections(save.networkCapacity || []);
                 setNetworkCapacityDisabled(save.capacityDisabled ?? false);
                 setNetworkGoalDisabled(save.goalDisabled ?? false);
+                setTruncationActive(save.truncationActive ?? true)
+
+                if ('truncationActive' in save) {
+                    if (save.truncationActive) {
+                        setTruncation(save.truncationCoverageAmount ?? 100)
+                    }
+                    else {
+                        setCoverage(save.truncationCoverageAmount ?? 0.9)
+                    }
+                } else {
+                    setTruncationActive(true)
+                    setTruncation(50)
+                }
 
                 if (setGraphCallback && setUserCodeCallback && save.graph && save.code) {
                     setGraphCallback(save.graph.nodes, save.graph.edges);

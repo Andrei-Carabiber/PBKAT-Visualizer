@@ -240,6 +240,8 @@ const SaveButtons = () => {
             goalDisabled: networkGoalDisabled,
             networkCapacity: networkCapacityConnections,
             capacityDisabled: networkCapacityDisabled,
+            truncationActive: truncationActive,
+            truncationCoverageAmount: truncationActive ? truncation : coverage,
         };
 
         try {
