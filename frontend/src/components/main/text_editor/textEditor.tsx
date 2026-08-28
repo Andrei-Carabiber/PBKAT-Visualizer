@@ -1086,6 +1086,7 @@ const MonacoEditor = forwardRef<
                         </p>
 
                         <LoaderCircle
+                            data-testid={"loading-editor-spinner"}
                             className={
                                 'animate-spin w-1/6 h-1/6'
                             }

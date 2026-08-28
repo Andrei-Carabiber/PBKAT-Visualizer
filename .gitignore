@@ -51,3 +51,6 @@ Thumbs.db
 logs/
 .agents/
 
+
+# Testing
+playwright-report/
