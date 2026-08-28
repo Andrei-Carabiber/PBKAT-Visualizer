@@ -68,9 +68,10 @@ export const useTutorialSteps = () => {
             selector: '#monaco-editor-container',
             content: 'This is the Protocol Editor. Here, you will write the instructions for your Quantum Protocol.',
             action : () => {
-                setLockTour(true);
                 bumpTutorialEpoch();
-                if (setUserCodeCallback) setUserCodeCallback(`e :: ProbBellKATPolicy
+                const setCode = useRunEngine.getState().setUserCodeCallback
+                if (setCode) {
+                    setCode(`e :: ProbBellKATPolicy
 e = create "C" <> trans "C" ("A", "C")
 
 f :: ProbBellKATPolicy
@@ -78,10 +79,10 @@ f = create "C" <> trans "C" ("B", "C")
 
 outputGoal :: ProbBellKATPolicy
 outputGoal = (e <||> f) <> (e <.> f)`)
+                }
                 setNodes(initialNodes)
                 setEdges(initialEdges)
                 setTimeout(() => fitView(), 25)
-                setLockTour(false)
             },
             stepInteraction: false
         },
