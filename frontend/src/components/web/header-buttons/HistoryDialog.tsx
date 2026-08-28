@@ -366,7 +366,7 @@ const HistoryDialog = ({
         const stageText = getStageText(item);
 
         return (
-            <Button variant="ghost"
+            <div
                 key={item.id}
                 onClick={() => {
                     if (compareModeOn && comparable) {
@@ -519,7 +519,7 @@ const HistoryDialog = ({
                         </div>
                     )}
                 </div>
-            </Button>
+            </div>
         );
     };
 

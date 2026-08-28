@@ -63,7 +63,6 @@ const SmallNodeViewer = ({ nodes, edges, id }: Props) => {
 
     // Calculate clamped coordinates before paint
     useLayoutEffect(() => {
-        console.log(nodes)
         if (!menu || !menuRef.current) return;
 
         const { clientWidth: menuWidth, clientHeight: menuHeight } = menuRef.current;

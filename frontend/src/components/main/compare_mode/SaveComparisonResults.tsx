@@ -94,7 +94,6 @@ const produceJson = (comparisonObjectsArray: (HistoryItem | null)[], exportOptio
                 edgeData: edge.data
             }
         })
-        console.log(curatedEdges)
         let curatedItem: Record<string, unknown> = {
             name
         }

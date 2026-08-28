@@ -12,6 +12,7 @@
   "dependencies": {
     "@codingame/esbuild-import-meta-url-plugin": "^1.0.3",
     "@codingame/monaco-vscode-files-service-override": "^25.1.2",
+    "@playwright/test": "^1.62.1",
     "@reactour/tour": "^3.8.0",
     "@remixicon/react": "^4.9.0",
     "@tailwindcss/vite": "^4.3.2",
