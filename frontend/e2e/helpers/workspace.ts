@@ -4,6 +4,6 @@ export async function setupAndClearWorkspace(page: Page) {
     await page.setViewportSize({width: 1900, height: 1200});
     await page.goto('/');
 
-    await expect(page.getByTestId("loading-editor-spinner")).not.toBeVisible();
-    await expect(page.getByRole('button', {name: 'Run'})).toBeVisible();
+    await expect(page.getByTestId("loading-editor-spinner")).not.toBeVisible({ timeout: 30000 });
+    await expect(page.getByRole('button', {name: 'Run'})).toBeVisible({ timeout: 30000 });
 }

@@ -1,9 +1,12 @@
 import { test, expect } from '../../../fixtures/test-base';
+import {setupAndClearWorkspace} from "../../../helpers/workspace";
 
 test.describe('Utility Bar Responsive Behavior', () => {
-
     test('Expanded view shows all action buttons directly', async ({ page }) => {
-        await page.setViewportSize({ width: 1900, height: 1200 });
+
+        //This already sets width to 1900
+        await setupAndClearWorkspace(page)
+
         await page.goto('/');
 
         await expect(page.getByRole('button', { name: 'Add new node' })).toBeVisible();
@@ -24,6 +27,7 @@ test.describe('Utility Bar Responsive Behavior', () => {
     });
 
     test('Collapsed view hides actions inside a popover menu', async ({ page }) => {
+        await setupAndClearWorkspace(page)
         await page.setViewportSize({ width: 1200, height: 800 });
         await page.goto('/');
 

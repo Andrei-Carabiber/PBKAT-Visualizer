@@ -1,4 +1,4 @@
-import { test as base, expect } from '@playwright/test';
+import { test as base } from '@playwright/test';
 
 
 const QueuedJobExample = {
@@ -267,7 +267,11 @@ export const JobExamples = {
 export const test = base.extend({
     page: async ({ page }, use) => {
 
-        // 1. Intercept Haskell Language Server WebSocket
+        await page.route('**/api/**', async route => {
+            console.log(`⚠️ Unmocked API call intercepted: ${route.request().url()}`);
+            await route.fulfill({ status: 200, json: {} });
+        });
+
         await page.routeWebSocket('ws://localhost:3000/api/*', ws => {
             ws.onMessage(message => {
                 const parsed = JSON.parse(message as string);
@@ -281,7 +285,6 @@ export const test = base.extend({
             });
         });
 
-        // 2. Intercept Global HTTP Routes for /run-protocol
         await page.route('**/api/run-protocol', async route => {
             if (route.request().method() === 'POST') {
                 // By default, instantly queue the job
@@ -305,9 +308,8 @@ export const test = base.extend({
             }
         });
 
-        // 3. Pass the fully mocked page to your tests
         await use(page);
     },
 });
 
-export { expect };
+export { expect } from '@playwright/test'
