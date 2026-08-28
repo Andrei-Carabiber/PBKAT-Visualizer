@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react"
+import { get, set } from "idb-keyval"
 
 type Theme = "dark" | "light" | "system"
 
@@ -26,9 +27,15 @@ export function ThemeProvider({
                                   storageKey = "vite-ui-theme",
                                   ...props
                               }: ThemeProviderProps) {
-    const [theme, setTheme] = useState<Theme>(
-        () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
-    )
+    const [theme, setReactTheme] = useState<Theme>(defaultTheme)
+
+    useEffect(() => {
+        get<Theme>(storageKey).then((savedTheme) => {
+            if (savedTheme) {
+                setReactTheme(savedTheme)
+            }
+        }).catch(console.error)
+    }, [storageKey])
 
     useEffect(() => {
         const root = window.document.documentElement
@@ -48,11 +55,11 @@ export function ThemeProvider({
         root.classList.add(theme)
     }, [theme])
 
-    const value = {
+    const value : ThemeProviderState = {
         theme,
-        setTheme: (theme: Theme) => {
-            localStorage.setItem(storageKey, theme)
-            setTheme(theme)
+        setTheme: (newTheme: Theme) => {
+            setReactTheme(newTheme)
+            set(storageKey, newTheme).catch(console.error)
         },
     }
 

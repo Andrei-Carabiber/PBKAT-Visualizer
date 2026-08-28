@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/tabs.tsx";
 import RunStatusBadge from "@/components/main/result_display/RunStatusBadge.tsx";
 import RenameRunButton from "@/components/main/result_display/RenameRunButton.tsx";
+import {del, set} from "idb-keyval";
 
 interface HistoryDialogProps {
     isOpen: boolean;
@@ -195,17 +196,17 @@ const HistoryDialog = ({
             (existingSave) => existingSave.id !== save.id
         );
 
-        localStorage.setItem(
+        set(
             "savedStates",
             JSON.stringify(updatedSaves)
-        );
-
-        setAllSaves(updatedSaves);
-        toast.success("Saved state deleted");
+        ).then(() => {
+            setAllSaves(updatedSaves);
+            toast.success("Saved state deleted");
+        })
     };
 
-    const handleClearAllSaves = () => {
-        localStorage.removeItem("savedStates");
+    const handleClearAllSaves = async () => {
+        await del("savedStates");
         setAllSaves([]);
         toast.success("All saved states cleared");
     };

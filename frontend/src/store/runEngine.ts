@@ -1,20 +1,21 @@
-import {create} from 'zustand';
-import type {Node, Edge} from "@xyflow/react";
-import type {NodeData, EdgeData} from "@/components/main/node_editor/nodeEditor.tsx";
-import {isCodeValid, isCodeCorrect} from "@/components/main/text_editor/protocolParser.ts";
+import { create } from 'zustand';
+import type { Node, Edge } from "@xyflow/react";
+import type { NodeData, EdgeData } from "@/components/main/node_editor/nodeEditor.tsx";
+import { isCodeValid, isCodeCorrect } from "@/components/main/text_editor/protocolParser.ts";
 import {
     isQuantumCode,
 } from "@/components/main/text_editor/haskellBoilerplate.ts";
-import type {DataType} from "@/components/main/result_display/DataType.ts";
-import {useCustomization} from "@/store/customization.ts";
-import {formatData, type FormattedDataType} from "@/store/formatData.ts";
+import type { DataType } from "@/components/main/result_display/DataType.ts";
+import { useCustomization } from "@/store/customization.ts";
+import { formatData, type FormattedDataType } from "@/store/formatData.ts";
+// 1. Import get, set, and del with aliases to avoid conflicts with Zustand's get/set
+import { get as idbGet, set as idbSet, del as idbDel } from 'idb-keyval';
 
 export interface ActiveConnection {
     id: string;
     label: string;
 }
 
-//Used for comparison
 export type LastSettingsRan = {
     id: string;
     code: string;
@@ -62,7 +63,6 @@ export type ProtocolJob = {
     error?: string;
 };
 
-
 interface RunEngineState {
     loading: boolean;
     data: DataType | null;
@@ -78,31 +78,26 @@ interface RunEngineState {
     setGraphCallback: ((nodes: Node<NodeData>[], edges: Edge<EdgeData>[]) => void) | null;
     setUserCodeCallback: ((code: string) => void) | null;
 
-    // Network Goal
     networkGoalDisabled: boolean;
     goalConnections: ActiveConnection[];
     setNetworkGoalDisabled: (disabled: boolean) => void;
     setGoalConnections: (connections: ActiveConnection[] | ((prev: ActiveConnection[]) => ActiveConnection[])) => void;
 
-    // Network Capacity
     networkCapacityDisabled: boolean;
     networkCapacityConnections: ActiveConnection[];
     setNetworkCapacityDisabled: (disabled: boolean) => void;
     setNetworkCapacityConnections: (connections: ActiveConnection[] | ((prev: ActiveConnection[]) => ActiveConnection[])) => void;
 
-    //State before loading
     pendingSharedState: PendingState | null;
     setPendingSharedState: (state: PendingState | null) => void;
 
-    // Run mode / command selection
     truncation: number;
     coverage: number;
     setTruncation: (value: number) => void;
     setCoverage: (value: number) => void;
     truncationActive: boolean;
-    setTruncationActive: (value:boolean) => void;
+    setTruncationActive: (value: boolean) => void;
 
-    // Editor and Graph
     registerEditor: (callback: () => string) => void;
     registerUserCodeGetter: (callback: () => string) => void;
     registerGraph: (callback: () => { nodes: Node<NodeData>[]; edges: Edge<EdgeData>[] }) => void;
@@ -111,7 +106,7 @@ interface RunEngineState {
     handleRun: () => Promise<void>;
     runHistory: HistoryItem[];
     renameRunHistory: (id: string, name: string) => void;
-    hydrateRunHistory: () => void;
+    hydrateRunHistory: () => Promise<void>; // Updated to Promise
     upsertRunHistory: (item: HistoryItem) => void;
     removeRunHistory: (id: string) => void;
     clearRunHistory: (onlyUntitled?: boolean) => void;
@@ -147,7 +142,6 @@ export type RunContext = {
     truncationActive: boolean;
 };
 
-//State before editors loaded
 interface PendingState {
     code: string;
     graph: { nodes: Node<NodeData>[]; edges: Edge<EdgeData>[] };
@@ -157,15 +151,16 @@ const RUN_PROTOCOL_URL = "/api/run-protocol";
 const ACTIVE_PROTOCOL_JOB_STORAGE_KEY = "active-protocol-job";
 const RUN_HISTORY_STORAGE_KEY = "history";
 
-function readRunHistory(): HistoryItem[] {
+// 2. Updated helper methods to async using idbGet / idbSet
+async function readRunHistory(): Promise<HistoryItem[]> {
     try {
-        const raw = localStorage.getItem(RUN_HISTORY_STORAGE_KEY);
+        const raw = await idbGet(RUN_HISTORY_STORAGE_KEY);
         if (!raw) return [];
 
-        const parsed = JSON.parse(raw) as HistoryItem[];
+        // idb-keyval supports storing objects natively, but we include a fallback for stringified data.
+        const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
 
-        // Migrate old completed-only history entries.
-        return parsed.map((item) => ({
+        return parsed.map((item: any) => ({
             ...item,
             jobId: item.jobId ?? item.id,
             status: item.status ?? "completed",
@@ -177,16 +172,21 @@ function readRunHistory(): HistoryItem[] {
     }
 }
 
-function writeRunHistory(items: HistoryItem[]): void {
+async function writeRunHistory(items: HistoryItem[]): Promise<void> {
     try {
-        localStorage.setItem(RUN_HISTORY_STORAGE_KEY, JSON.stringify(items));
+        await idbSet(RUN_HISTORY_STORAGE_KEY, items);
     } catch (error) {
         console.error("Failed to write run history:", error);
     }
 }
+
+async function saveActiveJobId(jobId: string | null): Promise<void> {
+    if (jobId) await idbSet(ACTIVE_PROTOCOL_JOB_STORAGE_KEY, jobId);
+    else await idbDel(ACTIVE_PROTOCOL_JOB_STORAGE_KEY);
+}
+
 const POLL_INTERVAL_MS = 2_000;
 const resumingJobIds = new Set<string>();
-
 
 const terminalJobStatuses: ProtocolJobStatus[] = ["completed", "failed", "cancelled", "interrupted", "timed_out"];
 
@@ -194,19 +194,14 @@ function isTerminalJob(status: ProtocolJobStatus): boolean {
     return terminalJobStatuses.includes(status);
 }
 
-function saveActiveJobId(jobId: string | null): void {
-    if (jobId) localStorage.setItem(ACTIVE_PROTOCOL_JOB_STORAGE_KEY, jobId);
-    else localStorage.removeItem(ACTIVE_PROTOCOL_JOB_STORAGE_KEY);
-}
-
 export const useRunEngine = create<RunEngineState>((set, get) => ({
     viewMode: 'protocol',
-    setViewMode: (viewMode => {set({viewMode})}),
+    setViewMode: (viewMode => { set({ viewMode }) }),
     loading: false,
     data: null,
     formattedData: null,
     lastSettingsRan: null,
-    setLastSettingsRan: (newSettings) => {set({lastSettingsRan: newSettings})},
+    setLastSettingsRan: (newSettings) => { set({ lastSettingsRan: newSettings }) },
     cached: false,
     error: null,
     activeJob: null,
@@ -216,71 +211,68 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
     setUserCodeCallback: null,
     getGraphCallback: null,
 
-    //State before load
     pendingSharedState: null,
     setPendingSharedState: (pendingSharedState) => {
-        set({pendingSharedState})
+        set({ pendingSharedState })
     },
 
-    // Run mode / command selection
     truncation: 100,
     coverage: 0.99,
-    setTruncation: (truncation) => set({truncation}),
-    setCoverage: (coverage) => set({coverage}),
+    setTruncation: (truncation) => set({ truncation }),
+    setCoverage: (coverage) => set({ coverage }),
     truncationActive: true,
-    setTruncationActive: (bool) => set({truncationActive: bool}),
+    setTruncationActive: (bool) => set({ truncationActive: bool }),
 
-    //NetworkGoal state
     networkGoalDisabled: false,
-    goalConnections: [{label: '"A" ~ "C"', id: crypto.randomUUID(),}],
-    setNetworkGoalDisabled: (disabled) => set({networkGoalDisabled: disabled}),
+    goalConnections: [{ label: '"A" ~ "C"', id: crypto.randomUUID(), }],
+    setNetworkGoalDisabled: (disabled) => set({ networkGoalDisabled: disabled }),
     setGoalConnections: (updater) => {
         if (typeof updater === 'function') {
-            set((state) => ({goalConnections: updater(state.goalConnections)}));
+            set((state) => ({ goalConnections: updater(state.goalConnections) }));
         } else {
-            set({goalConnections: updater});
+            set({ goalConnections: updater });
         }
     },
 
-    //Network capacity state
     networkCapacityDisabled: false,
-    networkCapacityConnections: [{label: '"A" ~ "C"', id: crypto.randomUUID()}, {
+    networkCapacityConnections: [{ label: '"A" ~ "C"', id: crypto.randomUUID() }, {
         label: '"C" ~ "C"',
         id: crypto.randomUUID()
-    }, {label: '"C" ~ "C"', id: crypto.randomUUID()},],
-    setNetworkCapacityDisabled: (disabled) => set({networkCapacityDisabled: disabled}),
+    }, { label: '"C" ~ "C"', id: crypto.randomUUID() },],
+    setNetworkCapacityDisabled: (disabled) => set({ networkCapacityDisabled: disabled }),
     setNetworkCapacityConnections: (updater) => {
         if (typeof updater === 'function') {
-            set((state) => ({networkCapacityConnections: updater(state.networkCapacityConnections)}));
+            set((state) => ({ networkCapacityConnections: updater(state.networkCapacityConnections) }));
         } else {
-            set({networkCapacityConnections: updater});
+            set({ networkCapacityConnections: updater });
         }
     },
 
-    registerEditor: (callback) => set({getCodeCallback: callback}),
-    registerUserCodeGetter: (callback) => set({getUserCodeCallback: callback}),
-    registerGraph: (callback) => set({getGraphCallback: callback}),
+    registerEditor: (callback) => set({ getCodeCallback: callback }),
+    registerUserCodeGetter: (callback) => set({ getUserCodeCallback: callback }),
+    registerGraph: (callback) => set({ getGraphCallback: callback }),
     registerGraphSetter: (callback) => {
-        set({setGraphCallback: callback})
+        set({ setGraphCallback: callback })
         const pending = get().pendingSharedState;
         if (pending?.graph) {
             callback(pending.graph.nodes, pending.graph.edges);
-            if (get().setUserCodeCallback) set({pendingSharedState: null});
+            if (get().setUserCodeCallback) set({ pendingSharedState: null });
         }
     },
     registerUserCodeSetter: (callback) => {
-        set({setUserCodeCallback: callback});
+        set({ setUserCodeCallback: callback });
         const pending = get().pendingSharedState;
         if (pending?.code) {
             callback(pending.code);
-            if (get().setGraphCallback) set({pendingSharedState: null});
+            if (get().setGraphCallback) set({ pendingSharedState: null });
         }
     },
 
-    runHistory: readRunHistory(),
+    runHistory: [],
 
-    hydrateRunHistory: () => {
-        set({ runHistory: readRunHistory() });
+    hydrateRunHistory: async () => {
+        const history = await readRunHistory();
+        set({ runHistory: history });
     },
 
     upsertRunHistory: (item) => {
@@ -306,7 +298,7 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
                 };
             }
 
-            writeRunHistory(next);
+            writeRunHistory(next); // "Fire and forget" async save
             return { runHistory: next };
         });
     },
@@ -354,11 +346,9 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
 
         const fullCode = getCodeCallback();
         const userRawCode = getUserCodeCallback?.() ?? fullCode;
-        const graphSnapshot = getGraphCallback?.() ?? {nodes: [], edges: []};
+        const graphSnapshot = getGraphCallback?.() ?? { nodes: [], edges: [] };
 
-
-        console.log(fullCode)
-        set({loading: true, error: null, data: null, formattedData:null});
+        set({ loading: true, error: null, data: null, formattedData: null });
 
         if (fullCode) {
             const codeCorrection = isCodeCorrect(userRawCode);
@@ -381,9 +371,6 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
             }
         }
 
-        // Detect mode from the user's own code (matches buildFullSSource's check)
-        // rather than re-deciding independently, so the mode sent to the backend
-        // can never drift from the mode the Haskell was actually generated for.
         const quantum = isQuantumCode(userRawCode);
         const mode: "quantum" | "probabilistic" = quantum ? "quantum" : "probabilistic";
 
@@ -409,13 +396,13 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
                 code: fullCode,
                 command,
                 truncation: truncationActive ? truncation : -1,
-                coverage : truncationActive ? -1 : coverage,
+                coverage: truncationActive ? -1 : coverage,
                 probOnly: !computeWernerQuality
             }
 
             const response = await fetch(RUN_PROTOCOL_URL, {
                 method: "POST",
-                headers: {"Content-Type": "application/json"},
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
             });
 
@@ -435,11 +422,8 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
                 graphSnapshot,
                 goal: structuredClone(goalConnections),
                 goalDisabled: networkGoalDisabled,
-                networkCapacity: structuredClone(
-                    networkCapacityConnections
-                ),
+                networkCapacity: structuredClone(networkCapacityConnections),
                 capacityDisabled: networkCapacityDisabled,
-
                 truncation,
                 coverage,
                 truncationActive,
@@ -453,11 +437,9 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
                 goalDisabled: runContext.goalDisabled,
                 networkCapacity: runContext.networkCapacity,
                 capacityDisabled: runContext.capacityDisabled,
-
                 truncation: runContext.truncation,
                 coverage: runContext.coverage,
                 truncationActive: runContext.truncationActive,
-
                 dateWhenRan: Date.now(),
             };
 
@@ -475,7 +457,7 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
                 error: job.error,
             });
 
-            saveActiveJobId(job.jobId);
+            await saveActiveJobId(job.jobId);
 
             set({
                 activeJob: job,
@@ -484,9 +466,8 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
 
             await get().pollProtocolJob(job.jobId);
 
-
         } catch (e: any) {
-            set({error: e.message || "An error occurred.", loading: false});
+            set({ error: e.message || "An error occurred.", loading: false });
         }
     },
     cancelJob: async (jobId) => {
@@ -527,7 +508,7 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
                     activeJob: job,
                     loading: false,
                 });
-                saveActiveJobId(null);
+                await saveActiveJobId(null);
             }
         } catch (error: any) {
             set({
@@ -570,7 +551,7 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
                 });
             }
 
-            saveActiveJobId(jobId);
+            await saveActiveJobId(jobId);
 
             set({
                 activeJob: job,
@@ -599,9 +580,7 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
     },
 
     resumeSavedJob: async () => {
-        const jobId = localStorage.getItem(
-            ACTIVE_PROTOCOL_JOB_STORAGE_KEY
-        );
+        const jobId = await idbGet<string>(ACTIVE_PROTOCOL_JOB_STORAGE_KEY);
 
         if (!jobId || resumingJobIds.has(jobId)) {
             return;
@@ -610,7 +589,6 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
         resumingJobIds.add(jobId);
 
         try {
-
             await get().pollProtocolJob(jobId, {
                 showInOutput: false,
             });
@@ -670,10 +648,6 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
 
                 const protocolJob = body as ProtocolJob;
 
-                /*
-                 * Always update history, including when polling silently
-                 * after restoring a job from local storage.
-                 */
                 const existingHistoryItem = get().runHistory.find(
                     (item) => item.jobId === protocolJob.jobId
                 );
@@ -690,13 +664,6 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
                     });
                 }
 
-                /*
-                 * A foreground polling loop should stop controlling the
-                 * output if another foreground job has replaced it.
-                 *
-                 * Background polling should continue because it only
-                 * updates history.
-                 */
                 if (
                     showInOutput &&
                     get().activeJob &&
@@ -705,9 +672,6 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
                     return;
                 }
 
-                /*
-                 * Only foreground polling controls the result window.
-                 */
                 if (showInOutput) {
                     set({
                         activeJob: protocolJob,
@@ -746,23 +710,13 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
                                     new Date().toISOString(),
                             });
 
-                            /*
-                             * lastSettingsRan belongs to the visible
-                             * output. Do not change it when polling in
-                             * the background.
-                             */
                             if (showInOutput) {
                                 set({
-                                    lastSettingsRan:
-                                    completedSettings,
+                                    lastSettingsRan: completedSettings,
                                 });
                             }
                         }
 
-                        /*
-                         * Only open/populate the output for a foreground
-                         * run.
-                         */
                         if (showInOutput) {
                             set({
                                 cached: result._cached ?? false,
@@ -780,12 +734,9 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
                         });
                     }
 
-                    if (
-                        localStorage.getItem(
-                            ACTIVE_PROTOCOL_JOB_STORAGE_KEY
-                        ) === jobId
-                    ) {
-                        saveActiveJobId(null);
+                    const activeJobId = await idbGet(ACTIVE_PROTOCOL_JOB_STORAGE_KEY);
+                    if (activeJobId === jobId) {
+                        await saveActiveJobId(null);
                     }
 
                     return;
@@ -806,12 +757,9 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
                         });
                     }
 
-                    if (
-                        localStorage.getItem(
-                            ACTIVE_PROTOCOL_JOB_STORAGE_KEY
-                        ) === jobId
-                    ) {
-                        saveActiveJobId(null);
+                    const activeJobId = await idbGet(ACTIVE_PROTOCOL_JOB_STORAGE_KEY);
+                    if (activeJobId === jobId) {
+                        await saveActiveJobId(null);
                     }
 
                     return;
@@ -825,12 +773,9 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
                         });
                     }
 
-                    if (
-                        localStorage.getItem(
-                            ACTIVE_PROTOCOL_JOB_STORAGE_KEY
-                        ) === jobId
-                    ) {
-                        saveActiveJobId(null);
+                    const activeJobId = await idbGet(ACTIVE_PROTOCOL_JOB_STORAGE_KEY);
+                    if (activeJobId === jobId) {
+                        await saveActiveJobId(null);
                     }
 
                     return;
@@ -847,10 +792,6 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
                         loading: false,
                     });
                 } else {
-                    /*
-                     * A background polling failure should not open the
-                     * result window.
-                     */
                     console.error(
                         `Could not resume protocol job ${jobId}:`,
                         error
@@ -892,7 +833,6 @@ export const useRunEngine = create<RunEngineState>((set, get) => ({
             },
         });
     },
-    clearOutput: () => set({data: null, formattedData: null, error: null, activeJob: null}),
-
+    clearOutput: () => set({ data: null, formattedData: null, error: null, activeJob: null }),
 
 }));

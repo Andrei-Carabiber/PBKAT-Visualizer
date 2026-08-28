@@ -11,6 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { type HistoryItem, useRunEngine } from "@/store/runEngine";
 import { toast } from "sonner";
+import {get, set} from 'idb-keyval'
 
 const SaveToHistoryButton = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -18,7 +19,7 @@ const SaveToHistoryButton = () => {
     const [error, setError] = useState("");
     const { lastSettingsRan } = useRunEngine();
 
-    const handleSave = () => {
+    const handleSave = async () => {
         setError("");
 
         if (!lastSettingsRan) {
@@ -33,7 +34,7 @@ const SaveToHistoryButton = () => {
         }
 
         try {
-            const rawHistory = localStorage.getItem("history");
+            const rawHistory = await get("history");
             const historyArray: HistoryItem[] = rawHistory ? JSON.parse(rawHistory) : [];
 
             // Match by unique ID
@@ -52,11 +53,15 @@ const SaveToHistoryButton = () => {
                 historyArray[itemIndex] = updatedItem;
             }
 
-            localStorage.setItem("history", JSON.stringify(historyArray));
-            toast.success(`Saved "${trimmedName}" to history`);
+            set("history", JSON.stringify(historyArray)).then(() => {
+                toast.success(`Saved "${trimmedName}" to history`);
 
-            setName("");
-            setIsOpen(false);
+                setName("");
+                setIsOpen(false);
+            }).catch(() => {
+                toast.error("Error saving run to history")
+            })
+
         } catch {
             setError("Failed to save history to storage.");
         }

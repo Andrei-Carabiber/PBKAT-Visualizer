@@ -18,6 +18,7 @@ import type {exampleQuantumSave, exampleSave} from "@/examples/type.ts";
 import ExampleSelectionCard from "@/components/web/header-buttons/example-selection-card.tsx";
 import HistoryDialog from "@/components/web/header-buttons/HistoryDialog.tsx";
 import {Menu} from "lucide-react";
+import {get, set} from 'idb-keyval'
 
 const exampleProbModules = import.meta.glob<{ default: exampleSave }>(
     "@/examples/probabilistic/*.json",
@@ -86,7 +87,7 @@ const SaveButtons = () => {
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
 
-    const handleSave = () => {
+    const handleSave = async () => {
         const savedName = nameInputRef.current?.value;
         const alreadyPresentNames = allSaves.map((save) => save.name);
 
@@ -125,21 +126,21 @@ const SaveButtons = () => {
         };
 
         let saves: localStorageSave[] = [];
-        const memory = localStorage.getItem("savedStates");
+        const memory = await get("savedStates");
         if (memory) {
             saves = JSON.parse(memory);
         }
 
         saves.push(save);
-        localStorage.setItem("savedStates", JSON.stringify(saves));
+        await set("savedStates", JSON.stringify(saves));
 
         setAllSaves(saves);
         setIsSaveOpen(false);
     };
 
-    const loadAllSaves = () => {
+    const loadAllSaves = async () => {
         let allSavesList: localStorageSave[] = [];
-        const memory = localStorage.getItem("savedStates");
+        const memory = await get("savedStates");
         if (memory) {
             allSavesList = JSON.parse(memory);
         }
@@ -147,7 +148,7 @@ const SaveButtons = () => {
     };
 
     useEffect(() => {
-        setAllSaves(loadAllSaves());
+        loadAllSaves().then(saves => setAllSaves(saves))
     }, []);
 
     const handleLoad = (
