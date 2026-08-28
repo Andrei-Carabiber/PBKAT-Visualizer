@@ -1,21 +1,17 @@
 import {test, expect} from '../../fixtures/test-base';
+import {setupAndClearWorkspace} from "../../helpers/workspace";
 
 test('User writes Haskell code, adds nodes, and views compilation output', async ({ page }) => {
 
-    await test.step('Arrange: Mock compile backend and load workspace', async () => {
-
-        await page.goto('/');
-
-        await expect(page.getByTestId("loading-editor-spinner")).not.toBeVisible();
-        await expect(page.getByRole('button', { name: 'Run' })).toBeVisible();
-        await expect(page.getByRole('button', { name: 'Add new node' })).toBeVisible();
-    });
+    await setupAndClearWorkspace(page);
 
     await test.step('Act: Input Haskell code and configure canvas', async () => {
         // Left Panel: Focus the Monaco/CodeMirror editor and type Haskell code
         const editor = page.locator('.monaco-editor').first();
         await editor.click();
         await page.keyboard.insertText('main = print "Calculated Value: 256"');
+        await expect(editor).toContainText(`main = print "Calculated Value: 256"`)
+
 
         const numberOfNodes = page.locator(".customNodeBody")
         const initialCount = await numberOfNodes.count();

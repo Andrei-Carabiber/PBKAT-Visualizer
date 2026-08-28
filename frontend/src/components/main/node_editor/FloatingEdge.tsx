@@ -4,15 +4,13 @@ import {
     type EdgeProps,
     getStraightPath,
     useInternalNode,
-    useReactFlow
 } from '@xyflow/react';
 
 import {getEdgeParams} from './utils.js';
 
-function FloatingEdge({id, source, target, markerEnd, style}: EdgeProps) {
+function FloatingEdge({id, source, target, markerEnd, style, data}: EdgeProps) {
     const sourceNode = useInternalNode(source);
     const targetNode = useInternalNode(target);
-    const {getEdge} = useReactFlow();
 
     if (!sourceNode || !targetNode) {
         return null;
@@ -26,8 +24,6 @@ function FloatingEdge({id, source, target, markerEnd, style}: EdgeProps) {
         targetX: tx,
         targetY: ty,
     });
-
-    const edge = getEdge(id)
 
     return (
         <>
@@ -49,7 +45,7 @@ function FloatingEdge({id, source, target, markerEnd, style}: EdgeProps) {
                     className="nodrag nopan bg-background border px-2 py-1 rounded shadow-sm text-xs flex gap-2 items-center"
                 >
                     <div className="flex flex-col">
-                        <span className="text-base">L<sup className="text-[10px]">{`${sourceNode.data.nodeLabel} - ${targetNode.data.nodeLabel}`}</sup> = {`${edge?.data?.distance}`}</span>
+                        <span className="text-base">L<sup className="text-[10px]">{`${sourceNode.data.nodeLabel} - ${targetNode.data.nodeLabel}`}</sup> = {`${data?.distance}`}</span>
                     </div>
                 </div>
             </EdgeLabelRenderer>

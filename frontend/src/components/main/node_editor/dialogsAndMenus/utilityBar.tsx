@@ -153,7 +153,7 @@ const UtilityBar = ({panelSize, onUndo, onRedo, canUndo, canRedo, takeSnapshot, 
                     <div className="flex gap-5 items-center">
                         <Popover open={popoverOpen} onOpenChange={(open) => setPopoverOpen(open)}>
                             <PopoverTrigger asChild>
-                                <Button variant="outline" size="icon" className="text-muted-foreground">
+                                <Button variant="outline" size="icon" aria-label="More actions" className="text-muted-foreground">
                                     <MoreHorizontal className="size-4"/>
                                 </Button>
                             </PopoverTrigger>
