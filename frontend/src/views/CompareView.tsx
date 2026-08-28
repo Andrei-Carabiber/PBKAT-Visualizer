@@ -39,8 +39,8 @@ const CompareView = () => {
             <div className="flex flex-col gap-6 flex-1 min-h-0 overflow-y-auto pr-1">
                 {/* 1. Header / Name Row */}
                 <div className="grid grid-cols-2 gap-x-6">
-                    {[first, second].map((item, idx) => (
-                        <div key={`header-${idx}`} className="border-b pb-2">
+                    {[first, second].map((item) => (
+                        <div key={`header-${item.id}`} className="border-b pb-2">
                             <span className="font-medium text-sm text-card-foreground">{item.name}</span>
                         </div>
                     ))}
@@ -48,8 +48,8 @@ const CompareView = () => {
 
                 {/* 2. Results Row */}
                 <div id="result-box-comparison" className="grid grid-cols-2 gap-x-6">
-                    {[first, second].map((item, idx) => (
-                        <div key={`result-${idx}`} className="flex flex-col gap-2 h-full">
+                    {[first, second].map((item) => (
+                        <div key={`result-${item.id}`} className="flex flex-col gap-2 h-full">
                             <h3 className="text-xs font-semibold text-muted-foreground uppercase">Result</h3>
                             <div className="rounded-md border bg-background/50 p-2 flex-1">
                                 <SmallResultDisplay settings={item.settings}/>
@@ -60,8 +60,8 @@ const CompareView = () => {
 
                 {/* 3. Code Row */}
                 <div id="code-box-comparison" className="grid grid-cols-2 gap-x-6">
-                    {[first, second].map((item, idx) => (
-                        <div key={`code-${idx}`} className="flex flex-col gap-2 h-full">
+                    {[first, second].map((item) => (
+                        <div key={`code-${item.id}`} className="flex flex-col gap-2 h-full">
                             <h3 className="text-xs font-semibold text-muted-foreground uppercase">Code</h3>
                             <pre
                                 className="text-xs font-mono bg-muted/60 text-muted-foreground p-3 rounded-md overflow-x-auto border border-border/50 flex-1 min-h-0">
@@ -73,11 +73,11 @@ const CompareView = () => {
 
                 {/* 4. Node View Row (Independent Pan/Zoom) */}
                 <div id="node-editor-comparison" className="grid grid-cols-2 gap-x-6">
-                    {[first, second].map((item, idx) => {
-                        const id = `viewer-${idx}`;
+                    {[first, second].map((item) => {
+                        const id = `viewer-${item.id}`;
 
                         return (
-                            <div key={`node-${idx}`} className="flex flex-col gap-2 h-full">
+                            <div key={`node-${item.id}`} className="flex flex-col gap-2 h-full">
                                 <h3 className="text-xs font-semibold text-muted-foreground uppercase">Node View</h3>
                                 <div
                                     className="rounded-md border border-border/50 bg-background/50 h-72 w-full overflow-hidden">
@@ -94,11 +94,11 @@ const CompareView = () => {
 
                 {/* 5. Network Goal */}
                 <div id="network-goal-comparison" className="grid grid-cols-2 gap-x-6">
-                    {[first, second].map((item, idx) => {
+                    {[first, second].map((item) => {
                         const aggregatedGoals = aggregateConnections(item.settings.goal);
 
                         return (
-                            <div key={`goal-${idx}`} className="flex flex-col gap-2 h-full">
+                            <div key={`goal-${item.id}`} className="flex flex-col gap-2 h-full">
                                 <h3 className="text-xs font-semibold text-muted-foreground uppercase">Network Goal</h3>
                                 <div className="rounded-md border border-border/50 bg-background/50 p-3 flex-1 flex flex-col justify-center min-h-16">
                                     {item.settings.goalDisabled ? (
@@ -133,11 +133,11 @@ const CompareView = () => {
 
                 {/* 6. Network Capacity */}
                 <div id="network-capacity-comparison" className="grid grid-cols-2 gap-x-6">
-                    {[first, second].map((item, idx) => {
+                    {[first, second].map((item) => {
                         const aggregatedCapacities = aggregateConnections(item.settings.networkCapacity);
 
                         return (
-                            <div key={`capacity-${idx}`} className="flex flex-col gap-2 h-full">
+                            <div key={`capacity-${item.id}`} className="flex flex-col gap-2 h-full">
                                 <h3 className="text-xs font-semibold text-muted-foreground uppercase">Network Capacity</h3>
                                 <div className="rounded-md border border-border/50 bg-background/50 p-3 flex-1 flex flex-col justify-center min-h-16">
                                     {item.settings.capacityDisabled ? (

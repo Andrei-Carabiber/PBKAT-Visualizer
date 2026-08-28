@@ -8,7 +8,7 @@ interface LayoutProps {
     children: ReactNode;
 }
 
-export function MainLayout({children}: LayoutProps) {
+export function MainLayout({children}: Readonly<LayoutProps>) {
     const theme = useTheme().theme;
     return (
         // Changed max-h-screen to min-h-screen

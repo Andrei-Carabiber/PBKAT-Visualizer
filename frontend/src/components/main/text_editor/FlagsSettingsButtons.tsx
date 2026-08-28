@@ -45,6 +45,7 @@ const FlagsSettingsButtons = () => {
 
                     {/* Segmented Control Switch */}
                     <button
+                        type="button"
                         className="flex w-fit bg-muted p-1 rounded-lg cursor-pointer select-none"
                         onClick={() => setTruncationActive(!truncationActive)}
                     >

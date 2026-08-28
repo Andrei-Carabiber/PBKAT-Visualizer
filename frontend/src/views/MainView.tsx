@@ -30,7 +30,7 @@ const MainView = () => {
 
     // We import data, error, and loading to check if the result window is active
     const { viewMode, data, error, loading } = useRunEngine();
-    const hasResults = !!(data || error || loading);
+    const hasResults = !!((data ?? error) || loading);
 
     if (isMobile) {
         return (

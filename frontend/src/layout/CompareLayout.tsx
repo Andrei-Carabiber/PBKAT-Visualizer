@@ -5,6 +5,7 @@ import {useTheme} from "@/components/theme-provider.tsx";
 import {useNavigate} from "react-router-dom";
 import {useCompareStore} from "@/store/useCompareStore.ts";
 import {ModeToggle} from "@/components/theme-toggle.tsx";
+import {Button} from "@/components/ui/button.tsx";
 
 interface LayoutProps {
     children: ReactNode;
@@ -18,13 +19,14 @@ export function CompareLayout({children}: LayoutProps) {
         <div className="min-h-screen flex flex-col bg-background">
             <header className="h-16 border-b flex items-center justify-between px-4 md:px-6">
                 <div className="flex md:gap-10 items-center justify-between w-full overflow-hidden">
-                    <h1 className="font-bold truncate text-sm md:text-base hover:cursor-pointer"
-                        onClick={() => {
-                            clearCompare()
-                            navigate('/')
-                        }}>
-                        QBKAT Visualizer
-                    </h1>
+                    <Button variant="ghost" onClick={() => {
+                        clearCompare()
+                        navigate('/')
+                    }}>
+                        <h1 className="font-bold truncate text-sm md:text-base hover:cursor-pointer rounded-xs">
+                            QBKAT Visualizer
+                        </h1>
+                    </Button>
 
                     <ModeToggle />
                 </div>

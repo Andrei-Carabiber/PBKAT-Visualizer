@@ -45,8 +45,8 @@ const WernerGraph = ({
     const [internalLeft, setInternalLeft] = useState<string | number>("dataMin");
     const [internalRight, setInternalRight] = useState<string | number>("dataMax");
 
-    const left = zoomLeft !== undefined ? zoomLeft : internalLeft;
-    const right = zoomRight !== undefined ? zoomRight : internalRight;
+    const left = zoomLeft ?? internalLeft;
+    const right = zoomRight ?? internalRight;
     const [refAreaLeft, setRefAreaLeft] = useState<string | number | null>(null);
     const [refAreaRight, setRefAreaRight] = useState<string | number | null>(null);
 
@@ -124,6 +124,7 @@ const WernerGraph = ({
                 <div className="flex justify-end px-4 py-1">
                     {(left !== "dataMin" || right !== "dataMax") && (
                         <button
+                            type="button"
                             onClick={zoomOut}
                             className="px-3 py-1 text-xs bg-secondary text-secondary-foreground rounded-md border shadow-sm hover:bg-accent"
                         >
@@ -181,7 +182,7 @@ const WernerGraph = ({
                             <Tooltip
                                 content={({active, payload}) => {
                                     const point = payload?.[0]?.payload as PlotPoint | undefined;
-                                    if (!active || !point || point.werner === null) return null;
+                                    if (!active || point?.werner === null || !point) return null;
 
                                     return (
                                         <div

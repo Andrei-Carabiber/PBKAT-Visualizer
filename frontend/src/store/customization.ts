@@ -5,7 +5,7 @@ import type {EdgeData, NodeData} from "@/components/main/node_editor/nodeEditor.
 
 type GenericNodeData = Omit<NodeData, "nodeLabel">
 
-interface customizationState {
+interface CustomizationState {
     defaultNodeValues: GenericNodeData,
     defaultEdgeValues: EdgeData,
     setDefaultNodeValues: (newDefault: GenericNodeData) => void,
@@ -54,7 +54,7 @@ const DEFAULT_EDITOR_VALUES: EditorVisualSettings = {
     wordWrap: 'off',
 }
 
-export const useCustomization = create<customizationState>()(
+export const useCustomization = create<CustomizationState>()(
     persist(
         (set) => ({
             defaultNodeValues: DEFAULT_NODE_VALUES,

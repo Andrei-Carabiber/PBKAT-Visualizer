@@ -13,6 +13,11 @@ export const bumpTutorialEpoch = () => ++tutorialEpoch;
 const getTutorialEpoch = () => tutorialEpoch;
 let dialogGuardHandler: ((e: MouseEvent) => void) | null = null;
 
+const areFloatingNumbersEqual = (float1: number | undefined, float2: number | undefined) => {
+    if (!float1 || !float2) return false
+    return Math.abs(float1 - float2) < Number.EPSILON
+}
+
 const installDialogGuard = (selector: string) => {
     if (dialogGuardHandler) return;
     dialogGuardHandler = (e: MouseEvent) => {
@@ -937,7 +942,7 @@ outputGoal = (e <||> f) <> (e <.> f)`)
 
                         if (currentEdges.length > 0) {
                             const EdgeData = currentEdges[0].data as EdgeData;
-                            const isProbCorrect = Number(EdgeData.uCreate_prob) === 0.8;
+                            const isProbCorrect = areFloatingNumbersEqual(EdgeData.uCreate_prob, 0.8)
 
                             if (isProbCorrect) {
                                 clearInterval(checkDataInterval);
@@ -1297,7 +1302,7 @@ outputGoal = (e <||> f) <> (e <.> f)`)
                                 }
                                 const mode = useRunEngine.getState().truncationActive;
                                 const coverageAmount = useRunEngine.getState().coverage;
-                                if (!mode && coverageAmount === 0.9) {
+                                if (!mode && areFloatingNumbersEqual(coverageAmount , 0.9)) {
                                     clearInterval(checkCoverageInterval);
                                     removeDialogGuard();
 
@@ -1712,8 +1717,8 @@ outputGoal = (e <||> f) <> (e <.> f)`)
                             const curatedEdges = edges.map((edge) => {
                                 const source = edge.source
                                 const target = edge.target
-                                const sourceLabel = nodes.filter(node => node.id == source)[0].data.nodeLabel
-                                const targetLabel = nodes.filter(node => node.id == target)[0].data.nodeLabel
+                                const sourceLabel = nodes.find(node => node.id == source)?.data.nodeLabel
+                                const targetLabel = nodes.find(node => node.id == target)?.data.nodeLabel
                                 const name = sourceLabel + "~" + targetLabel
                                 return {
                                     name: name,
@@ -1721,20 +1726,25 @@ outputGoal = (e <||> f) <> (e <.> f)`)
                                 }
                             })
                             try {
-                                const HNode = nodes.filter((node) => node.data.nodeLabel === "H")[0]
-                                const HALink = curatedEdges.filter(edge => edge.name === "H~A")[0]
-                                const HBLink = curatedEdges.filter(edge => edge.name === "H~B")[0]
-                                const HCLink = curatedEdges.filter(edge => edge.name === "H~C")[0]
+                                const HNode = nodes.find((node) => node.data.nodeLabel === "H")
+                                const HALink = curatedEdges.find(edge => edge.name === "H~A")
+                                const HBLink = curatedEdges.find(edge => edge.name === "H~B")
+                                const HCLink = curatedEdges.find(edge => edge.name === "H~C")
 
+                                if (!HNode || !HALink || !HBLink || !HCLink) {
+                                    toast.error("Something went wrong when checking graph. We are sorry.")
+                                    return
+                                }
                                 if (HNode.data.coherence_time === 200 && HNode.data.swap_prob === 0.5 &&
-                                    HALink.edgeData?.uCreate_prob === 0.25 && HALink.edgeData?.uCreate_quality === 0.9
-                                && HBLink.edgeData?.uCreate_prob === 0.4 && HCLink.edgeData?.uCreate_prob === 0.4 &&
-                                HBLink.edgeData?.uCreate_quality === 0.95 && HCLink.edgeData?.uCreate_quality === 0.95
-                                && HBLink.edgeData.distance === 3) {
+                                    HALink.edgeData?.uCreate_prob === 0.25 && areFloatingNumbersEqual(HALink.edgeData?.uCreate_quality , 0.9)
+                                && areFloatingNumbersEqual(HBLink.edgeData?.uCreate_prob, 0.4) && areFloatingNumbersEqual(HCLink.edgeData?.uCreate_prob, 0.4) &&
+                                areFloatingNumbersEqual(HBLink.edgeData?.uCreate_quality , 0.95) && areFloatingNumbersEqual(HCLink.edgeData?.uCreate_quality , 0.95)
+                                && HBLink.edgeData?.distance === 3) {
                                     passed = true
                                 }
                             }
                             catch (error) {
+                                console.log(error)
                                 toast.error('There was an unexpected error. We are sorry. You can check the H-Swap example from QBKAT to see how it would have been.')
                                 clearInterval(checkCodeInterval)
                                 setLockTour(false)
@@ -1787,9 +1797,9 @@ outputGoal = (e <||> f) <> (e <.> f)`)
                             return;
                         }
                         const currentGoalConnections = useRunEngine.getState().goalConnections;
-                        const labels = currentGoalConnections.map(c => c.label);
-                        const hasAC = labels.includes(`"A" ~ "C"`) || labels.includes(`"C" ~ "A"`);
-                        const hasBC = labels.includes(`"B" ~ "C"`) || labels.includes(`"C" ~ "B"`);
+                        const labels = new Set(currentGoalConnections.map(c => c.label));
+                        const hasAC = labels.has(`"A" ~ "C"`) || labels.has(`"C" ~ "A"`);
+                        const hasBC = labels.has(`"B" ~ "C"`) || labels.has(`"C" ~ "B"`);
 
                         if (currentGoalConnections.length === 2 && hasAC && hasBC) {
                             clearInterval(checkGoalInterval);

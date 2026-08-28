@@ -120,6 +120,7 @@ const ProbabilityGraph = ({
                 <div className="flex justify-end px-4 py-1">
                     {(left !== "dataMin" || right !== "dataMax") && (
                         <button
+                            type="button"
                             onClick={zoomOut}
                             className="px-3 py-1 text-xs bg-secondary text-secondary-foreground rounded-md border shadow-sm hover:bg-accent"
                         >

@@ -70,7 +70,7 @@ const produceJson = (comparisonObjectsArray: (HistoryItem | null)[], exportOptio
 }) => {
     const output: Record<string, unknown> = {};
 
-    comparisonObjectsArray.map((item, index) => {
+    comparisonObjectsArray.forEach((item, index) => {
         if (!item) return
         const {name, settings} = item;
         const {code, result, goal, goalDisabled, networkCapacity, capacityDisabled, graph} = settings
@@ -86,8 +86,8 @@ const produceJson = (comparisonObjectsArray: (HistoryItem | null)[], exportOptio
         const curatedEdges = edges.map((edge) => {
             const source = edge.source
             const target = edge.target
-            const sourceLabel = nodes.filter(node => node.id == source)[0].data.nodeLabel
-            const targetLabel = nodes.filter(node => node.id == target)[0].data.nodeLabel
+            const sourceLabel = nodes.find(node => node.id == source)?.data.nodeLabel
+            const targetLabel = nodes.find(node => node.id == target)?.data.nodeLabel
             const name = sourceLabel + "~" + targetLabel
             return {
                 name: name,

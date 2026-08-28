@@ -48,13 +48,13 @@ interface HistoryDialogProps {
     setAllSaves: (saves: localStorageSave[]) => void;
 }
 
-const ACTIVE_STATUSES: ProtocolJobStatus[] = ["queued", "running"];
+const ACTIVE_STATUSES: Set<ProtocolJobStatus> = new Set(["queued", "running"]);
 
-const RETRYABLE_STATUSES: ProtocolJobStatus[] = [
+const RETRYABLE_STATUSES: Set<ProtocolJobStatus> = new Set([
     "failed",
     "interrupted",
     "timed_out",
-];
+]);
 
 function getRunStatus(item: HistoryItem): ProtocolJobStatus {
     // Old history entries did not have a status and were all completed.
@@ -62,11 +62,11 @@ function getRunStatus(item: HistoryItem): ProtocolJobStatus {
 }
 
 function isActiveRun(item: HistoryItem): boolean {
-    return ACTIVE_STATUSES.includes(getRunStatus(item));
+    return ACTIVE_STATUSES.has(getRunStatus(item));
 }
 
 function isRetryableRun(item: HistoryItem): boolean {
-    return RETRYABLE_STATUSES.includes(getRunStatus(item));
+    return RETRYABLE_STATUSES.has(getRunStatus(item));
 }
 
 function isComparableRun(item: HistoryItem): boolean {
@@ -366,7 +366,7 @@ const HistoryDialog = ({
         const stageText = getStageText(item);
 
         return (
-            <div
+            <Button variant="ghost"
                 key={item.id}
                 onClick={() => {
                     if (compareModeOn && comparable) {
@@ -374,7 +374,7 @@ const HistoryDialog = ({
                     }
                 }}
                 className={[
-                    "rounded-lg border p-3 transition-colors",
+                    "rounded-lg border p-3 transition-colors w-full h-fit",
                     isSelected
                         ? "border-primary bg-primary/5"
                         : "border-border",
@@ -389,7 +389,7 @@ const HistoryDialog = ({
                         : "",
                 ].join(" ")}
             >
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start justify-between gap-3 w-full">
                     <div className="flex min-w-0 flex-1 items-start gap-3">
                         {compareModeOn && (
                             <Checkbox
@@ -519,7 +519,7 @@ const HistoryDialog = ({
                         </div>
                     )}
                 </div>
-            </div>
+            </Button>
         );
     };
 

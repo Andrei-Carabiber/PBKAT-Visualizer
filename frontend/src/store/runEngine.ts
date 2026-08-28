@@ -188,10 +188,10 @@ async function saveActiveJobId(jobId: string | null): Promise<void> {
 const POLL_INTERVAL_MS = 2_000;
 const resumingJobIds = new Set<string>();
 
-const terminalJobStatuses: ProtocolJobStatus[] = ["completed", "failed", "cancelled", "interrupted", "timed_out"];
+const terminalJobStatuses: Set<ProtocolJobStatus> = new Set(["completed", "failed", "cancelled", "interrupted", "timed_out"]);
 
 function isTerminalJob(status: ProtocolJobStatus): boolean {
-    return terminalJobStatuses.includes(status);
+    return terminalJobStatuses.has(status);
 }
 
 export const useRunEngine = create<RunEngineState>((set, get) => ({

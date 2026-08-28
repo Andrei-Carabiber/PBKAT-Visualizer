@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react"
+import {createContext, useContext, useEffect, useMemo, useState} from "react"
 import { get, set } from "idb-keyval"
 
 type Theme = "dark" | "light" | "system"
@@ -26,13 +26,13 @@ export function ThemeProvider({
                                   defaultTheme = "system",
                                   storageKey = "vite-ui-theme",
                                   ...props
-                              }: ThemeProviderProps) {
-    const [theme, setReactTheme] = useState<Theme>(defaultTheme)
+                              }: Readonly<ThemeProviderProps>) {
+    const [theme, setTheme] = useState<Theme>(defaultTheme)
 
     useEffect(() => {
         get<Theme>(storageKey).then((savedTheme) => {
             if (savedTheme) {
-                setReactTheme(savedTheme)
+                setTheme(savedTheme)
             }
         }).catch(console.error)
     }, [storageKey])
@@ -55,13 +55,15 @@ export function ThemeProvider({
         root.classList.add(theme)
     }, [theme])
 
-    const value : ThemeProviderState = {
-        theme,
-        setTheme: (newTheme: Theme) => {
-            setReactTheme(newTheme)
-            set(storageKey, newTheme).catch(console.error)
-        },
-    }
+    const value : ThemeProviderState = useMemo(() => (
+        {
+            theme,
+            setTheme: (newTheme: Theme) => {
+                setTheme(newTheme)
+                set(storageKey, newTheme).catch(console.error)
+            },
+        }
+    ), [])
 
     return (
         <ThemeProviderContext.Provider {...props} value={value}>
