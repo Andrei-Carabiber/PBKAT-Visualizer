@@ -166,7 +166,8 @@ const ALWAYS_ALLOWED_KEYCODES = new Set<number>([
 
 function restrictToEditableRegion(
     editorInstance:
-    monacoEditor.IStandaloneCodeEditor
+    monacoEditor.IStandaloneCodeEditor,
+    editableStartLineRef: { current: number }
 ): () => void {
     const model = editorInstance.getModel();
 
@@ -295,14 +296,31 @@ function restrictToEditableRegion(
                 )!;
         }
 
-        return {
+        if (!preludeRange || !suffixRange) {
+            if (!setupDecorations()) {
+                const fallback = new Range(1, 1, 1, 1);
+                editableStartLineRef.current = 1;
+                return {
+                    preludeRange: fallback,
+                    suffixRange: fallback,
+                    editableStartLine: 1,
+                    editableEndLine: model!.getLineCount()
+                };
+            }
+            preludeRange = model!.getDecorationRange(preludeDecorationId!)!;
+            suffixRange = model!.getDecorationRange(suffixDecorationId!)!;
+        }
+
+        const bounds = {
             preludeRange,
             suffixRange,
-            editableStartLine:
-                preludeRange.endLineNumber + 1,
-            editableEndLine:
-                suffixRange.startLineNumber - 1
+            editableStartLine: preludeRange.endLineNumber + 1,
+            editableEndLine: suffixRange.startLineNumber - 1
         };
+
+        editableStartLineRef.current = bounds.editableStartLine; // <-- new
+
+        return bounds;
     }
 
     function applyHiddenAreas(): void {
@@ -549,6 +567,8 @@ const MonacoEditor = forwardRef<
 
     const applyHiddenAreasRef =
         useRef<(() => void) | null>(null);
+
+    const editableStartLineRef = useRef(1);
 
     const initialized = useRef(false);
 
@@ -807,7 +827,8 @@ const MonacoEditor = forwardRef<
 
             applyHiddenAreasRef.current =
                 restrictToEditableRegion(
-                    editorRefInstance.current
+                    editorRefInstance.current,
+                    editableStartLineRef
                 );
             setIsEditorReady(true);
             const lcWrapper =
@@ -1017,6 +1038,11 @@ const MonacoEditor = forwardRef<
         }
 
         editor.updateOptions({
+            lineNumbers: (originalLineNumber: number) => {
+                const offset = editableStartLineRef.current - 1;
+                const displayLine = originalLineNumber - offset;
+                return displayLine > 0 ? String(displayLine) : '';
+            },
             fontSize:
             editorVisualSettings.fontSize,
             fontFamily: '',
