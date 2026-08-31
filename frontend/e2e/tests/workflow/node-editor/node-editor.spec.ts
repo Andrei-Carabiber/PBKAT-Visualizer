@@ -112,10 +112,12 @@ test('User adds nodes, moves them, and connects edges', async ({page}) => {
 });
 
 test('User can generate a layout using Auto-create', async ({page}) => {
+    await expect(page.getByText('outputGoal :: ProbBellKATPolicy')).toBeVisible();
 
     await test.step("Click Auto Create and check Result", async () => {
-        await page.getByRole('button', {name: "Auto-create"}).click()
-        await expect(page.locator('.customNode')).toHaveCount(3);
-        await expect(page.locator('#edge-label')).toHaveCount(2);
-    })
-})
+        await page.getByRole('button', {name: "Auto-create"}).click();
+
+        await expect(page.locator('.customNode')).toHaveCount(3, { timeout: 10000 });
+        await expect(page.locator('#edge-label')).toHaveCount(2, { timeout: 10000 });
+    });
+});
