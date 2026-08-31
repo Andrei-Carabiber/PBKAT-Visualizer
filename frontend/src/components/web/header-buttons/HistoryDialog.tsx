@@ -127,7 +127,7 @@ const HistoryDialog = ({
 
     const navigate = useNavigate();
     const setCompareItems = useCompareStore(
-        (state) => state.setCompareItems
+        (state) => state.setItems
     );
 
     /*
@@ -238,13 +238,6 @@ const HistoryDialog = ({
                 );
             }
 
-            if (currentIds.length >= 2) {
-                toast.info(
-                    "You can only compare 2 runs at a time"
-                );
-                return currentIds;
-            }
-
             return [...currentIds, id];
         });
     };
@@ -312,29 +305,13 @@ const HistoryDialog = ({
     };
 
     const handleCompare = () => {
-        const [firstId, secondId] = selectedIds;
 
-        const itemA = historyItems.find(
-            (item) => item.id === firstId
-        );
+        const selectedHistoryItems: HistoryItem[] = selectedIds.map((selectedId: string) => {
+            const item = historyItems.find((item) => item?.id === selectedId)
+            if (item !== undefined) return item
+        }).filter(item => !!item )
 
-        const itemB = historyItems.find(
-            (item) => item.id === secondId
-        );
-
-        if (
-            !itemA ||
-            !itemB ||
-            !isComparableRun(itemA) ||
-            !isComparableRun(itemB)
-        ) {
-            toast.error(
-                "Both selected runs must have completed results"
-            );
-            return;
-        }
-
-        setCompareItems(itemA, itemB);
+        setCompareItems(selectedHistoryItems);
         onOpenChange(false);
         navigate("/compare");
     };
@@ -804,7 +781,7 @@ const HistoryDialog = ({
                             compareModeOn && (
                                 <Button
                                     disabled={
-                                        selectedIds.length !== 2
+                                        selectedIds.length < 2
                                     }
                                     onClick={handleCompare}
                                     className="px-4"

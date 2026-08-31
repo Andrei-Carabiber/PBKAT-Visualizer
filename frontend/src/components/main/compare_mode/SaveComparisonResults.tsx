@@ -126,7 +126,7 @@ const produceJson = (comparisonObjectsArray: (HistoryItem | null)[], exportOptio
 }
 
 const SaveResultsButton = () => {
-    const {first, second} = useCompareStore();
+    const {items} = useCompareStore();
     const {theme} = useTheme();
     const [isSaving, setIsSaving] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
@@ -190,20 +190,38 @@ const SaveResultsButton = () => {
                 // state rather than static markup, which is why the old clone-based
                 // approach produced a blank/white export.
                 const captures: Capture[] = [];
+
                 for (const key of selectedKeys) {
                     const elementId = COMPONENT_IDS[key];
                     const el = document.getElementById(elementId);
+
                     if (!el) continue;
+
+                    const width = el.scrollWidth;
+                    const height = el.scrollHeight;
 
                     const dataUrl = await toPng(el, {
                         cacheBust: true,
                         pixelRatio: 2,
                         backgroundColor,
+
+                        // Force html-to-image to render the entire comparison row
+                        width,
+                        height,
+
+                        // Make sure the cloned element has the full width
+                        style: {
+                            width: `${width}px`,
+                            maxWidth: "none",
+                            overflow: "visible",
+                        },
                     });
+
                     const img = await loadImage(dataUrl);
 
                     captures.push({
-                        label: checkboxConfig.find((c) => c.key === key)?.label ?? key,
+                        label:
+                            checkboxConfig.find((c) => c.key === key)?.label ?? key,
                         img,
                     });
                 }
@@ -276,7 +294,7 @@ const SaveResultsButton = () => {
 
     const handleSaveJSON = () => {
 
-        const payload = produceJson([first, second], exportOptions);
+        const payload = produceJson(items, exportOptions);
         const textData = JSON.stringify(payload, null, 2);
         const blob = new Blob([textData], {type: "application/json"});
         const href = URL.createObjectURL(blob);

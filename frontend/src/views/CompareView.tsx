@@ -1,45 +1,59 @@
-import {useEffect} from "react";
-import {useCompareStore} from "@/store/useCompareStore";
-import {useNavigate} from "react-router-dom";
+import React, { useEffect } from "react";
+import { useCompareStore } from "@/store/useCompareStore";
+import { useNavigate } from "react-router-dom";
 import SmallResultDisplay from "@/components/main/compare_mode/SmallResultDisplay.tsx";
 import SmallNodeViewer from "@/components/main/compare_mode/SmallNodeViewer.tsx";
-import {aggregateConnections} from "@/lib/utils.ts";
+import { aggregateConnections } from "@/lib/utils.ts";
 import SaveComparisonResults from "@/components/main/compare_mode/SaveComparisonResults.tsx";
 
 const CompareView = () => {
-    const {first, second, clearCompare} = useCompareStore();
+    const { items, clearCompare } = useCompareStore();
     const navigate = useNavigate();
 
     useEffect(() => {
-        if (!first || !second) {
+        if (!items || items.length < 2) {
             clearCompare();
-            navigate("/", {replace: true});
+            navigate("/", { replace: true });
         }
-    }, [first, second, clearCompare, navigate]);
+    }, [items, clearCompare, navigate]);
 
-    if (!first || !second) {
+    if (!items || items.length < 2) {
         return null;
     }
 
+    const gridStyle = {
+        "--total-cols": items.length,
+    } as React.CSSProperties;
+
+    const gridRowClass =
+        "grid w-max min-w-full gap-x-6 grid-cols-[repeat(var(--total-cols),calc(50%-12px))]";
+
     return (
         <div className="flex flex-col h-screen w-full bg-background p-6 gap-6">
-            <header className="flex items-center justify-between pb-4 border-b border-border">
+            <header className="flex items-center justify-between pb-4 border-b border-border shrink-0">
                 <div>
                     <h1 className="text-xl font-bold tracking-tight">Side-by-Side Comparison</h1>
                     <p className="text-sm text-muted-foreground">
-                        Comparing <span className="font-semibold text-foreground">{first.name}</span> with{" "}
-                        <span className="font-semibold text-foreground">{second.name}</span>
+                        Comparing:{" "}
+                        {items.map((item) => (
+                            <span key={item.id + item.name} className="font-semibold text-foreground mr-2">
+                                {item.name}
+                            </span>
+                        ))}
                     </p>
                 </div>
 
                 <SaveComparisonResults />
             </header>
 
-
-            <div className="flex flex-col gap-6 flex-1 min-h-0 overflow-y-auto pr-1">
+            {/* Scroll container with both overflow-y-auto and overflow-x-auto */}
+            <div
+                style={gridStyle}
+                className="flex flex-col gap-6 flex-1 min-h-0 overflow-x-auto overflow-y-auto pr-1 pb-4"
+            >
                 {/* 1. Header / Name Row */}
-                <div className="grid grid-cols-2 gap-x-6">
-                    {[first, second].map((item) => (
+                <div className={gridRowClass}>
+                    {items.map((item) => (
                         <div key={`header-${item.id}`} className="border-b pb-2">
                             <span className="font-medium text-sm text-card-foreground">{item.name}</span>
                         </div>
@@ -47,24 +61,23 @@ const CompareView = () => {
                 </div>
 
                 {/* 2. Results Row */}
-                <div id="result-box-comparison" className="grid grid-cols-2 gap-x-6">
-                    {[first, second].map((item) => (
+                <div id="result-box-comparison" className={gridRowClass}>
+                    {items.map((item) => (
                         <div key={`result-${item.id}`} className="flex flex-col gap-2 h-full">
                             <h3 className="text-xs font-semibold text-muted-foreground uppercase">Result</h3>
                             <div className="rounded-md border bg-background/50 p-2 flex-1">
-                                <SmallResultDisplay settings={item.settings}/>
+                                <SmallResultDisplay settings={item.settings} />
                             </div>
                         </div>
                     ))}
                 </div>
 
                 {/* 3. Code Row */}
-                <div id="code-box-comparison" className="grid grid-cols-2 gap-x-6">
-                    {[first, second].map((item) => (
+                <div id="code-box-comparison" className={gridRowClass}>
+                    {items.map((item) => (
                         <div key={`code-${item.id}`} className="flex flex-col gap-2 h-full">
                             <h3 className="text-xs font-semibold text-muted-foreground uppercase">Code</h3>
-                            <pre
-                                className="text-xs font-mono bg-muted/60 text-muted-foreground p-3 rounded-md overflow-x-auto border border-border/50 flex-1 min-h-0">
+                            <pre className="text-xs font-mono bg-muted/60 text-muted-foreground p-3 rounded-md overflow-x-auto border border-border/50 flex-1 min-h-0">
                                 <code>{item.settings.code}</code>
                             </pre>
                         </div>
@@ -72,15 +85,14 @@ const CompareView = () => {
                 </div>
 
                 {/* 4. Node View Row (Independent Pan/Zoom) */}
-                <div id="node-editor-comparison" className="grid grid-cols-2 gap-x-6">
-                    {[first, second].map((item) => {
+                <div id="node-editor-comparison" className={gridRowClass}>
+                    {items.map((item) => {
                         const id = `viewer-${item.id}`;
 
                         return (
                             <div key={`node-${item.id}`} className="flex flex-col gap-2 h-full">
                                 <h3 className="text-xs font-semibold text-muted-foreground uppercase">Node View</h3>
-                                <div
-                                    className="rounded-md border border-border/50 bg-background/50 h-72 w-full overflow-hidden">
+                                <div className="rounded-md border border-border/50 bg-background/50 h-72 w-full overflow-hidden">
                                     <SmallNodeViewer
                                         id={id}
                                         nodes={item.settings.graph.nodes || []}
@@ -93,8 +105,8 @@ const CompareView = () => {
                 </div>
 
                 {/* 5. Network Goal */}
-                <div id="network-goal-comparison" className="grid grid-cols-2 gap-x-6">
-                    {[first, second].map((item) => {
+                <div id="network-goal-comparison" className={gridRowClass}>
+                    {items.map((item) => {
                         const aggregatedGoals = aggregateConnections(item.settings.goal);
 
                         return (
@@ -132,8 +144,8 @@ const CompareView = () => {
                 </div>
 
                 {/* 6. Network Capacity */}
-                <div id="network-capacity-comparison" className="grid grid-cols-2 gap-x-6">
-                    {[first, second].map((item) => {
+                <div id="network-capacity-comparison" className={gridRowClass}>
+                    {items.map((item) => {
                         const aggregatedCapacities = aggregateConnections(item.settings.networkCapacity);
 
                         return (
